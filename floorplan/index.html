@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Burlington Arcade Viewer — 150 Worth Ave — Palm Beach FL</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,44 +13,44 @@
      Fairfax & Sammons Architecture
      ============================================================
 
-     WHAT CHANGED (2026-08-20) — and why views 10 and 14 were broken
+     WHY VIEWS 10 AND 14 WERE DEAD (fixed 2026-08-20)
 
-     The previous version did not know its own filenames. It GUESSED,
-     firing about 61 requests per image ("is it _0000_? is it _0001_?")
-     across ~52 images — roughly 3,000 requests at once. Under that
-     load some requests fail, and a failure was cached permanently, so
-     whichever views lost the race stayed broken until a hard reload.
-     Views 10 and 14 were the ones losing it.
+     Not the files. Every dot PNG was healthy. The marker coordinates
+     in the VIEWS list simply did not match where the dot was actually
+     drawn in the image:
 
-     Now every filename is listed explicitly in VIEW_FILES below. Same
-     files, no guessing: ~3,000 requests became 35. That is also the
-     single biggest reason the map now appears almost instantly.
+        View 10   list said 56.4, 73.2   dot really at 33.2, 74.2
+        View 14   list said 28.6, 73.0   dot really at 36.0, 73.2
 
-     WHAT YOU EDIT — all in the CONFIG block at the top of the script:
+     The dots were on screen; the invisible click target was a quarter
+     of the map away. Every coordinate below was re-measured from the
+     PNGs themselves, so all seventeen now line up.
+
+     WHAT YOU EDIT — the CONFIG block at the top of the script:
        VIEW_FLOORS         which floor each view is on
-       VIEW_EDITOR_LINKS   the per-view "Go to Editor" links
+       VIEW_EDITOR_LINKS   per-view "Go to Editor" links
        INTERIOR/EXTERIOR_EDITOR_LINK
        PAGE_TEXT           optional blurb under the title
-
-     IF YOU RE-EXPORT and the numeric prefixes change, the filenames in
-     VIEW_FILES need updating to match. Ask and it takes a minute.
      ============================================================ -->
 
 <style>
   :root{
     --ivory:#F4EFE4; --ivory-deep:#ECE4D2; --ink:#161310; --ink-soft:#3A342C;
     --line:#C9BFA6; --line-soft:#DAD2BB; --brass:#8A6D3B; --brass-light:#B79A5E;
-    --white:#FFFFFF; --warn:#9C4A34;
-    --tri-opacity:0.44;              /* the (2) sightline layer, per request */
+    --white:#FFFFFF; --warn:#9C4A34; --red:#C0392B;
+    --tri-opacity:0.44;
+    --map-aspect: 4500 / 3161;        /* the plan's true ratio — never distorted */
     --shadow:0 18px 50px rgba(20,16,10,0.28);
   }
   *{ box-sizing:border-box; }
   html,body{ margin:0; padding:0; height:100%; background:var(--ink); color:var(--ink);
-    font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+    font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;
+    -webkit-text-size-adjust:100%; }
   ::selection{ background:var(--brass-light); color:var(--ink); }
   .serif{ font-family:'EB Garamond',serif; }
   button{ font-family:inherit; cursor:pointer; }
   a{ color:inherit; }
+  img{ -webkit-user-drag:none; user-select:none; }
 
   /* ============== SPLASH ============== */
   #splash{
@@ -64,7 +64,7 @@
   @keyframes splashIn{ from{ opacity:0; transform:translateY(14px); letter-spacing:.5em; } to{ opacity:1; transform:translateY(0); } }
   .splash-eyebrow{ font-size:11px; letter-spacing:.42em; text-transform:uppercase; color:var(--brass-light); margin-bottom:22px; }
   .splash-rule{ width:56px; height:1px; background:var(--line-soft); margin:22px auto; opacity:.55; }
-  .splash-title{ font-family:'EB Garamond',serif; font-weight:500; font-size:clamp(52px,11vw,128px); letter-spacing:.12em; line-height:1; margin:0; }
+  .splash-title{ font-family:'EB Garamond',serif; font-weight:500; font-size:clamp(46px,11vw,128px); letter-spacing:.12em; line-height:1; margin:0; }
   .splash-sub{ font-family:'EB Garamond',serif; font-style:italic; font-size:clamp(14px,2vw,19px); color:#C9BFA6; margin-top:6px; }
   .splash-cta{ margin-top:40px; font-size:11px; letter-spacing:.32em; text-transform:uppercase; opacity:.75; display:inline-flex; align-items:center; gap:10px; }
   .splash-cta .ring{ width:9px; height:9px; border-radius:50%; border:1px solid var(--brass-light); animation:pulse 1.8s ease-in-out infinite; }
@@ -76,22 +76,22 @@
   #app.visible{ opacity:1; }
 
   header.topbar{
-    display:flex; flex-direction:column; align-items:center; gap:10px;
-    padding:14px 20px; background:var(--ivory); border-bottom:1px solid var(--line);
-    z-index:20; text-align:center; flex:none;
+    display:flex; flex-direction:column; align-items:center; gap:9px;
+    padding:12px 16px calc(12px + env(safe-area-inset-top,0px));
+    background:var(--ivory); border-bottom:1px solid var(--line); z-index:20; text-align:center; flex:none;
   }
-  .brandblock .title{ font-family:'EB Garamond',serif; font-size:22px; letter-spacing:.03em; }
-  .brandblock .addr{ font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-soft); opacity:.75; margin-top:2px; }
-  .toolrow{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .brandblock .title{ font-family:'EB Garamond',serif; font-size:clamp(17px,2.4vw,22px); letter-spacing:.03em; }
+  .brandblock .addr{ font-size:9.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-soft); opacity:.75; margin-top:2px; }
+  .toolrow{ display:flex; gap:7px; justify-content:center; flex-wrap:wrap; }
   .toolrow a, .toolrow button{
     border:1px solid var(--ink); background:transparent; color:var(--ink);
-    padding:8px 15px; font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
-    text-decoration:none; transition:all .18s ease;
+    padding:7px 13px; font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+    text-decoration:none; transition:all .18s ease; white-space:nowrap;
   }
   .toolrow a:hover, .toolrow button:hover{ background:var(--ink); color:var(--ivory); }
   .toolrow a.disabled{ opacity:.32; pointer-events:none; }
   .toolrow button.on{ background:var(--brass); border-color:var(--brass); color:var(--ivory); }
-  .page-text{ max-width:640px; font-family:'EB Garamond',serif; font-size:13.5px; line-height:1.6; color:var(--ink-soft); }
+  .page-text{ max-width:640px; font-family:'EB Garamond',serif; font-size:13px; line-height:1.6; color:var(--ink-soft); }
   .page-text:empty{ display:none; }
 
   .missing-note{ display:none; max-width:900px; margin:0 auto; padding:10px 20px 0;
@@ -105,173 +105,280 @@
       repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(20,16,10,.028) 40px),
       repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(20,16,10,.028) 40px),
       var(--ivory);
-    scroll-behavior:smooth;
+    -webkit-overflow-scrolling:touch;
   }
-  .plan-wrap{ position:relative; width:100%; max-width:1900px; margin:0 auto; padding:20px 20px 4px; text-align:center; }
-  .plan-frame{ position:relative; display:inline-block; width:100%; min-height:180px;
-    background:var(--white); box-shadow:var(--shadow); border:1px solid var(--line); line-height:0; }
-  .plan-frame img.base{ display:block; width:100%; height:auto; user-select:none; -webkit-user-drag:none; }
+  .plan-wrap{ position:relative; width:100%; max-width:1900px; margin:0 auto; padding:16px 16px 4px; }
 
-  .layer-img{ position:absolute; inset:0; width:100%; height:100%; display:block;
-    pointer-events:none; user-select:none; -webkit-user-drag:none; }
+  /* viewport clips; frame inside is what pans and zooms (uniform scale = ratio locked) */
+  .plan-viewport{
+    position:relative; width:100%; aspect-ratio:var(--map-aspect);
+    overflow:hidden; background:var(--white); border:1px solid var(--line);
+    box-shadow:var(--shadow); touch-action:none; cursor:grab;
+  }
+  .plan-viewport.grabbing{ cursor:grabbing; }
+  .plan-frame{
+    position:absolute; top:0; left:0; width:100%; aspect-ratio:var(--map-aspect);
+    transform-origin:0 0; line-height:0; will-change:transform;
+  }
+  .plan-frame img.base{ display:block; width:100%; height:100%; }
+
+  .layer-img{ position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; }
   .layer-tri{ opacity:0; transition:opacity .18s ease; z-index:1; }
   .layer-dot{ opacity:.4; transition:opacity .14s ease; z-index:2; }
-  .view-group.is-hot .layer-dot,
-  .view-group.is-pinned .layer-dot{ opacity:1; }
-  .view-group.is-hot .layer-tri,
-  .view-group.is-pinned .layer-tri{ opacity:var(--tri-opacity); }
+  .view-group.is-hot .layer-dot, .view-group.is-pinned .layer-dot{ opacity:1; }
+  .view-group.is-hot .layer-tri, .view-group.is-pinned .layer-tri{ opacity:var(--tri-opacity); }
 
   .hit{ position:absolute; width:30px; height:30px; margin:-15px 0 0 -15px; border-radius:50%;
-    background:transparent; border:none; cursor:pointer; z-index:5; }
+    background:transparent; border:none; z-index:5; padding:0; }
 
-  /* ============== SIDE WIDGET (overlays the map, never moves it) ============== */
+  /* zoom controls */
+  .zoombar{ position:absolute; left:12px; bottom:12px; display:flex; gap:6px; z-index:30; }
+  .zoombar button{
+    width:34px; height:34px; border:1px solid var(--line); background:rgba(255,255,255,.94);
+    color:var(--ink); font-size:15px; line-height:1; display:flex; align-items:center; justify-content:center;
+  }
+  .zoombar button:hover{ background:var(--ink); color:var(--ivory); }
+  .zoombar .lbl{ width:auto; padding:0 10px; font-size:10px; letter-spacing:.12em; }
+
+  /* ============== WIDGET — draggable, resizable, sections collapse ============== */
   .widget{
-    position:absolute; top:14px; right:14px; width:26%; min-width:210px; max-width:330px;
-    background:var(--white); border:1px solid var(--line); box-shadow:0 14px 40px rgba(20,16,10,.22);
+    position:absolute; top:26px; right:26px; width:min(30%,340px); min-width:190px;
+    background:var(--white); border:1px solid var(--line); box-shadow:0 14px 40px rgba(20,16,10,.24);
     z-index:40; text-align:left; line-height:1.5;
-    opacity:0; visibility:hidden; transform:translateY(-6px);
-    transition:opacity .16s ease, visibility .16s ease, transform .16s ease;
+    opacity:0; visibility:hidden; transition:opacity .16s ease, visibility .16s ease;
+    display:flex; flex-direction:column;
   }
-  .widget.visible{ opacity:1; visibility:visible; transform:translateY(0); }
+  .widget.visible{ opacity:1; visibility:visible; }
   .widget-head{
-    display:flex; align-items:center; justify-content:space-between; gap:8px;
-    padding:9px 12px; background:var(--ink); color:var(--ivory);
+    display:flex; align-items:center; gap:6px; padding:8px 10px;
+    background:var(--ink); color:var(--ivory); cursor:grab; flex:none; touch-action:none;
   }
-  .widget-head .wtitle{ font-size:10px; letter-spacing:.18em; text-transform:uppercase; }
-  .widget-head button{ background:none; border:none; color:var(--ivory); font-size:14px; line-height:1; padding:2px 4px; opacity:.8; }
+  .widget-head.grabbing{ cursor:grabbing; }
+  .widget-head .wtitle{ font-size:10px; letter-spacing:.16em; text-transform:uppercase; flex:1; }
+  .widget-head button{ background:none; border:none; color:var(--ivory); font-size:13px; line-height:1; padding:2px 5px; opacity:.75; }
   .widget-head button:hover{ opacity:1; }
-  .widget-body{ display:block; }
-  .widget.min .widget-body{ display:none; }
+  .widget-scroll{ overflow:auto; flex:1; min-height:0; }
+  .widget.min .widget-scroll{ display:none; }
+  .widget.min .resize{ display:none; }
+
+  .sect-head{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:8px 10px; font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--brass); border-bottom:1px solid var(--line-soft); background:var(--ivory);
+    cursor:pointer; user-select:none;
+  }
+  .sect-head .chev{ transition:transform .18s ease; font-size:10px; color:var(--ink-soft); }
+  .sect.closed .chev{ transform:rotate(-90deg); }
+  .sect.closed .sect-body{ display:none; }
 
   .w-photo{ position:relative; width:100%; aspect-ratio:4/3; overflow:hidden; background:var(--ivory-deep); }
   .w-photo img{ width:100%; height:100%; object-fit:cover; object-position:center bottom; display:block; }
   .w-photo .ph{ width:100%; height:100%; display:flex; align-items:center; justify-content:center;
-    font-family:'EB Garamond',serif; font-size:30px; color:var(--ink-soft); opacity:.4; }
+    font-family:'EB Garamond',serif; font-size:28px; color:var(--ink-soft); opacity:.4; }
+  .w-floor{ padding:7px 10px; font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); }
 
-  .w-floor{ padding:10px 12px 8px; font-size:10px; letter-spacing:.18em; text-transform:uppercase;
-    color:var(--brass); border-bottom:1px solid var(--line-soft); }
-  .w-croplabel{ padding:9px 12px 6px; font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); opacity:.7; }
-  .crop{ position:relative; width:calc(100% - 24px); margin:0 12px 12px; aspect-ratio:1;
-    overflow:hidden; border:1px solid var(--line); background:var(--ivory-deep); }
-  .crop img{ position:absolute; max-width:none; height:auto; display:block; }
-  .crop img.c-dot{ z-index:2; }
-  .crop img.c-tri{ z-index:1; opacity:var(--tri-opacity); }
+  /* the little plan detail: its own zoom + pan, ratio always locked */
+  .cropwrap{ position:relative; }
+  .crop{
+    position:relative; width:100%; aspect-ratio:1; overflow:hidden;
+    background:var(--ivory-deep); touch-action:none; cursor:grab;
+  }
+  .crop.grabbing{ cursor:grabbing; }
+  .crop-inner{ position:absolute; top:0; left:0; width:100%; aspect-ratio:var(--map-aspect);
+    transform-origin:0 0; line-height:0; }
+  .crop-inner img{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .crop-inner img.c-tri{ opacity:var(--tri-opacity); z-index:1; }
+  .crop-inner img.c-dot{ z-index:2; }
+  .cropbar{ display:flex; gap:5px; padding:7px 10px; border-top:1px solid var(--line-soft); }
+  .cropbar button{
+    flex:1; border:1px solid var(--line); background:var(--white); color:var(--ink-soft);
+    font-size:10px; letter-spacing:.1em; padding:5px 0;
+  }
+  .cropbar button:hover{ background:var(--ink); color:var(--ivory); }
 
-  .w-hint{ padding:0 12px 12px; font-size:10.5px; color:var(--ink-soft); opacity:.75; font-family:'EB Garamond',serif; font-style:italic; }
+  .w-hint{ padding:8px 10px 10px; font-size:10px; color:var(--ink-soft); opacity:.75;
+    font-family:'EB Garamond',serif; font-style:italic; }
 
-  /* ============== "ADDED BELOW" FLASH ============== */
+  .resize{
+    position:absolute; right:0; bottom:0; width:18px; height:18px; cursor:nwse-resize;
+    background:linear-gradient(135deg, transparent 0 48%, var(--line) 48% 56%, transparent 56% 72%, var(--line) 72% 80%, transparent 80%);
+    touch-action:none; z-index:2;
+  }
+
+  /* ============== FLASH ============== */
   .flash{
-    position:absolute; left:50%; bottom:18px; transform:translateX(-50%) translateY(8px);
-    background:var(--ink); color:var(--ivory); padding:9px 18px;
-    font-size:10px; letter-spacing:.2em; text-transform:uppercase; z-index:50;
-    opacity:0; transition:opacity .25s ease, transform .25s ease; pointer-events:none;
+    position:absolute; left:50%; bottom:16px; transform:translateX(-50%) translateY(8px);
+    background:var(--ink); color:var(--ivory); padding:8px 16px;
+    font-size:10px; letter-spacing:.18em; text-transform:uppercase; z-index:60;
+    opacity:0; transition:opacity .25s ease, transform .25s ease; pointer-events:none; white-space:nowrap;
   }
   .flash.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
-  .hint{ text-align:center; font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+  .hint{ text-align:center; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
     color:var(--ink-soft); opacity:.55; padding:10px 20px 4px; }
 
   /* ============== PINNED VIEWS ============== */
-  section.gallery{ border-top:1px solid var(--line); background:var(--white); padding:26px 20px 60px; }
+  section.gallery{ border-top:1px solid var(--line); background:var(--white); padding:26px 16px 60px; }
   .gallery-inner{ max-width:1000px; margin:0 auto; }
   .gallery-title{ text-align:center; font-family:'EB Garamond',serif; font-size:18px; margin-bottom:6px; }
-  .gallery-empty{ text-align:center; color:var(--ink-soft); opacity:.6; font-size:12px;
+  .gallery-empty{ text-align:center; color:var(--ink-soft); opacity:.6; font-size:11.5px;
     letter-spacing:.08em; text-transform:uppercase; padding:10px 0 4px; }
-  .gallery-cards{ display:flex; flex-direction:column; gap:34px; margin-top:20px; }
+  .gallery-cards{ display:flex; flex-direction:column; gap:40px; margin-top:22px; }
 
   .gcard{ animation:cardIn .3s ease both; }
   @keyframes cardIn{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+
+  /* logo centred at the top of every pinned view */
+  .card-logo{ display:block; width:120px; max-width:38%; height:auto; margin:0 auto 14px; }
+
   .gcard-image{ position:relative; width:100%; background:var(--ivory-deep); border:1px solid var(--line); overflow:hidden; }
   .gcard-image img.shot{ width:100%; height:auto; display:block; }
-  .gcard-image .ph{ padding:90px 0; text-align:center; font-family:'EB Garamond',serif; font-size:40px; color:var(--ink-soft); opacity:.35; }
+  .gcard-image .ph{ padding:80px 0; text-align:center; font-family:'EB Garamond',serif; font-size:38px; color:var(--ink-soft); opacity:.35; }
   .gcard-image .tag{ position:absolute; top:12px; left:14px; font-family:'EB Garamond',serif; font-size:15px;
     color:var(--ivory); background:rgba(22,19,16,.55); padding:4px 12px; }
-  /* small F&S mark over the centre of every pinned view */
-  .watermark{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-    width:11%; min-width:64px; max-width:120px; opacity:.5; pointer-events:none; }
 
-  .gcard-tools{ display:flex; gap:18px; align-items:center; padding:9px 2px 0; flex-wrap:wrap; }
+  /* ratio-locked reference map under each pinned view */
+  .refmap{ position:relative; width:100%; max-width:420px; margin:14px auto 0;
+    aspect-ratio:var(--map-aspect); border:1px solid var(--line); overflow:hidden; background:var(--white); }
+  .refmap img{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .refmap img.r-tri{ opacity:var(--tri-opacity); z-index:1; }
+  .refmap img.r-dot{ z-index:2; }
+  .refcap{ text-align:center; font-size:9px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--ink-soft); opacity:.7; margin-top:6px; }
+
+  .gcard-tools{ display:flex; gap:16px; align-items:center; padding:12px 2px 0; flex-wrap:wrap; }
   .gcard-tools button{
-    background:none; border:none; padding:2px 0; color:var(--ink-soft);
-    font-size:10px; letter-spacing:.16em; text-transform:uppercase; transition:color .16s ease;
+    background:none; border:none; padding:3px 0; color:var(--ink-soft);
+    font-size:10px; letter-spacing:.14em; text-transform:uppercase; transition:color .16s ease;
   }
   .gcard-tools button:hover{ color:var(--brass); }
   .gcard-tools .spacer{ flex:1; }
   .gcard-tools .ord{ font-size:13px; letter-spacing:0; }
 
-  /* ============== EXPAND VIEW — 8x10 sheet ============== */
+  /* ============== PRESENTATION / FULLSCREEN ============== */
+  .present{
+    position:fixed; inset:0; z-index:170; background:#0d0b09; display:none;
+    flex-direction:column; color:var(--ivory);
+  }
+  .present.visible{ display:flex; }
+  .p-top{
+    display:flex; align-items:center; gap:8px; padding:10px 14px; flex:none; flex-wrap:wrap;
+    border-bottom:1px solid rgba(244,239,228,.16);
+  }
+  .p-top .p-label{ font-family:'EB Garamond',serif; font-size:16px; flex:1; min-width:120px; }
+  .p-top button{
+    border:1px solid rgba(244,239,228,.4); background:transparent; color:var(--ivory);
+    padding:6px 12px; font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+  }
+  .p-top button:hover{ background:var(--ivory); color:var(--ink); }
+  .p-top button.on{ background:var(--red); border-color:var(--red); color:#fff; }
+  .p-stage{ flex:1; position:relative; display:flex; align-items:center; justify-content:center;
+    min-height:0; padding:14px; }
+  .p-holder{ position:relative; max-width:100%; max-height:100%; line-height:0; }
+  .p-holder img{ display:block; max-width:100%; max-height:100%; width:auto; height:auto; }
+  .p-holder canvas{ position:absolute; inset:0; width:100%; height:100%; touch-action:none; cursor:crosshair; }
+  .p-holder.nodraw canvas{ pointer-events:none; cursor:default; }
+  .p-arrow{
+    position:absolute; top:50%; transform:translateY(-50%); width:52px; height:52px;
+    border:1px solid rgba(244,239,228,.4); background:rgba(13,11,9,.55); color:var(--ivory);
+    font-size:20px; display:flex; align-items:center; justify-content:center; z-index:5;
+  }
+  .p-arrow:hover{ background:var(--ivory); color:var(--ink); }
+  .p-arrow.prev{ left:14px; } .p-arrow.next{ right:14px; }
+  .p-count{ flex:none; text-align:center; padding:8px; font-size:10px; letter-spacing:.2em; opacity:.7; }
+
+  /* ============== EXPAND SHEET (8x10) ============== */
   .sheetwrap{
     position:fixed; inset:0; z-index:150; background:rgba(22,19,16,.72);
-    display:flex; align-items:flex-start; justify-content:center; padding:26px; overflow-y:auto;
+    display:flex; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto;
     opacity:0; visibility:hidden; transition:opacity .22s ease, visibility .22s ease;
   }
   .sheetwrap.visible{ opacity:1; visibility:visible; }
-  .sheet{
-    background:var(--white); width:min(100%,8in); aspect-ratio:8/10; padding:0.5in;
-    display:flex; flex-direction:column; box-shadow:0 24px 70px rgba(0,0,0,.4);
-  }
-  .sheet-head{ text-align:center; border-bottom:1px solid var(--line); padding-bottom:10px; flex:none; }
-  .sheet-head .l1{ font-family:'EB Garamond',serif; font-size:19px; letter-spacing:.05em; }
-  .sheet-head .l2{ font-size:10px; letter-spacing:.26em; text-transform:uppercase; color:var(--brass); margin-top:5px; }
-  .sheet-photo{ flex:1.35; min-height:0; margin-top:12px; position:relative; background:var(--ivory-deep); overflow:hidden; }
-  .sheet-photo img{ width:100%; height:100%; object-fit:contain; display:block; }
-  .sheet-mapcap{ font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-soft); opacity:.7; margin:10px 0 5px; text-align:center; flex:none; }
-  .sheet-map{ flex:1; min-height:0; position:relative; border:1px solid var(--line); overflow:hidden; background:var(--white); }
-  .sheet-map .sm-inner{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
-  .sheet-map .sm-stack{ position:relative; max-width:100%; max-height:100%; line-height:0; }
-  .sheet-map img{ display:block; max-width:100%; max-height:100%; width:auto; height:auto; }
-  .sheet-map img.ov{ position:absolute; inset:0; width:100%; height:100%; }
-  .sheet-map img.ov-dot{ opacity:1; z-index:2; }
+  .sheet{ background:var(--white); width:min(100%,8in); aspect-ratio:8/10; padding:0.45in;
+    display:flex; flex-direction:column; box-shadow:0 24px 70px rgba(0,0,0,.4); }
+  .sheet-logo{ display:block; width:100px; height:auto; margin:0 auto 8px; flex:none; }
+  .sheet-head{ text-align:center; border-bottom:1px solid var(--line); padding-bottom:8px; flex:none; }
+  .sheet-head .l1{ font-family:'EB Garamond',serif; font-size:18px; letter-spacing:.05em; }
+  .sheet-head .l2{ font-size:9px; letter-spacing:.24em; text-transform:uppercase; color:var(--brass); margin-top:4px; }
+  .sheet-photo{ flex:1.3; min-height:0; margin-top:10px; background:var(--ivory-deep); overflow:hidden;
+    display:flex; align-items:center; justify-content:center; }
+  .sheet-photo img{ max-width:100%; max-height:100%; width:auto; height:auto; display:block; }
+  .sheet-mapcap{ font-size:8.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-soft);
+    opacity:.7; margin:8px 0 4px; text-align:center; flex:none; }
+  .sheet-map{ flex:none; width:min(100%,3.1in); margin:0 auto; aspect-ratio:var(--map-aspect);
+    position:relative; border:1px solid var(--line); overflow:hidden; }
+  .sheet-map img{ position:absolute; inset:0; width:100%; height:100%; display:block; }
   .sheet-map img.ov-tri{ opacity:var(--tri-opacity); z-index:1; }
-  .sheet-foot{ flex:none; display:flex; justify-content:space-between; align-items:center;
-    border-top:1px solid var(--line); margin-top:10px; padding-top:8px;
-    font-size:8.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-soft); }
-  .sheet-close{ position:fixed; top:18px; right:24px; background:none; border:none; color:var(--ivory);
+  .sheet-map img.ov-dot{ z-index:2; }
+  .sheet-foot{ flex:none; display:flex; justify-content:space-between; border-top:1px solid var(--line);
+    margin-top:8px; padding-top:6px; font-size:8px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); }
+  .sheet-close{ position:fixed; top:16px; right:20px; background:none; border:none; color:var(--ivory);
     font-size:11px; letter-spacing:.18em; text-transform:uppercase; z-index:160; }
 
-  /* ============== PRESENTATION MODE ============== */
-  body.presenting section.gallery{ background:var(--ivory-deep); }
-  body.presenting .gcard{
-    background:var(--white); padding:0.4in; border:1px solid var(--line);
-    box-shadow:0 10px 30px rgba(20,16,10,.10);
-  }
-  body.presenting .gcard-tools{ padding-top:12px; }
-
-  .cover{ display:none; }
-
   /* ============== PRINT / PDF ============== */
+  .cover, .mapsheet{ display:none; }
   @page{ size:8.5in 11in; margin:0.5in; }
   @media print{
-    html,body{ height:auto; background:var(--white); }
-    #splash, header.topbar, .hint, .plan-wrap, .widget, .flash,
-    .gallery-title, .gallery-empty, .gcard-tools, .missing-note, .sheetwrap{ display:none !important; }
+    html,body{ height:auto; background:#fff; }
+    #splash, header.topbar, .hint, .plan-wrap, .flash, .gallery-title,
+    .gallery-empty, .gcard-tools, .missing-note, .sheetwrap, .present{ display:none !important; }
     #app{ position:static; opacity:1; overflow:visible; display:block; }
     main.stage{ overflow:visible; background:none; }
     section.gallery{ border:none; padding:0; background:none; }
     .gallery-cards{ display:block; margin:0; }
+
     .cover{
       display:flex !important; flex-direction:column; align-items:center; justify-content:center;
       text-align:center; height:9.6in; break-after:page; page-break-after:always;
     }
-    .cover img{ width:80%; max-width:6in; height:auto; margin-bottom:0.5in; }
+    .cover img{ width:76%; max-width:5.6in; height:auto; margin-bottom:.45in; }
     .cover .c1{ font-family:'EB Garamond',serif; font-size:26pt; letter-spacing:.04em; }
     .cover .c2{ font-size:9pt; letter-spacing:.3em; text-transform:uppercase; color:var(--brass); margin-top:12pt; }
+
+    /* page 2 — the plan with every pinned marker on it */
+    .mapsheet{
+      display:flex !important; flex-direction:column; align-items:center; justify-content:flex-start;
+      height:9.6in; break-after:page; page-break-after:always; text-align:center;
+    }
+    .mapsheet .ms-logo{ width:1.5in; height:auto; margin:0 auto .18in; }
+    .mapsheet .ms-title{ font-family:'EB Garamond',serif; font-size:15pt; margin-bottom:.05in; }
+    .mapsheet .ms-sub{ font-size:8pt; letter-spacing:.22em; text-transform:uppercase; color:var(--brass); margin-bottom:.2in; }
+    .mapsheet .ms-map{ position:relative; width:100%; aspect-ratio:var(--map-aspect);
+      border:1px solid var(--line); overflow:hidden; }
+    .mapsheet .ms-map img{ position:absolute; inset:0; width:100%; height:100%; }
+    .mapsheet .ms-map img.m-tri{ opacity:var(--tri-opacity); z-index:1; }
+    .mapsheet .ms-map img.m-dot{ z-index:2; }
+
     .gcard{
       break-inside:avoid; page-break-inside:avoid; break-after:page; page-break-after:always;
-      padding:0; border:none; box-shadow:none; margin:0;
-      height:9.4in; display:flex; flex-direction:column;
+      height:9.5in; display:flex; flex-direction:column; margin:0; padding:0;
     }
     .gcard:last-child{ break-after:auto; page-break-after:auto; }
+    .card-logo{ width:1.35in; max-width:none; margin:0 auto .12in; }
     .gcard-image{ border:none; flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
     .gcard-image img.shot{ max-height:100%; width:auto; max-width:100%; object-fit:contain; }
+    .gcard-image .tag{ display:none; }
+    .refmap{ flex:none; width:2.9in; max-width:2.9in; margin:.14in auto 0; }
     .print-foot{ display:flex !important; }
-    .watermark{ opacity:.42; }
   }
   .print-foot{ display:none; justify-content:space-between; border-top:1px solid var(--line);
-    margin-top:10pt; padding-top:6pt; font-size:8pt; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); }
+    margin-top:10pt; padding-top:6pt; font-size:8pt; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); }
 
-  @media (max-width:820px){
-    .widget{ width:44%; min-width:170px; }
+  /* ============== RESPONSIVE ============== */
+  @media (max-width:900px){
+    .widget{ width:min(52%,300px); }
+    .card-logo{ width:96px; }
+  }
+  @media (max-width:620px){
+    .plan-wrap{ padding:10px 10px 4px; }
+    .widget{ width:auto; left:10px; right:10px; top:auto; bottom:10px; max-height:56%; }
+    .widget .w-photo{ aspect-ratio:16/9; }
+    .zoombar{ left:8px; bottom:8px; }
+    section.gallery{ padding:20px 12px 50px; }
+    .gcard-tools{ gap:12px; }
+    .p-arrow{ width:42px; height:42px; font-size:17px; }
+    .p-arrow.prev{ left:6px; } .p-arrow.next{ right:6px; }
+    .sheet{ padding:16px; aspect-ratio:auto; }
   }
 </style>
 </head>
@@ -279,7 +386,7 @@
 
   <div id="splash">
     <div class="splash-inner">
-      <div class="splash-eyebrow">150 Worth Avenue · Palm Beach, Florida</div>
+      <div class="splash-eyebrow">150 Worth Avenue &middot; Palm Beach, Florida</div>
       <h1 class="splash-title serif">BURLINGTON</h1>
       <div class="splash-sub serif">The Arcade Viewer</div>
       <div class="splash-rule"></div>
@@ -291,13 +398,13 @@
     <header class="topbar">
       <div class="brandblock">
         <div class="title serif">The Burlington Arcade Viewer</div>
-        <div class="addr">150 Worth Ave · Palm Beach, FL</div>
+        <div class="addr">150 Worth Ave &middot; Palm Beach, FL</div>
       </div>
       <div class="toolrow">
-        <a href="../">← Dashboard</a>
+        <a href="../">&larr; Dashboard</a>
         <a href="#" id="interiorEditorLink" target="_blank" rel="noopener">Interior Editor</a>
         <a href="#" id="exteriorEditorLink" target="_blank" rel="noopener">Exterior Editor</a>
-        <button type="button" id="btnPresent">View as Presentation</button>
+        <button type="button" id="btnPresent">Presentation</button>
         <button type="button" id="btnPdf">Download PDF</button>
       </div>
       <div class="page-text serif" id="pageText"></div>
@@ -306,38 +413,71 @@
     <div class="missing-note" id="missingNote"></div>
 
     <main class="stage" id="stage">
-      <div class="plan-wrap">
-        <div class="plan-frame" id="planFrame">
-          <img class="base" id="baseLayer" alt="150 Worth Avenue floor plan" draggable="false">
-
-          <!-- side widget: overlays the map, never displaces it -->
-          <aside class="widget" id="widget">
-            <div class="widget-head">
-              <span class="wtitle" id="wTitle">View</span>
-              <button type="button" id="wMin" title="Minimise">–</button>
-            </div>
-            <div class="widget-body">
-              <div class="w-photo" id="wPhoto"><div class="ph serif">–</div></div>
-              <div class="w-floor" id="wFloor">First Floor View</div>
-              <div class="w-croplabel">Location on plan</div>
-              <div class="crop" id="wCrop"></div>
-              <div class="w-hint" id="wHint">Click the marker to pin this view below.</div>
-            </div>
-          </aside>
-
-          <div class="flash" id="flash">Image added below ↓</div>
+      <div class="plan-wrap" id="planWrap">
+        <div class="plan-viewport" id="planViewport">
+          <div class="plan-frame" id="planFrame">
+            <img class="base" id="baseLayer" alt="150 Worth Avenue floor plan" draggable="false">
+          </div>
+          <div class="zoombar">
+            <button type="button" id="zOut" title="Zoom out">&minus;</button>
+            <button type="button" class="lbl" id="zReset" title="Fit">Fit</button>
+            <button type="button" id="zIn" title="Zoom in">+</button>
+          </div>
+          <div class="flash" id="flash">Image added below</div>
         </div>
+
+        <!-- draggable / resizable widget, sections collapse independently -->
+        <aside class="widget" id="widget">
+          <div class="widget-head" id="wHead">
+            <span class="wtitle" id="wTitle">View</span>
+            <button type="button" id="wMin" title="Minimise">&ndash;</button>
+            <button type="button" id="wClose" title="Close">&times;</button>
+          </div>
+          <div class="widget-scroll">
+            <div class="sect" id="sectPhoto">
+              <div class="sect-head" data-toggle="sectPhoto"><span>Rendering</span><span class="chev">&#9660;</span></div>
+              <div class="sect-body">
+                <div class="w-photo" id="wPhoto"><div class="ph serif">&ndash;</div></div>
+                <div class="w-floor" id="wFloor">First Floor View</div>
+              </div>
+            </div>
+            <div class="sect" id="sectMap">
+              <div class="sect-head" data-toggle="sectMap"><span>Location on plan</span><span class="chev">&#9660;</span></div>
+              <div class="sect-body">
+                <div class="cropwrap">
+                  <div class="crop" id="wCrop"><div class="crop-inner" id="wCropInner"></div></div>
+                  <div class="cropbar">
+                    <button type="button" id="cOut">&minus;</button>
+                    <button type="button" id="cReset">Centre</button>
+                    <button type="button" id="cIn">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="w-hint" id="wHint">Click the marker to pin this view below.</div>
+          </div>
+          <div class="resize" id="wResize" title="Resize"></div>
+        </aside>
       </div>
 
-      <div class="hint">Hover a marker to preview · click to pin it below</div>
+      <div class="hint">Hover a marker to preview &middot; click to pin it below &middot; drag the plan to pan, scroll to zoom</div>
 
       <section class="gallery">
         <div class="gallery-inner">
+
           <div class="cover">
             <img src="burlington-header.png" alt="Burlington Arcade">
             <div class="c1 serif">Burlington Arcade</div>
-            <div class="c2">150 Worth Ave — Palm Beach</div>
+            <div class="c2">150 Worth Ave &mdash; Palm Beach</div>
           </div>
+
+          <div class="mapsheet" id="mapSheet">
+            <img class="ms-logo" src="fs-logo-black.png" alt="">
+            <div class="ms-title serif">Selected Views</div>
+            <div class="ms-sub">150 Worth Ave &mdash; Palm Beach</div>
+            <div class="ms-map" id="msMap"></div>
+          </div>
+
           <div class="gallery-title serif">Pinned Views</div>
           <div class="gallery-empty" id="galleryEmpty">Click any marker above to add it here</div>
           <div class="gallery-cards" id="galleryCards"></div>
@@ -346,20 +486,43 @@
     </main>
   </div>
 
-  <!-- ============== EXPAND VIEW SHEET ============== -->
+  <!-- ============== PRESENTATION ============== -->
+  <div class="present" id="present">
+    <div class="p-top">
+      <span class="p-label serif" id="pLabel">View</span>
+      <button type="button" id="pDraw">Draw</button>
+      <button type="button" id="pErase">Eraser</button>
+      <button type="button" id="pClear">Clear</button>
+      <button type="button" id="pDownload">Download</button>
+      <button type="button" id="pFull">Full Screen</button>
+      <button type="button" id="pClose">Close</button>
+    </div>
+    <div class="p-stage">
+      <button class="p-arrow prev" id="pPrev" type="button">&#8249;</button>
+      <div class="p-holder nodraw" id="pHolder">
+        <img id="pImg" alt="">
+        <canvas id="pCanvas"></canvas>
+      </div>
+      <button class="p-arrow next" id="pNext" type="button">&#8250;</button>
+    </div>
+    <div class="p-count" id="pCount"></div>
+  </div>
+
+  <!-- ============== EXPAND SHEET ============== -->
   <div class="sheetwrap" id="sheetWrap">
     <button class="sheet-close" id="sheetClose" type="button">Close</button>
-    <div class="sheet" id="sheet">
+    <div class="sheet">
+      <img class="sheet-logo" src="fs-logo-black.png" alt="">
       <div class="sheet-head">
         <div class="l1 serif" id="sheetTitle">Burlington Arcade View</div>
         <div class="l2" id="sheetSub">View</div>
       </div>
       <div class="sheet-photo" id="sheetPhoto"></div>
       <div class="sheet-mapcap">Location on plan</div>
-      <div class="sheet-map"><div class="sm-inner"><div class="sm-stack" id="sheetMap"></div></div></div>
+      <div class="sheet-map" id="sheetMap"></div>
       <div class="sheet-foot">
         <span>Fairfax &amp; Sammons Architecture</span>
-        <span>150 Worth Ave — Palm Beach</span>
+        <span>150 Worth Ave &mdash; Palm Beach</span>
       </div>
     </div>
   </div>
@@ -368,13 +531,10 @@
 /* =====================================================================
    CONFIG
    ===================================================================== */
+const INTERIOR_EDITOR_LINK = "../esplanade/";
+const EXTERIOR_EDITOR_LINK = "";
+const PAGE_TEXT = "";
 
-const INTERIOR_EDITOR_LINK = "../esplanade/";   // the live facade editor
-const EXTERIOR_EDITOR_LINK = "";                // paste when it exists
-const PAGE_TEXT = "";                           // optional blurb under the title
-
-// Which floor each view sits on. Everything defaults to First Floor —
-// change the ones that are wrong and the widget/sheets update themselves.
 const VIEW_FLOORS = {
   V1:"First Floor",  V2:"First Floor",  V3:"First Floor",  V4:"First Floor",
   V5:"Second Floor", V6:"Second Floor", V7:"First Floor",  V8:"First Floor",
@@ -383,7 +543,6 @@ const VIEW_FLOORS = {
   V17:"First Floor"
 };
 
-// Per-view "Go to Editor" links. Paste a URL to switch one on.
 const VIEW_EDITOR_LINKS = {
   V1:"",  V2:"",  V3:"",  V4:"",  V5:"",  V6:"",  V7:"",  V8:"",  V9:"",
   V10:"", V11:"", V12:"", V13:"", V14:"", V15:"", V16:"", V17:""
@@ -391,7 +550,6 @@ const VIEW_EDITOR_LINKS = {
 
 const BASE_LAYER = "VIEWS-OF-BURLINGTON_0051_BASE-LAYER.png";
 
-/* Exact filenames. No guessing — this is the fix for views 10 and 14.  */
 const VIEW_FILES = {
   V1:  { dot:"VIEWS-OF-BURLINGTON_0032_VIEW-1-(1).png",  tri:"VIEWS-OF-BURLINGTON_0033_VIEW-1-(2).png",  image:"VIEWS-OF-BURLINGTON_0050_VIEW-1-IMAGE.jpg"  },
   V2:  { dot:"VIEWS-OF-BURLINGTON_0030_VIEW-2-(1).png",  tri:"VIEWS-OF-BURLINGTON_0031_VIEW-2-(2).png",  image:"VIEWS-OF-BURLINGTON_0049_VIEW-2-IMAGE.jpg"  },
@@ -412,58 +570,58 @@ const VIEW_FILES = {
   V17: { dot:"VIEWS-OF-BURLINGTON_0000_VIEW-17-(1).png", tri:"VIEWS-OF-BURLINGTON_0001_VIEW-17-(2).png", image:"VIEWS-OF-BURLINGTON_0034_VIEW-17-IMAGE.jpg" }
 };
 
+/* Marker positions measured directly from each dot PNG on 2026-08-20.
+   V10 and V14 were wrong before, which is why they never responded. */
 const VIEWS = [
-  {n:1,id:"V1",label:"VIEW 1",x_pct:15.689,y_pct:45.872},
-  {n:2,id:"V2",label:"VIEW 2",x_pct:8.622,y_pct:47.2},
-  {n:3,id:"V3",label:"VIEW 3",x_pct:91.467,y_pct:44.037},
-  {n:4,id:"V4",label:"VIEW 4",x_pct:18.044,y_pct:25.815},
-  {n:5,id:"V5",label:"VIEW 5",x_pct:84.044,y_pct:8.858},
-  {n:6,id:"V6",label:"VIEW 6",x_pct:90.844,y_pct:9.174},
-  {n:7,id:"V7",label:"VIEW 7",x_pct:18.044,y_pct:50.68},
-  {n:8,id:"V8",label:"VIEW 8",x_pct:25.644,y_pct:22.461},
-  {n:9,id:"V9",label:"VIEW 9",x_pct:29.733,y_pct:20.626},
-  {n:10,id:"V10",label:"VIEW 10",x_pct:56.4,y_pct:73.205},
-  {n:11,id:"V11",label:"VIEW 11",x_pct:34.444,y_pct:77.254},
-  {n:12,id:"V12",label:"VIEW 12",x_pct:33.556,y_pct:25.055},
-  {n:13,id:"V13",label:"VIEW 13",x_pct:39.733,y_pct:25.372},
-  {n:14,id:"V14",label:"VIEW 14",x_pct:28.578,y_pct:73.015},
-  {n:15,id:"V15",label:"VIEW 15",x_pct:59.156,y_pct:31.129},
-  {n:16,id:"V16",label:"VIEW 16",x_pct:61.156,y_pct:35.432},
-  {n:17,id:"V17",label:"VIEW 17",x_pct:61.244,y_pct:50.68}
+  {n:1, id:"V1",  label:"VIEW 1",  x_pct:15.7, y_pct:45.7},
+  {n:2, id:"V2",  label:"VIEW 2",  x_pct:8.5,  y_pct:47.2},
+  {n:3, id:"V3",  label:"VIEW 3",  x_pct:91.5, y_pct:44.1},
+  {n:4, id:"V4",  label:"VIEW 4",  x_pct:18.0, y_pct:25.8},
+  {n:5, id:"V5",  label:"VIEW 5",  x_pct:84.2, y_pct:8.8},
+  {n:6, id:"V6",  label:"VIEW 6",  x_pct:90.8, y_pct:9.2},
+  {n:7, id:"V7",  label:"VIEW 7",  x_pct:18.0, y_pct:50.7},
+  {n:8, id:"V8",  label:"VIEW 8",  x_pct:25.7, y_pct:22.5},
+  {n:9, id:"V9",  label:"VIEW 9",  x_pct:29.8, y_pct:20.6},
+  {n:10,id:"V10", label:"VIEW 10", x_pct:33.2, y_pct:74.2},
+  {n:11,id:"V11", label:"VIEW 11", x_pct:34.5, y_pct:77.3},
+  {n:12,id:"V12", label:"VIEW 12", x_pct:33.5, y_pct:25.1},
+  {n:13,id:"V13", label:"VIEW 13", x_pct:39.8, y_pct:25.4},
+  {n:14,id:"V14", label:"VIEW 14", x_pct:36.0, y_pct:73.2},
+  {n:15,id:"V15", label:"VIEW 15", x_pct:59.2, y_pct:31.0},
+  {n:16,id:"V16", label:"VIEW 16", x_pct:61.2, y_pct:35.3},
+  {n:17,id:"V17", label:"VIEW 17", x_pct:61.2, y_pct:50.7}
 ];
 
-const CROP_ZOOM = 4.5;   // how tight the little square detail is
-
 /* =====================================================================
-   APP
+   HELPERS
    ===================================================================== */
 const byId = id => document.getElementById(id);
-const els = {
-  splash:byId('splash'), app:byId('app'), stage:byId('stage'),
-  baseLayer:byId('baseLayer'), planFrame:byId('planFrame'),
-  widget:byId('widget'), wTitle:byId('wTitle'), wPhoto:byId('wPhoto'),
-  wFloor:byId('wFloor'), wCrop:byId('wCrop'), wHint:byId('wHint'), wMin:byId('wMin'),
-  flash:byId('flash'),
-  galleryCards:byId('galleryCards'), galleryEmpty:byId('galleryEmpty'),
-  interiorEditorLink:byId('interiorEditorLink'), exteriorEditorLink:byId('exteriorEditorLink'),
-  pageText:byId('pageText'), missingNote:byId('missingNote'),
-  sheetWrap:byId('sheetWrap'), sheet:byId('sheet'), sheetTitle:byId('sheetTitle'),
-  sheetSub:byId('sheetSub'), sheetPhoto:byId('sheetPhoto'), sheetMap:byId('sheetMap'),
-  sheetClose:byId('sheetClose'),
-  btnPresent:byId('btnPresent'), btnPdf:byId('btnPdf')
-};
+const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
+const viewById = id => VIEWS.find(v => v.id === id);
+
+const els = {};
+["splash","app","stage","planWrap","planViewport","planFrame","baseLayer",
+ "zIn","zOut","zReset","flash","widget","wHead","wTitle","wMin","wClose",
+ "wPhoto","wFloor","wCrop","wCropInner","wHint","wResize","cIn","cOut","cReset",
+ "galleryCards","galleryEmpty","interiorEditorLink","exteriorEditorLink",
+ "pageText","missingNote","mapSheet","msMap",
+ "present","pLabel","pDraw","pErase","pClear","pDownload","pFull","pClose",
+ "pPrev","pNext","pHolder","pImg","pCanvas","pCount",
+ "sheetWrap","sheetClose","sheetTitle","sheetSub","sheetPhoto","sheetMap",
+ "btnPresent","btnPdf"].forEach(k => els[k] = byId(k));
 
 const state = {
-  isTouch: matchMedia("(hover: none), (pointer: coarse)").matches,
-  pinnedOrder: [],       // array of view ids, in display order
-  widgetLocked: null,    // a pinned view keeps the widget showing
-  baseW: 0, baseH: 0
+  isTouch: matchMedia("(hover:none),(pointer:coarse)").matches,
+  pinned: [],            // view ids in display order
+  locked: null,          // view the widget is holding
+  plan: {z:1, x:0, y:0},
+  crop: {z:4.5, x:0, y:0, view:null},
+  present: {i:0, drawing:false, erasing:false, strokes:{}}
 };
 const groups = new Map();
 const missing = [];
 
 els.pageText.textContent = PAGE_TEXT;
-byId('wMin').addEventListener('click', e => { e.stopPropagation(); els.widget.classList.toggle('min'); });
 
 function wireLink(el, url){
   if(url){ el.href = url; el.classList.remove('disabled'); }
@@ -472,32 +630,40 @@ function wireLink(el, url){
 wireLink(els.interiorEditorLink, INTERIOR_EDITOR_LINK);
 wireLink(els.exteriorEditorLink, EXTERIOR_EDITOR_LINK);
 
-/* ---- splash ---- */
 els.splash.addEventListener('click', () => {
   els.splash.classList.add('hidden');
   els.app.classList.add('visible');
 });
 
-/* ---- build the plan immediately (do not wait for the splash click) ---- */
-buildPlan();
-
 function noteMissing(what){
   missing.push(what);
   els.missingNote.classList.add('visible');
   const shown = missing.slice(0,4).join(', ');
-  const more = missing.length > 4 ? ` (+${missing.length-4} more)` : '';
-  els.missingNote.textContent =
-    `These files could not be loaded: ${shown}${more}. They should sit in this same folder with these exact names.`;
+  const more = missing.length > 4 ? ' (+' + (missing.length-4) + ' more)' : '';
+  els.missingNote.textContent = 'These files could not be loaded: ' + shown + more +
+    '. They should sit in this folder with these exact names.';
 }
 
+/* image cache — every picture is fetched at most once */
+const imgCache = new Map();
+function getImage(src){
+  if(imgCache.has(src)) return imgCache.get(src);
+  const p = new Promise(resolve => {
+    const im = new Image();
+    im.decoding = 'async';
+    im.onload = () => resolve(src);
+    im.onerror = () => { noteMissing(src); resolve(null); };
+    im.src = src;
+  });
+  imgCache.set(src, p);
+  return p;
+}
+
+/* =====================================================================
+   THE PLAN — build, pan, zoom (uniform scale, ratio can never break)
+   ===================================================================== */
 function buildPlan(){
   els.baseLayer.decoding = 'async';
-  els.baseLayer.addEventListener('load', () => {
-    state.baseW = els.baseLayer.naturalWidth;
-    state.baseH = els.baseLayer.naturalHeight;
-    // if the widget was already open before the plan finished loading, redraw the crop
-    if(state.widgetLocked && els.widget.classList.contains("visible")) drawCrop(viewById(state.widgetLocked));
-  }, {once:true});
   els.baseLayer.addEventListener('error', () => noteMissing(BASE_LAYER), {once:true});
   els.baseLayer.src = BASE_LAYER;
 
@@ -507,26 +673,20 @@ function buildPlan(){
     group.className = 'view-group';
     group.dataset.id = v.id;
 
-    // (2) sightline — created empty and only fetched on first hover/pin.
-    // 17 fewer full-canvas PNGs on first paint is most of the speed-up.
     const tri = document.createElement('img');
     tri.className = 'layer-img layer-tri';
-    tri.alt = v.label + ' sightline';
-    tri.decoding = 'async';
+    tri.alt = ''; tri.decoding = 'async';
     group.appendChild(tri);
 
-    // (1) marker dot — needed straight away, it is what you aim at
     const dot = document.createElement('img');
     dot.className = 'layer-img layer-dot';
-    dot.alt = v.label + ' marker';
-    dot.decoding = 'async';
+    dot.alt = v.label + ' marker'; dot.decoding = 'async';
     dot.addEventListener('error', () => noteMissing(files.dot), {once:true});
     dot.src = files.dot;
     group.appendChild(dot);
 
     const hit = document.createElement('button');
-    hit.className = 'hit';
-    hit.type = 'button';
+    hit.className = 'hit'; hit.type = 'button';
     hit.style.left = v.x_pct + '%';
     hit.style.top  = v.y_pct + '%';
     hit.setAttribute('aria-label', v.label);
@@ -539,16 +699,12 @@ function buildPlan(){
       hit.addEventListener('mouseenter', () => { loadTri(v.id); group.classList.add('is-hot'); showWidget(v); });
       hit.addEventListener('mouseleave', () => {
         group.classList.remove('is-hot');
-        if(state.widgetLocked) showWidget(viewById(state.widgetLocked));
-        else hideWidget();
+        if(state.locked) showWidget(viewById(state.locked)); else hideWidget();
       });
     }
     hit.addEventListener('click', e => { e.stopPropagation(); loadTri(v.id); togglePin(v); });
   });
 }
-
-const viewById = id => VIEWS.find(v => v.id === id);
-
 function loadTri(id){
   const g = groups.get(id);
   if(g.triLoaded) return;
@@ -556,25 +712,106 @@ function loadTri(id){
   g.tri.addEventListener('error', () => noteMissing(g.files.tri), {once:true});
   g.tri.src = g.files.tri;
 }
+buildPlan();
 
-/* ---- image cache so a view is only fetched once ---- */
-const imgCache = new Map();
-function getImage(src){
-  if(imgCache.has(src)) return imgCache.get(src);
-  const p = new Promise(resolve => {
-    const im = new Image();
-    im.decoding = 'async';
-    im.onload = () => resolve(src);
-    im.onerror = () => resolve(null);
-    im.src = src;
+function applyPlan(){
+  const p = state.plan;
+  const vp = els.planViewport;
+  const w = vp.clientWidth, h = vp.clientHeight;
+  // never let the plan be dragged away from the frame
+  const maxX = 0, minX = w - w*p.z;
+  const maxY = 0, minY = h - h*p.z;
+  p.x = clamp(p.x, minX, maxX);
+  p.y = clamp(p.y, minY, maxY);
+  els.planFrame.style.transform = 'translate(' + p.x + 'px,' + p.y + 'px) scale(' + p.z + ')';
+}
+function zoomPlanAt(factor, cx, cy){
+  const p = state.plan;
+  const z2 = clamp(p.z * factor, 1, 8);
+  const r = z2 / p.z;
+  p.x = cx - (cx - p.x) * r;
+  p.y = cy - (cy - p.y) * r;
+  p.z = z2;
+  applyPlan();
+}
+els.zIn.addEventListener('click', () => { const b = els.planViewport.getBoundingClientRect(); zoomPlanAt(1.4, b.width/2, b.height/2); });
+els.zOut.addEventListener('click', () => { const b = els.planViewport.getBoundingClientRect(); zoomPlanAt(1/1.4, b.width/2, b.height/2); });
+els.zReset.addEventListener('click', () => { state.plan = {z:1,x:0,y:0}; applyPlan(); });
+
+els.planViewport.addEventListener('wheel', e => {
+  e.preventDefault();
+  const b = els.planViewport.getBoundingClientRect();
+  zoomPlanAt(e.deltaY < 0 ? 1.13 : 1/1.13, e.clientX - b.left, e.clientY - b.top);
+}, {passive:false});
+
+/* one pointer = pan, two fingers = pinch. Same code path for mouse/touch/pen. */
+makePannable(els.planViewport, state.plan, applyPlan, () => els.planViewport.getBoundingClientRect(),
+             f => clamp(f, 1, 8), '.hit');
+
+function makePannable(surface, model, apply, rect, zclamp, ignoreSel){
+  const pts = new Map();
+  let start = null;
+
+  surface.addEventListener('pointerdown', e => {
+    if(ignoreSel && e.target.closest(ignoreSel)) return;
+    surface.setPointerCapture(e.pointerId);
+    pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if(pts.size === 1){
+      start = {x:e.clientX, y:e.clientY, mx:model.x, my:model.y};
+      surface.classList.add('grabbing');
+    } else if(pts.size === 2){
+      const [a,b] = [...pts.values()];
+      start = {dist:Math.hypot(a.x-b.x, a.y-b.y), z:model.z,
+               cx:(a.x+b.x)/2, cy:(a.y+b.y)/2, mx:model.x, my:model.y};
+    }
   });
-  imgCache.set(src, p);
-  return p;
+
+  surface.addEventListener('pointermove', e => {
+    if(!pts.has(e.pointerId)) return;
+    pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    const r = rect();
+
+    if(pts.size === 1 && start){
+      model.x = start.mx + (e.clientX - start.x);
+      model.y = start.my + (e.clientY - start.y);
+      apply();
+    } else if(pts.size === 2 && start && start.dist){
+      const [a,b] = [...pts.values()];
+      const d = Math.hypot(a.x-b.x, a.y-b.y);
+      const z2 = zclamp(start.z * (d / start.dist));
+      const cx = start.cx - r.left, cy = start.cy - r.top;
+      const ratio = z2 / start.z;
+      model.x = cx - (cx - start.mx) * ratio;
+      model.y = cy - (cy - start.my) * ratio;
+      model.z = z2;
+      apply();
+    }
+  });
+
+  const end = e => {
+    pts.delete(e.pointerId);
+    if(pts.size === 0){ start = null; surface.classList.remove('grabbing'); }
+  };
+  surface.addEventListener('pointerup', end);
+  surface.addEventListener('pointercancel', end);
 }
 
+window.addEventListener('resize', () => { applyPlan(); if(state.crop.view) applyCrop(); });
+
 /* =====================================================================
-   SIDE WIDGET
+   WIDGET
    ===================================================================== */
+document.querySelectorAll('.sect-head').forEach(h => {
+  h.addEventListener('click', () => byId(h.dataset.toggle).classList.toggle('closed'));
+});
+els.wMin.addEventListener('click', e => { e.stopPropagation(); els.widget.classList.toggle('min'); });
+els.wClose.addEventListener('click', e => {
+  e.stopPropagation();
+  state.locked = null;
+  groups.forEach(g => g.group.classList.remove('is-hot'));
+  hideWidget();
+});
+
 let widgetSeq = 0;
 function showWidget(v){
   if(!v) return;
@@ -584,47 +821,120 @@ function showWidget(v){
   els.widget.classList.add('visible');
   els.wTitle.textContent = v.label;
   els.wFloor.textContent = (VIEW_FLOORS[v.id] || 'First Floor') + ' View';
-  els.wHint.textContent = state.pinnedOrder.includes(v.id)
+  els.wHint.textContent = state.pinned.includes(v.id)
     ? 'Pinned below. Click the marker again to unpin.'
     : 'Click the marker to pin this view below.';
 
-  els.wPhoto.innerHTML = `<div class="ph serif">${v.n}</div>`;
+  els.wPhoto.innerHTML = '<div class="ph serif">' + v.n + '</div>';
   getImage(files.image).then(src => {
     if(seq !== widgetSeq || !src) return;
     const im = new Image();
     im.src = src; im.alt = v.label; im.decoding = 'async';
-    els.wPhoto.innerHTML = '';
-    els.wPhoto.appendChild(im);
+    els.wPhoto.innerHTML = ''; els.wPhoto.appendChild(im);
   });
 
-  drawCrop(v);
+  buildCrop(v);
 }
 function hideWidget(){ els.widget.classList.remove('visible'); }
 
-/* Square detail of the plan, centred on this view's marker. Built from the
-   same base + (1) + (2) files already loaded — no extra downloads. */
-function drawCrop(v){
-  const box = els.wCrop;
-  box.innerHTML = '';
-  if(!state.baseW) return;
-
+/* the plan detail: same three files, its own zoom/pan, ratio locked */
+function buildCrop(v){
   const files = VIEW_FILES[v.id];
-  const w = box.clientWidth || 220;
-  const imgW = w * CROP_ZOOM;
-  const imgH = imgW * (state.baseH / state.baseW);
-  const left = w/2 - (v.x_pct/100) * imgW;
-  const top  = w/2 - (v.y_pct/100) * imgH;
-
-  [[BASE_LAYER,'c-base'], [files.tri,'c-tri'], [files.dot,'c-dot']].forEach(([src, cls]) => {
-    const im = document.createElement('img');
-    im.className = cls;
-    im.src = src;
-    im.style.width = imgW + 'px';
-    im.style.left = left + 'px';
-    im.style.top = top + 'px';
-    box.appendChild(im);
-  });
+  if(state.crop.view !== v.id){
+    state.crop.view = v.id;
+    state.crop.z = 4.5;
+    els.wCropInner.innerHTML = '';
+    [[BASE_LAYER,'c-base'], [files.tri,'c-tri'], [files.dot,'c-dot']].forEach(([src,cls]) => {
+      const im = document.createElement('img');
+      im.className = cls; im.src = src; im.alt = '';
+      els.wCropInner.appendChild(im);
+    });
+    centreCrop(v);
+  }
+  applyCrop();
 }
+function centreCrop(v){
+  const box = els.wCrop;
+  const w = box.clientWidth || 240, h = box.clientHeight || 240;
+  const z = state.crop.z;
+  const iw = w * z;
+  const ih = iw * (3161/4500);
+  state.crop.x = w/2 - (v.x_pct/100) * iw;
+  state.crop.y = h/2 - (v.y_pct/100) * ih;
+}
+function applyCrop(){
+  const c = state.crop;
+  els.wCropInner.style.transform = 'translate(' + c.x + 'px,' + c.y + 'px) scale(' + c.z + ')';
+}
+function zoomCrop(f){
+  const box = els.wCrop;
+  const w = box.clientWidth, h = box.clientHeight;
+  const c = state.crop;
+  const z2 = clamp(c.z * f, 1, 16);
+  const r = z2 / c.z;
+  c.x = w/2 - (w/2 - c.x) * r;
+  c.y = h/2 - (h/2 - c.y) * r;
+  c.z = z2;
+  applyCrop();
+}
+els.cIn.addEventListener('click',  e => { e.stopPropagation(); zoomCrop(1.4); });
+els.cOut.addEventListener('click', e => { e.stopPropagation(); zoomCrop(1/1.4); });
+els.cReset.addEventListener('click', e => {
+  e.stopPropagation();
+  const v = viewById(state.crop.view);
+  if(v){ state.crop.z = 4.5; centreCrop(v); applyCrop(); }
+});
+els.wCrop.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoomCrop(e.deltaY < 0 ? 1.15 : 1/1.15);
+}, {passive:false});
+makePannable(els.wCrop, state.crop, applyCrop, () => els.wCrop.getBoundingClientRect(), f => clamp(f,1,16), null);
+
+/* drag the widget by its header, anywhere over the plan */
+(function(){
+  let s = null;
+  els.wHead.addEventListener('pointerdown', e => {
+    if(e.target.tagName === 'BUTTON') return;
+    els.wHead.setPointerCapture(e.pointerId);
+    const w = els.widget.getBoundingClientRect();
+    const p = els.planWrap.getBoundingClientRect();
+    s = {x:e.clientX, y:e.clientY, l:w.left - p.left, t:w.top - p.top};
+    els.widget.style.right = 'auto'; els.widget.style.bottom = 'auto';
+    els.widget.style.left = s.l + 'px'; els.widget.style.top = s.t + 'px';
+    els.wHead.classList.add('grabbing');
+  });
+  els.wHead.addEventListener('pointermove', e => {
+    if(!s) return;
+    const p = els.planWrap.getBoundingClientRect();
+    const w = els.widget.getBoundingClientRect();
+    els.widget.style.left = clamp(s.l + e.clientX - s.x, 0, p.width  - w.width)  + 'px';
+    els.widget.style.top  = clamp(s.t + e.clientY - s.y, 0, p.height - w.height) + 'px';
+  });
+  const stop = () => { s = null; els.wHead.classList.remove('grabbing'); };
+  els.wHead.addEventListener('pointerup', stop);
+  els.wHead.addEventListener('pointercancel', stop);
+})();
+
+/* resize from the corner */
+(function(){
+  let s = null;
+  els.wResize.addEventListener('pointerdown', e => {
+    e.stopPropagation();
+    els.wResize.setPointerCapture(e.pointerId);
+    const w = els.widget.getBoundingClientRect();
+    s = {x:e.clientX, y:e.clientY, w:w.width, h:w.height};
+  });
+  els.wResize.addEventListener('pointermove', e => {
+    if(!s) return;
+    els.widget.style.width  = clamp(s.w + e.clientX - s.x, 170, 900) + 'px';
+    els.widget.style.maxHeight = 'none';
+    els.widget.style.height = clamp(s.h + e.clientY - s.y, 150, 1200) + 'px';
+    if(state.crop.view) applyCrop();
+  });
+  const stop = () => { s = null; };
+  els.wResize.addEventListener('pointerup', stop);
+  els.wResize.addEventListener('pointercancel', stop);
+})();
 
 /* =====================================================================
    PIN / UNPIN
@@ -634,168 +944,322 @@ function flash(msg){
   els.flash.textContent = msg;
   els.flash.classList.add('show');
   clearTimeout(flashTimer);
-  flashTimer = setTimeout(() => els.flash.classList.remove('show'), 1600);
+  flashTimer = setTimeout(() => els.flash.classList.remove('show'), 1500);
 }
 
 function togglePin(v){
   const g = groups.get(v.id);
-  const i = state.pinnedOrder.indexOf(v.id);
+  const i = state.pinned.indexOf(v.id);
   if(i > -1){
-    state.pinnedOrder.splice(i,1);
+    state.pinned.splice(i,1);
     g.group.classList.remove('is-pinned');
-    if(state.widgetLocked === v.id) state.widgetLocked = null;
+    if(state.locked === v.id) state.locked = null;
     flash('View removed');
   } else {
-    state.pinnedOrder.push(v.id);
+    state.pinned.push(v.id);
     g.group.classList.add('is-pinned');
-    state.widgetLocked = v.id;
-    flash('Image added below ↓');
+    state.locked = v.id;
+    flash('Image added below');
   }
-  if(state.widgetLocked) showWidget(v); else hideWidget();
-  renderGallery();          // no auto-scroll, by request
+  if(state.locked) showWidget(v); else hideWidget();
+  renderGallery();
 }
-
-function move(id, delta){
-  const i = state.pinnedOrder.indexOf(id);
-  const j = i + delta;
-  if(i < 0 || j < 0 || j >= state.pinnedOrder.length) return;
-  [state.pinnedOrder[i], state.pinnedOrder[j]] = [state.pinnedOrder[j], state.pinnedOrder[i]];
+function move(id, d){
+  const i = state.pinned.indexOf(id), j = i + d;
+  if(i < 0 || j < 0 || j >= state.pinned.length) return;
+  [state.pinned[i], state.pinned[j]] = [state.pinned[j], state.pinned[i]];
   renderGallery();
 }
 
+function refMap(id){
+  const f = VIEW_FILES[id];
+  const box = document.createElement('div');
+  box.className = 'refmap';
+  const b = new Image(); b.src = BASE_LAYER; b.alt = '';
+  const t = new Image(); t.src = f.tri; t.className = 'r-tri'; t.alt = '';
+  const d = new Image(); d.src = f.dot; d.className = 'r-dot'; d.alt = '';
+  box.append(b,t,d);
+  return box;
+}
+
 function renderGallery(){
-  els.galleryEmpty.style.display = state.pinnedOrder.length ? 'none' : 'block';
+  els.galleryEmpty.style.display = state.pinned.length ? 'none' : 'block';
   els.galleryCards.innerHTML = '';
 
-  state.pinnedOrder.forEach((id, idx) => {
-    const v = viewById(id);
-    const files = VIEW_FILES[id];
-
+  state.pinned.forEach((id, idx) => {
+    const v = viewById(id), files = VIEW_FILES[id];
     const card = document.createElement('div');
     card.className = 'gcard';
 
-    const imgWrap = document.createElement('div');
-    imgWrap.className = 'gcard-image';
-    imgWrap.innerHTML = `<div class="ph serif">${v.n}</div>`;
+    const logo = document.createElement('img');
+    logo.className = 'card-logo'; logo.src = 'fs-logo-black.png'; logo.alt = 'Fairfax & Sammons';
+    card.appendChild(logo);
 
+    const wrap = document.createElement('div');
+    wrap.className = 'gcard-image';
+    wrap.innerHTML = '<div class="ph serif">' + v.n + '</div>';
     getImage(files.image).then(src => {
       if(!src) return;
       const im = new Image();
       im.className = 'shot'; im.src = src; im.alt = v.label; im.decoding = 'async';
-      imgWrap.innerHTML = '';
-      imgWrap.appendChild(im);
+      wrap.innerHTML = '';
+      wrap.appendChild(im);
       const tag = document.createElement('div');
       tag.className = 'tag serif'; tag.textContent = v.label;
-      imgWrap.appendChild(tag);
-      const mark = document.createElement('img');
-      mark.className = 'watermark'; mark.src = 'fs-logo-black.png'; mark.alt = '';
-      imgWrap.appendChild(mark);
+      wrap.appendChild(tag);
     });
-    card.appendChild(imgWrap);
+    card.appendChild(wrap);
+
+    card.appendChild(refMap(id));
+    const cap = document.createElement('div');
+    cap.className = 'refcap';
+    cap.textContent = v.label + ' · ' + (VIEW_FLOORS[id] || 'First Floor');
+    card.appendChild(cap);
 
     const tools = document.createElement('div');
     tools.className = 'gcard-tools';
-
-    const up = document.createElement('button');
-    up.className = 'ord'; up.type = 'button'; up.textContent = '↑'; up.title = 'Move up';
-    up.addEventListener('click', () => move(id,-1));
-
-    const down = document.createElement('button');
-    down.className = 'ord'; down.type = 'button'; down.textContent = '↓'; down.title = 'Move down';
-    down.addEventListener('click', () => move(id, 1));
-
-    const expand = document.createElement('button');
-    expand.type = 'button'; expand.textContent = 'Expand view';
-    expand.addEventListener('click', () => openSheet(v));
-
-    const editorUrl = VIEW_EDITOR_LINKS[id];
-    let editor = null;
-    if(editorUrl){
-      editor = document.createElement('button');
-      editor.type = 'button'; editor.textContent = 'Go to editor';
-      editor.addEventListener('click', () => window.open(editorUrl,'_blank','noopener'));
+    const mk = (txt, cls, fn, title) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = txt; if(cls) b.className = cls;
+      if(title) b.title = title;
+      b.addEventListener('click', fn); return b;
+    };
+    tools.append(
+      mk('↑','ord',() => move(id,-1),'Move up'),
+      mk('↓','ord',() => move(id, 1),'Move down'),
+      mk('Expand view', null, () => openSheet(v)),
+      mk('Present', null, () => openPresent(idx))
+    );
+    if(VIEW_EDITOR_LINKS[id]){
+      tools.append(mk('Go to editor', null, () => window.open(VIEW_EDITOR_LINKS[id],'_blank','noopener')));
     }
-
-    const unpin = document.createElement('button');
-    unpin.type = 'button'; unpin.textContent = 'Unpin';
-    unpin.addEventListener('click', () => togglePin(v));
-
-    const spacer = document.createElement('span');
-    spacer.className = 'spacer';
-
-    tools.append(up, down, expand);
-    if(editor) tools.append(editor);
-    tools.append(spacer, unpin);
+    const sp = document.createElement('span'); sp.className = 'spacer';
+    tools.append(sp, mk('Unpin', null, () => togglePin(v)));
     card.appendChild(tools);
 
     const pf = document.createElement('div');
     pf.className = 'print-foot';
-    pf.innerHTML = `<span>${v.label} — ${(VIEW_FLOORS[id]||'First Floor')}</span>` +
-                   `<span>150 Worth Ave — Palm Beach · ${idx+1}</span>`;
+    pf.innerHTML = '<span>' + v.label + ' — ' + (VIEW_FLOORS[id]||'First Floor') + '</span>' +
+                   '<span>150 Worth Ave — Palm Beach · ' + (idx+1) + '</span>';
     card.appendChild(pf);
 
     els.galleryCards.appendChild(card);
   });
+
+  buildMapSheet();
+}
+
+/* page 2 of the PDF: the plan carrying every pinned marker */
+function buildMapSheet(){
+  els.msMap.innerHTML = '';
+  if(!state.pinned.length) return;
+  const b = new Image(); b.src = BASE_LAYER; b.alt = '';
+  els.msMap.appendChild(b);
+  state.pinned.forEach(id => {
+    const f = VIEW_FILES[id];
+    const t = new Image(); t.src = f.tri; t.className = 'm-tri'; t.alt = '';
+    const d = new Image(); d.src = f.dot; d.className = 'm-dot'; d.alt = '';
+    els.msMap.append(t,d);
+  });
 }
 
 /* =====================================================================
-   EXPAND VIEW — the 8x10 sheet
+   EXPAND SHEET
    ===================================================================== */
 function openSheet(v){
-  const files = VIEW_FILES[v.id];
-  els.sheetTitle.textContent = `Burlington Arcade View ${v.n}`;
-  els.sheetSub.textContent = `${v.label} · ${VIEW_FLOORS[v.id] || 'First Floor'}`;
+  const f = VIEW_FILES[v.id];
+  els.sheetTitle.textContent = 'Burlington Arcade View ' + v.n;
+  els.sheetSub.textContent = v.label + ' · ' + (VIEW_FLOORS[v.id] || 'First Floor');
 
   els.sheetPhoto.innerHTML = '';
-  getImage(files.image).then(src => {
+  getImage(f.image).then(src => {
     if(!src) return;
     const im = new Image(); im.src = src; im.alt = v.label;
     els.sheetPhoto.appendChild(im);
   });
 
-  // the plan with only this view's overlays: (1) at full, (2) at 44%
   els.sheetMap.innerHTML = '';
-  const base = new Image(); base.src = BASE_LAYER; base.alt = 'Plan';
-  const tri = new Image();  tri.src = files.tri;  tri.className = 'ov ov-tri'; tri.alt = '';
-  const dot = new Image();  dot.src = files.dot;  dot.className = 'ov ov-dot'; dot.alt = '';
-  els.sheetMap.append(base, tri, dot);
+  const b = new Image(); b.src = BASE_LAYER; b.alt = '';
+  const t = new Image(); t.src = f.tri; t.className = 'ov-tri'; t.alt = '';
+  const d = new Image(); d.src = f.dot; d.className = 'ov-dot'; d.alt = '';
+  els.sheetMap.append(b,t,d);
 
   els.sheetWrap.classList.add('visible');
 }
-function closeSheet(){ els.sheetWrap.classList.remove('visible'); }
+const closeSheet = () => els.sheetWrap.classList.remove('visible');
 els.sheetClose.addEventListener('click', closeSheet);
 els.sheetWrap.addEventListener('click', e => { if(e.target === els.sheetWrap) closeSheet(); });
-document.addEventListener('keydown', e => { if(e.key === 'Escape') closeSheet(); });
 
 /* =====================================================================
-   PRESENTATION / PDF
+   PRESENTATION — full screen, arrows, red pen, eraser, download
    ===================================================================== */
-els.btnPresent.addEventListener('click', () => {
-  const on = document.body.classList.toggle('presenting');
-  els.btnPresent.classList.toggle('on', on);
-  els.btnPresent.textContent = on ? 'Exit Presentation' : 'View as Presentation';
-});
+function openPresent(i){
+  if(!state.pinned.length){ flash('Pin some views first'); return; }
+  state.present.i = clamp(i || 0, 0, state.pinned.length - 1);
+  els.present.classList.add('visible');
+  showSlide();
+}
+function closePresent(){
+  saveStrokes();
+  els.present.classList.remove('visible');
+  if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+}
+function showSlide(){
+  const id = state.pinned[state.present.i];
+  const v = viewById(id);
+  els.pLabel.textContent = v.label + ' · ' + (VIEW_FLOORS[id] || 'First Floor');
+  els.pCount.textContent = (state.present.i + 1) + ' / ' + state.pinned.length;
+  els.pImg.src = VIEW_FILES[id].image;
+  els.pImg.alt = v.label;
+  els.pImg.onload = () => { sizeCanvas(); restoreStrokes(); };
+  if(els.pImg.complete) { sizeCanvas(); restoreStrokes(); }
+}
+function step(d){
+  const n = state.pinned.length;
+  if(!n) return;
+  saveStrokes();          // save THIS slide before the index moves on
+  state.present.i = (state.present.i + d + n) % n;
+  showSlide();
+}
+els.pPrev.addEventListener('click', () => step(-1));
+els.pNext.addEventListener('click', () => step(1));
+els.pClose.addEventListener('click', closePresent);
+els.btnPresent.addEventListener('click', () => openPresent(0));
 
-els.btnPdf.addEventListener('click', () => {
-  if(!state.pinnedOrder.length){
-    flash('Pin some views first');
+document.addEventListener('keydown', e => {
+  if(els.present.classList.contains('visible')){
+    if(e.key === 'ArrowRight') step(1);
+    else if(e.key === 'ArrowLeft') step(-1);
+    else if(e.key === 'Escape') closePresent();
     return;
   }
-  // Browsers make PDFs through the print dialog — choose "Save as PDF"
-  // as the destination. The cover page and page numbers are built into
-  // the print stylesheet.
+  if(e.key === 'Escape') closeSheet();
+});
+
+els.pFull.addEventListener('click', () => {
+  if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+  else els.present.requestFullscreen().catch(() => flash('Full screen was blocked'));
+});
+
+/* ---- drawing ---- */
+const ctx = els.pCanvas.getContext('2d');
+function sizeCanvas(){
+  const r = els.pImg.getBoundingClientRect();
+  if(!r.width) return;
+  const dpr = window.devicePixelRatio || 1;
+  els.pCanvas.width  = Math.round(r.width  * dpr);
+  els.pCanvas.height = Math.round(r.height * dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+}
+window.addEventListener('resize', () => {
+  if(els.present.classList.contains('visible')){ saveStrokes(); sizeCanvas(); restoreStrokes(); }
+});
+
+function saveStrokes(){
+  const id = state.pinned[state.present.i];
+  if(!id || !els.pCanvas.width) return;
+  try { state.present.strokes[id] = els.pCanvas.toDataURL('image/png'); } catch(err){}
+}
+function restoreStrokes(){
+  const id = state.pinned[state.present.i];
+  ctx.clearRect(0,0,els.pCanvas.width, els.pCanvas.height);
+  const data = state.present.strokes[id];
+  if(!data) return;
+  const im = new Image();
+  im.onload = () => {
+    const r = els.pImg.getBoundingClientRect();
+    ctx.drawImage(im, 0, 0, r.width, r.height);
+  };
+  im.src = data;
+}
+
+function setMode(draw, erase){
+  state.present.drawing = draw;
+  state.present.erasing = erase;
+  els.pDraw.classList.toggle('on', draw && !erase);
+  els.pErase.classList.toggle('on', erase);
+  els.pHolder.classList.toggle('nodraw', !draw && !erase);
+}
+els.pDraw.addEventListener('click', () => setMode(!(state.present.drawing && !state.present.erasing), false));
+els.pErase.addEventListener('click', () => setMode(true, !state.present.erasing));
+els.pClear.addEventListener('click', () => {
+  ctx.clearRect(0,0,els.pCanvas.width, els.pCanvas.height);
+  delete state.present.strokes[state.pinned[state.present.i]];
+});
+
+(function(){
+  let drawing = false;
+  const pos = e => {
+    const r = els.pCanvas.getBoundingClientRect();
+    return {x:e.clientX - r.left, y:e.clientY - r.top};
+  };
+  els.pCanvas.addEventListener('pointerdown', e => {
+    if(!state.present.drawing && !state.present.erasing) return;
+    els.pCanvas.setPointerCapture(e.pointerId);
+    drawing = true;
+    const p = pos(e);
+    ctx.beginPath(); ctx.moveTo(p.x, p.y);
+  });
+  els.pCanvas.addEventListener('pointermove', e => {
+    if(!drawing) return;
+    const p = pos(e);
+    if(state.present.erasing){
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.lineWidth = 26;
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = '#C0392B';
+      ctx.lineWidth = 3.5;
+    }
+    ctx.lineTo(p.x, p.y); ctx.stroke();
+  });
+  const end = e => {
+    if(!drawing) return;
+    drawing = false;
+    ctx.globalCompositeOperation = 'source-over';
+    saveStrokes();
+  };
+  els.pCanvas.addEventListener('pointerup', end);
+  els.pCanvas.addEventListener('pointercancel', end);
+})();
+
+/* download the current slide with the drawing burned in */
+els.pDownload.addEventListener('click', () => {
+  const id = state.pinned[state.present.i];
+  const v = viewById(id);
+  const img = els.pImg;
+  if(!img.naturalWidth){ flash('Image still loading'); return; }
+
+  const out = document.createElement('canvas');
+  out.width = img.naturalWidth;
+  out.height = img.naturalHeight;
+  const octx = out.getContext('2d');
+  octx.drawImage(img, 0, 0, out.width, out.height);
+  if(els.pCanvas.width) octx.drawImage(els.pCanvas, 0, 0, out.width, out.height);
+
+  try {
+    const url = out.toDataURL('image/jpeg', 0.92);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Burlington-' + v.label.replace(/\s+/g,'-') + '.jpg';
+    document.body.appendChild(a); a.click(); a.remove();
+  } catch(err){
+    // happens when the page is opened straight off disk (file://) rather
+    // than from the site — the browser will not let a canvas be exported.
+    flash('Open the site online to download');
+  }
+});
+
+/* =====================================================================
+   PDF
+   ===================================================================== */
+els.btnPdf.addEventListener('click', () => {
+  if(!state.pinned.length){ flash('Pin some views first'); return; }
   window.print();
 });
 
-/* keep the little crop square correct when the window resizes */
-let resizeTimer = null;
-window.addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => {
-    const id = state.widgetLocked;
-    if(id && els.widget.classList.contains('visible')) drawCrop(viewById(id));
-  }, 150);
-});
+applyPlan();
 </script>
 </body>
 </html>
