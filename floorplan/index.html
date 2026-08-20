@@ -13,24 +13,26 @@
      Fairfax & Sammons Architecture
      ============================================================
 
-     WHY VIEWS 10 AND 14 WERE DEAD (fixed 2026-08-20)
+     WHY IT CRASHED ON A PHONE (fixed 2026-08-20)
 
-     Not the files. Every dot PNG was healthy. The marker coordinates
-     in the VIEWS list simply did not match where the dot was actually
-     drawn in the image:
+     The marker and sightline PNGs are tiny on disk (24KB) but each one
+     is a full 4500 x 3161 canvas holding one small graphic. A browser
+     does not store the compressed file, it stores the decoded bitmap:
 
-        View 10   list said 56.4, 73.2   dot really at 33.2, 74.2
-        View 14   list said 28.6, 73.0   dot really at 36.0, 73.2
+         4500 x 3161 x 4 bytes  =  54.3 MB  EACH
+         35 of them             =  1.85 GB
 
-     The dots were on screen; the invisible click target was a quarter
-     of the map away. Every coordinate below was re-measured from the
-     PNGs themselves, so all seventeen now line up.
+     A desktop absorbs that. A phone is killed by it.
 
-     WHAT YOU EDIT — the CONFIG block at the top of the script:
-       VIEW_FLOORS         which floor each view is on
-       VIEW_EDITOR_LINKS   per-view "Go to Editor" links
-       INTERIOR/EXTERIOR_EDITOR_LINK
-       PAGE_TEXT           optional blurb under the title
+     The fix is in the m/ folder:
+       m/base.jpg     the plan at 2400px  (16 MB decoded, not 54)
+       m/dot-V*.png   each marker cropped to a 340px tile (0.4 MB each)
+       m/tri-V*.png   sightlines at 1100px, loaded one at a time
+
+     Same picture on screen, about 27 MB of memory instead of 1.85 GB.
+     The original full-size files are still in this folder untouched.
+
+     WHAT YOU EDIT — the CONFIG block at the top of the script.
      ============================================================ -->
 
 <style>
@@ -39,320 +41,236 @@
     --line:#C9BFA6; --line-soft:#DAD2BB; --brass:#8A6D3B; --brass-light:#B79A5E;
     --white:#FFFFFF; --warn:#9C4A34; --red:#C0392B;
     --tri-opacity:0.44;
-    --map-aspect: 4500 / 3161;        /* the plan's true ratio — never distorted */
+    --map-aspect: 4500 / 3161;
+    --tile: 7.5556%;               /* each marker tile = 340 / 4500 of the plan */
     --shadow:0 18px 50px rgba(20,16,10,0.28);
   }
   *{ box-sizing:border-box; }
   html,body{ margin:0; padding:0; height:100%; background:var(--ink); color:var(--ink);
-    font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;
-    -webkit-text-size-adjust:100%; }
-  ::selection{ background:var(--brass-light); color:var(--ink); }
+    font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; -webkit-text-size-adjust:100%; }
   .serif{ font-family:'EB Garamond',serif; }
   button{ font-family:inherit; cursor:pointer; }
-  a{ color:inherit; }
   img{ -webkit-user-drag:none; user-select:none; }
 
-  /* ============== SPLASH ============== */
-  #splash{
-    position:fixed; inset:0; z-index:100;
+  /* ---------- splash ---------- */
+  #splash{ position:fixed; inset:0; z-index:100; cursor:pointer; text-align:center;
     background:radial-gradient(ellipse at 50% 30%, #1c1811 0%, var(--ink) 70%);
-    display:flex; align-items:center; justify-content:center; cursor:pointer; text-align:center;
-    transition:opacity .9s ease, visibility .9s ease;
-  }
+    display:flex; align-items:center; justify-content:center; transition:opacity .8s ease, visibility .8s ease; }
   #splash.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
-  .splash-inner{ color:var(--ivory); padding:0 24px; animation:splashIn 1.3s ease both; }
-  @keyframes splashIn{ from{ opacity:0; transform:translateY(14px); letter-spacing:.5em; } to{ opacity:1; transform:translateY(0); } }
-  .splash-eyebrow{ font-size:11px; letter-spacing:.42em; text-transform:uppercase; color:var(--brass-light); margin-bottom:22px; }
-  .splash-rule{ width:56px; height:1px; background:var(--line-soft); margin:22px auto; opacity:.55; }
-  .splash-title{ font-family:'EB Garamond',serif; font-weight:500; font-size:clamp(46px,11vw,128px); letter-spacing:.12em; line-height:1; margin:0; }
+  .splash-inner{ color:var(--ivory); padding:0 22px; }
+  .splash-eyebrow{ font-size:10.5px; letter-spacing:.4em; text-transform:uppercase; color:var(--brass-light); margin-bottom:20px; }
+  .splash-rule{ width:56px; height:1px; background:var(--line-soft); margin:20px auto; opacity:.55; }
+  .splash-title{ font-family:'EB Garamond',serif; font-weight:500; font-size:clamp(44px,11vw,124px); letter-spacing:.12em; line-height:1; margin:0; }
   .splash-sub{ font-family:'EB Garamond',serif; font-style:italic; font-size:clamp(14px,2vw,19px); color:#C9BFA6; margin-top:6px; }
-  .splash-cta{ margin-top:40px; font-size:11px; letter-spacing:.32em; text-transform:uppercase; opacity:.75; display:inline-flex; align-items:center; gap:10px; }
+  .splash-cta{ margin-top:34px; font-size:10.5px; letter-spacing:.3em; text-transform:uppercase; opacity:.75; display:inline-flex; align-items:center; gap:10px; }
   .splash-cta .ring{ width:9px; height:9px; border-radius:50%; border:1px solid var(--brass-light); animation:pulse 1.8s ease-in-out infinite; }
   @keyframes pulse{ 0%,100%{ transform:scale(1); opacity:.5; } 50%{ transform:scale(1.7); opacity:1; } }
 
-  /* ============== SHELL ============== */
+  /* ---------- shell ---------- */
   #app{ position:fixed; inset:0; background:var(--ivory); display:flex; flex-direction:column;
-        opacity:0; transition:opacity .8s ease; overflow:hidden; }
+        opacity:0; transition:opacity .6s ease; overflow:hidden; }
   #app.visible{ opacity:1; }
-
-  header.topbar{
-    display:flex; flex-direction:column; align-items:center; gap:9px;
-    padding:12px 16px calc(12px + env(safe-area-inset-top,0px));
-    background:var(--ivory); border-bottom:1px solid var(--line); z-index:20; text-align:center; flex:none;
-  }
-  .brandblock .title{ font-family:'EB Garamond',serif; font-size:clamp(17px,2.4vw,22px); letter-spacing:.03em; }
-  .brandblock .addr{ font-size:9.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-soft); opacity:.75; margin-top:2px; }
-  .toolrow{ display:flex; gap:7px; justify-content:center; flex-wrap:wrap; }
-  .toolrow a, .toolrow button{
-    border:1px solid var(--ink); background:transparent; color:var(--ink);
-    padding:7px 13px; font-size:10px; letter-spacing:.14em; text-transform:uppercase;
-    text-decoration:none; transition:all .18s ease; white-space:nowrap;
-  }
+  header.topbar{ display:flex; flex-direction:column; align-items:center; gap:8px; flex:none;
+    padding:10px 12px calc(10px + env(safe-area-inset-top,0px));
+    background:var(--ivory); border-bottom:1px solid var(--line); text-align:center; z-index:20; }
+  .brandblock .title{ font-family:'EB Garamond',serif; font-size:clamp(15px,2.3vw,22px); }
+  .brandblock .addr{ font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-soft); opacity:.75; margin-top:2px; }
+  .toolrow{ display:flex; gap:6px; justify-content:center; flex-wrap:wrap; }
+  .toolrow a, .toolrow button{ border:1px solid var(--ink); background:transparent; color:var(--ink);
+    padding:6px 11px; font-size:9.5px; letter-spacing:.13em; text-transform:uppercase; text-decoration:none;
+    transition:all .16s ease; white-space:nowrap; }
   .toolrow a:hover, .toolrow button:hover{ background:var(--ink); color:var(--ivory); }
   .toolrow a.disabled{ opacity:.32; pointer-events:none; }
-  .toolrow button.on{ background:var(--brass); border-color:var(--brass); color:var(--ivory); }
-  .page-text{ max-width:640px; font-family:'EB Garamond',serif; font-size:13px; line-height:1.6; color:var(--ink-soft); }
-  .page-text:empty{ display:none; }
-
-  .missing-note{ display:none; max-width:900px; margin:0 auto; padding:10px 20px 0;
-    font-size:11.5px; color:var(--warn); text-align:center; line-height:1.6; }
+  .missing-note{ display:none; padding:8px 16px 0; font-size:11px; color:var(--warn); text-align:center; }
   .missing-note.visible{ display:block; }
 
-  /* ============== STAGE ============== */
-  main.stage{
-    flex:1; position:relative; overflow-y:auto; overflow-x:hidden;
+  /* ---------- audio buttons ---------- */
+  .speak{ border:1px solid var(--line); background:var(--white); color:var(--ink-soft);
+    width:26px; height:26px; padding:0; font-size:12px; line-height:1; vertical-align:middle;
+    display:inline-flex; align-items:center; justify-content:center; flex:none; }
+  .speak:hover{ background:var(--ink); color:var(--ivory); }
+  .speak.on{ background:var(--brass); border-color:var(--brass); color:var(--ivory); }
+
+  /* ---------- stage ---------- */
+  main.stage{ flex:1; position:relative; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch;
     background:
       repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(20,16,10,.028) 40px),
       repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(20,16,10,.028) 40px),
-      var(--ivory);
-    -webkit-overflow-scrolling:touch;
-  }
-  .plan-wrap{ position:relative; width:100%; max-width:1900px; margin:0 auto; padding:16px 16px 4px; }
-
-  /* viewport clips; frame inside is what pans and zooms (uniform scale = ratio locked) */
-  .plan-viewport{
-    position:relative; width:100%; aspect-ratio:var(--map-aspect);
-    overflow:hidden; background:var(--white); border:1px solid var(--line);
-    box-shadow:var(--shadow); touch-action:none; cursor:grab;
-  }
+      var(--ivory); }
+  .plan-wrap{ position:relative; width:100%; max-width:1900px; margin:0 auto; padding:14px 14px 4px; }
+  .plan-viewport{ position:relative; width:100%; aspect-ratio:var(--map-aspect); overflow:hidden;
+    background:var(--white); border:1px solid var(--line); box-shadow:var(--shadow);
+    touch-action:none; cursor:grab; }
   .plan-viewport.grabbing{ cursor:grabbing; }
-  .plan-frame{
-    position:absolute; top:0; left:0; width:100%; aspect-ratio:var(--map-aspect);
-    transform-origin:0 0; line-height:0; will-change:transform;
-  }
+  .plan-frame{ position:absolute; top:0; left:0; width:100%; aspect-ratio:var(--map-aspect);
+    transform-origin:0 0; line-height:0; will-change:transform; }
   .plan-frame img.base{ display:block; width:100%; height:100%; }
 
-  .layer-img{ position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; }
-  .layer-tri{ opacity:0; transition:opacity .18s ease; z-index:1; }
-  .layer-dot{ opacity:.4; transition:opacity .14s ease; z-index:2; }
-  .view-group.is-hot .layer-dot, .view-group.is-pinned .layer-dot{ opacity:1; }
-  .view-group.is-hot .layer-tri, .view-group.is-pinned .layer-tri{ opacity:var(--tri-opacity); }
+  /* a marker is now a small tile, not a full-canvas layer */
+  .mk{ position:absolute; width:var(--tile); aspect-ratio:1; transform:translate(-50%,-50%);
+       z-index:3; padding:0; border:none; background:transparent; }
+  .mk img{ width:100%; height:100%; display:block; opacity:.45; transition:opacity .14s ease; pointer-events:none; }
+  .mk.is-hot img, .mk.is-pinned img{ opacity:1; }
+  .tri{ position:absolute; inset:0; width:100%; height:100%; opacity:0;
+        transition:opacity .18s ease; z-index:1; pointer-events:none; }
+  .tri.show{ opacity:var(--tri-opacity); }
 
-  .hit{ position:absolute; width:30px; height:30px; margin:-15px 0 0 -15px; border-radius:50%;
-    background:transparent; border:none; z-index:5; padding:0; }
-
-  /* zoom controls */
-  .zoombar{ position:absolute; left:12px; bottom:12px; display:flex; gap:6px; z-index:30; }
-  .zoombar button{
-    width:34px; height:34px; border:1px solid var(--line); background:rgba(255,255,255,.94);
-    color:var(--ink); font-size:15px; line-height:1; display:flex; align-items:center; justify-content:center;
+  /* ---------- quarter-tap hints ---------- */
+  .quads{ position:absolute; inset:0; z-index:8; display:none; }
+  .quads.on{ display:block; }
+  .quad{ position:absolute; width:50%; height:50%; border:none; background:transparent; padding:0;
+    display:flex; align-items:center; justify-content:center; }
+  .quad .bub{
+    width:clamp(46px,11vw,76px); aspect-ratio:1; border-radius:50%;
+    background:rgba(255,255,255,.30); border:1px solid rgba(255,255,255,.55);
+    backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px);
+    display:flex; align-items:center; justify-content:center;
+    font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:#fff;
+    text-shadow:0 1px 3px rgba(0,0,0,.5); animation:bub 2.2s ease-in-out infinite;
   }
-  .zoombar button:hover{ background:var(--ink); color:var(--ivory); }
-  .zoombar .lbl{ width:auto; padding:0 10px; font-size:10px; letter-spacing:.12em; }
+  @keyframes bub{ 0%,100%{ transform:scale(1); opacity:.85; } 50%{ transform:scale(1.09); opacity:1; } }
+  .quad.tl{ top:0; left:0; } .quad.tr{ top:0; right:0; }
+  .quad.bl{ bottom:0; left:0; } .quad.br{ bottom:0; right:0; }
 
-  /* ============== WIDGET — draggable, resizable, sections collapse ============== */
-  .widget{
-    position:absolute; top:26px; right:26px; width:min(30%,340px); min-width:190px;
+  /* ---------- map controls ---------- */
+  .mapctl{ position:absolute; left:10px; bottom:10px; display:flex; gap:5px; z-index:12; flex-wrap:wrap; max-width:calc(100% - 20px); }
+  .mapctl button{ width:34px; height:34px; border:1px solid var(--line); background:rgba(255,255,255,.94);
+    color:var(--ink); font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center; padding:0; }
+  .mapctl button:hover{ background:var(--ink); color:var(--ivory); }
+  .mapctl button.wide{ width:auto; padding:0 11px; font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; }
+
+  .flash{ position:absolute; left:50%; bottom:14px; transform:translateX(-50%) translateY(8px);
+    background:var(--ink); color:var(--ivory); padding:8px 15px; font-size:9.5px; letter-spacing:.16em;
+    text-transform:uppercase; z-index:60; opacity:0; transition:opacity .25s ease, transform .25s ease;
+    pointer-events:none; white-space:nowrap; }
+  .flash.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .hint{ text-align:center; font-size:10px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--ink-soft); opacity:.55; padding:9px 16px 2px; }
+
+  /* ---------- widget (desktop only) ---------- */
+  .widget{ position:absolute; top:24px; right:24px; width:min(28%,330px); min-width:190px;
     background:var(--white); border:1px solid var(--line); box-shadow:0 14px 40px rgba(20,16,10,.24);
-    z-index:40; text-align:left; line-height:1.5;
-    opacity:0; visibility:hidden; transition:opacity .16s ease, visibility .16s ease;
-    display:flex; flex-direction:column;
-  }
+    z-index:40; opacity:0; visibility:hidden; transition:opacity .16s ease, visibility .16s ease;
+    display:flex; flex-direction:column; }
   .widget.visible{ opacity:1; visibility:visible; }
-  .widget-head{
-    display:flex; align-items:center; gap:6px; padding:8px 10px;
-    background:var(--ink); color:var(--ivory); cursor:grab; flex:none; touch-action:none;
-  }
+  .widget-head{ display:flex; align-items:center; gap:6px; padding:7px 9px; background:var(--ink);
+    color:var(--ivory); cursor:grab; flex:none; touch-action:none; }
   .widget-head.grabbing{ cursor:grabbing; }
-  .widget-head .wtitle{ font-size:10px; letter-spacing:.16em; text-transform:uppercase; flex:1; }
-  .widget-head button{ background:none; border:none; color:var(--ivory); font-size:13px; line-height:1; padding:2px 5px; opacity:.75; }
+  .widget-head .wtitle{ font-size:9.5px; letter-spacing:.15em; text-transform:uppercase; flex:1; }
+  .widget-head button{ background:none; border:none; color:var(--ivory); font-size:13px; padding:2px 5px; opacity:.75; }
   .widget-head button:hover{ opacity:1; }
   .widget-scroll{ overflow:auto; flex:1; min-height:0; }
-  .widget.min .widget-scroll{ display:none; }
-  .widget.min .resize{ display:none; }
-
-  .sect-head{
-    display:flex; align-items:center; justify-content:space-between; gap:8px;
-    padding:8px 10px; font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
-    color:var(--brass); border-bottom:1px solid var(--line-soft); background:var(--ivory);
-    cursor:pointer; user-select:none;
-  }
-  .sect-head .chev{ transition:transform .18s ease; font-size:10px; color:var(--ink-soft); }
-  .sect.closed .chev{ transform:rotate(-90deg); }
+  .widget.min .widget-scroll, .widget.min .resize{ display:none; }
+  .sect-head{ display:flex; align-items:center; justify-content:space-between; padding:7px 9px;
+    font-size:9px; letter-spacing:.15em; text-transform:uppercase; color:var(--brass);
+    border-bottom:1px solid var(--line-soft); background:var(--ivory); cursor:pointer; user-select:none; }
   .sect.closed .sect-body{ display:none; }
-
+  .sect.closed .chev{ transform:rotate(-90deg); }
+  .chev{ transition:transform .18s ease; font-size:9px; color:var(--ink-soft); }
   .w-photo{ position:relative; width:100%; aspect-ratio:4/3; overflow:hidden; background:var(--ivory-deep); }
   .w-photo img{ width:100%; height:100%; object-fit:cover; object-position:center bottom; display:block; }
   .w-photo .ph{ width:100%; height:100%; display:flex; align-items:center; justify-content:center;
-    font-family:'EB Garamond',serif; font-size:28px; color:var(--ink-soft); opacity:.4; }
-  .w-floor{ padding:7px 10px; font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); }
-
-  /* the little plan detail: its own zoom + pan, ratio always locked */
-  .cropwrap{ position:relative; }
-  .crop{
-    position:relative; width:100%; aspect-ratio:1; overflow:hidden;
-    background:var(--ivory-deep); touch-action:none; cursor:grab;
-  }
-  .crop.grabbing{ cursor:grabbing; }
+    font-family:'EB Garamond',serif; font-size:26px; color:var(--ink-soft); opacity:.4; }
+  .w-floor{ display:flex; align-items:center; gap:7px; padding:7px 9px; font-size:9px;
+    letter-spacing:.15em; text-transform:uppercase; color:var(--ink-soft); }
+  .crop{ position:relative; width:100%; aspect-ratio:1; overflow:hidden; background:var(--ivory-deep);
+    touch-action:none; cursor:grab; }
   .crop-inner{ position:absolute; top:0; left:0; width:100%; aspect-ratio:var(--map-aspect);
     transform-origin:0 0; line-height:0; }
-  .crop-inner img{ position:absolute; inset:0; width:100%; height:100%; display:block; }
-  .crop-inner img.c-tri{ opacity:var(--tri-opacity); z-index:1; }
-  .crop-inner img.c-dot{ z-index:2; }
-  .cropbar{ display:flex; gap:5px; padding:7px 10px; border-top:1px solid var(--line-soft); }
-  .cropbar button{
-    flex:1; border:1px solid var(--line); background:var(--white); color:var(--ink-soft);
-    font-size:10px; letter-spacing:.1em; padding:5px 0;
-  }
+  .crop-inner img.cbase{ position:absolute; inset:0; width:100%; height:100%; }
+  .crop-inner img.ctri{ position:absolute; inset:0; width:100%; height:100%; opacity:var(--tri-opacity); }
+  .crop-inner img.cdot{ position:absolute; width:var(--tile); aspect-ratio:1; transform:translate(-50%,-50%); }
+  .cropbar{ display:flex; gap:5px; padding:6px 9px; border-top:1px solid var(--line-soft); }
+  .cropbar button{ flex:1; border:1px solid var(--line); background:var(--white); color:var(--ink-soft);
+    font-size:9.5px; padding:5px 0; }
   .cropbar button:hover{ background:var(--ink); color:var(--ivory); }
-
-  .w-hint{ padding:8px 10px 10px; font-size:10px; color:var(--ink-soft); opacity:.75;
+  .w-hint{ padding:7px 9px 9px; font-size:9.5px; color:var(--ink-soft); opacity:.75;
     font-family:'EB Garamond',serif; font-style:italic; }
+  .resize{ position:absolute; right:0; bottom:0; width:17px; height:17px; cursor:nwse-resize; touch-action:none; z-index:2;
+    background:linear-gradient(135deg,transparent 0 48%,var(--line) 48% 56%,transparent 56% 72%,var(--line) 72% 80%,transparent 80%); }
 
-  .resize{
-    position:absolute; right:0; bottom:0; width:18px; height:18px; cursor:nwse-resize;
-    background:linear-gradient(135deg, transparent 0 48%, var(--line) 48% 56%, transparent 56% 72%, var(--line) 72% 80%, transparent 80%);
-    touch-action:none; z-index:2;
-  }
-
-  /* ============== FLASH ============== */
-  .flash{
-    position:absolute; left:50%; bottom:16px; transform:translateX(-50%) translateY(8px);
-    background:var(--ink); color:var(--ivory); padding:8px 16px;
-    font-size:10px; letter-spacing:.18em; text-transform:uppercase; z-index:60;
-    opacity:0; transition:opacity .25s ease, transform .25s ease; pointer-events:none; white-space:nowrap;
-  }
-  .flash.show{ opacity:1; transform:translateX(-50%) translateY(0); }
-
-  .hint{ text-align:center; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
-    color:var(--ink-soft); opacity:.55; padding:10px 20px 4px; }
-
-  /* ============== PINNED VIEWS ============== */
-  section.gallery{ border-top:1px solid var(--line); background:var(--white); padding:26px 16px 60px; }
+  /* ---------- pinned ---------- */
+  section.gallery{ border-top:1px solid var(--line); background:var(--white); padding:22px 14px 56px; }
   .gallery-inner{ max-width:1000px; margin:0 auto; }
-  .gallery-title{ text-align:center; font-family:'EB Garamond',serif; font-size:18px; margin-bottom:6px; }
-  .gallery-empty{ text-align:center; color:var(--ink-soft); opacity:.6; font-size:11.5px;
-    letter-spacing:.08em; text-transform:uppercase; padding:10px 0 4px; }
-  .gallery-cards{ display:flex; flex-direction:column; gap:40px; margin-top:22px; }
-
+  .gallery-title{ text-align:center; font-family:'EB Garamond',serif; font-size:17px; margin-bottom:4px; }
+  .gallery-empty{ text-align:center; color:var(--ink-soft); opacity:.6; font-size:11px;
+    letter-spacing:.07em; text-transform:uppercase; padding:8px 0; }
+  .gallery-cards{ display:flex; flex-direction:column; gap:34px; margin-top:18px; }
   .gcard{ animation:cardIn .3s ease both; }
-  @keyframes cardIn{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
-
-  /* logo centred at the top of every pinned view */
-  .card-logo{ display:block; width:120px; max-width:38%; height:auto; margin:0 auto 14px; }
-
-  .gcard-image{ position:relative; width:100%; background:var(--ivory-deep); border:1px solid var(--line); overflow:hidden; }
+  @keyframes cardIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
+  .card-logo{ display:block; width:110px; max-width:34%; height:auto; margin:0 auto 12px; }
+  .gcard-image{ position:relative; width:100%; background:var(--ivory-deep); border:1px solid var(--line);
+    overflow:hidden; cursor:zoom-in; }
   .gcard-image img.shot{ width:100%; height:auto; display:block; }
-  .gcard-image .ph{ padding:80px 0; text-align:center; font-family:'EB Garamond',serif; font-size:38px; color:var(--ink-soft); opacity:.35; }
-  .gcard-image .tag{ position:absolute; top:12px; left:14px; font-family:'EB Garamond',serif; font-size:15px;
-    color:var(--ivory); background:rgba(22,19,16,.55); padding:4px 12px; }
-
-  /* ratio-locked reference map under each pinned view */
-  .refmap{ position:relative; width:100%; max-width:420px; margin:14px auto 0;
-    aspect-ratio:var(--map-aspect); border:1px solid var(--line); overflow:hidden; background:var(--white); }
-  .refmap img{ position:absolute; inset:0; width:100%; height:100%; display:block; }
-  .refmap img.r-tri{ opacity:var(--tri-opacity); z-index:1; }
-  .refmap img.r-dot{ z-index:2; }
-  .refcap{ text-align:center; font-size:9px; letter-spacing:.18em; text-transform:uppercase;
-    color:var(--ink-soft); opacity:.7; margin-top:6px; }
-
-  .gcard-tools{ display:flex; gap:16px; align-items:center; padding:12px 2px 0; flex-wrap:wrap; }
-  .gcard-tools button{
-    background:none; border:none; padding:3px 0; color:var(--ink-soft);
-    font-size:10px; letter-spacing:.14em; text-transform:uppercase; transition:color .16s ease;
-  }
+  .gcard-image .ph{ padding:70px 0; text-align:center; font-family:'EB Garamond',serif; font-size:34px;
+    color:var(--ink-soft); opacity:.35; }
+  .gcard-image .tag{ position:absolute; top:10px; left:12px; font-family:'EB Garamond',serif; font-size:14px;
+    color:var(--ivory); background:rgba(22,19,16,.55); padding:3px 11px; }
+  .refmap{ position:relative; width:100%; max-width:400px; margin:12px auto 0; aspect-ratio:var(--map-aspect);
+    border:1px solid var(--line); overflow:hidden; background:var(--white); }
+  .refmap img.rbase{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .refmap img.rtri{ position:absolute; inset:0; width:100%; height:100%; opacity:var(--tri-opacity); }
+  .refmap img.rdot{ position:absolute; width:var(--tile); aspect-ratio:1; transform:translate(-50%,-50%); }
+  .refcap{ text-align:center; font-size:8.5px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--ink-soft); opacity:.7; margin-top:5px; }
+  .gcard-tools{ display:flex; gap:14px; align-items:center; padding:10px 2px 0; flex-wrap:wrap; }
+  .gcard-tools button{ background:none; border:none; padding:3px 0; color:var(--ink-soft);
+    font-size:9.5px; letter-spacing:.13em; text-transform:uppercase; }
   .gcard-tools button:hover{ color:var(--brass); }
   .gcard-tools .spacer{ flex:1; }
   .gcard-tools .ord{ font-size:13px; letter-spacing:0; }
 
-  /* ============== PRESENTATION / FULLSCREEN ============== */
-  .present{
-    position:fixed; inset:0; z-index:170; background:#0d0b09; display:none;
-    flex-direction:column; color:var(--ivory);
-  }
+  /* ---------- lightbox / presentation ---------- */
+  .present{ position:fixed; inset:0; z-index:170; background:#0d0b09; display:none; flex-direction:column; color:var(--ivory); }
   .present.visible{ display:flex; }
-  .p-top{
-    display:flex; align-items:center; gap:8px; padding:10px 14px; flex:none; flex-wrap:wrap;
-    border-bottom:1px solid rgba(244,239,228,.16);
-  }
-  .p-top .p-label{ font-family:'EB Garamond',serif; font-size:16px; flex:1; min-width:120px; }
-  .p-top button{
-    border:1px solid rgba(244,239,228,.4); background:transparent; color:var(--ivory);
-    padding:6px 12px; font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
-  }
+  .p-top{ display:flex; align-items:center; gap:6px; padding:8px 10px calc(8px + env(safe-area-inset-top,0px));
+    flex:none; flex-wrap:wrap; border-bottom:1px solid rgba(244,239,228,.16); }
+  .p-top .p-label{ font-family:'EB Garamond',serif; font-size:15px; flex:1; min-width:100px; }
+  .p-top button{ border:1px solid rgba(244,239,228,.4); background:transparent; color:var(--ivory);
+    padding:6px 10px; font-size:9px; letter-spacing:.12em; text-transform:uppercase; }
   .p-top button:hover{ background:var(--ivory); color:var(--ink); }
   .p-top button.on{ background:var(--red); border-color:var(--red); color:#fff; }
   .p-stage{ flex:1; position:relative; display:flex; align-items:center; justify-content:center;
-    min-height:0; padding:14px; }
+    min-height:0; padding:10px; touch-action:pan-y; }
   .p-holder{ position:relative; max-width:100%; max-height:100%; line-height:0; }
   .p-holder img{ display:block; max-width:100%; max-height:100%; width:auto; height:auto; }
   .p-holder canvas{ position:absolute; inset:0; width:100%; height:100%; touch-action:none; cursor:crosshair; }
-  .p-holder.nodraw canvas{ pointer-events:none; cursor:default; }
-  .p-arrow{
-    position:absolute; top:50%; transform:translateY(-50%); width:52px; height:52px;
+  .p-holder.nodraw canvas{ pointer-events:none; }
+  .p-arrow{ position:absolute; top:50%; transform:translateY(-50%); width:48px; height:48px;
     border:1px solid rgba(244,239,228,.4); background:rgba(13,11,9,.55); color:var(--ivory);
-    font-size:20px; display:flex; align-items:center; justify-content:center; z-index:5;
-  }
+    font-size:19px; display:flex; align-items:center; justify-content:center; z-index:5; padding:0; }
   .p-arrow:hover{ background:var(--ivory); color:var(--ink); }
-  .p-arrow.prev{ left:14px; } .p-arrow.next{ right:14px; }
-  .p-count{ flex:none; text-align:center; padding:8px; font-size:10px; letter-spacing:.2em; opacity:.7; }
+  .p-arrow.prev{ left:10px; } .p-arrow.next{ right:10px; }
+  .p-count{ flex:none; text-align:center; padding:7px calc(7px + env(safe-area-inset-bottom,0px));
+    font-size:9.5px; letter-spacing:.18em; opacity:.7; }
 
-  /* ============== EXPAND SHEET (8x10) ============== */
-  .sheetwrap{
-    position:fixed; inset:0; z-index:150; background:rgba(22,19,16,.72);
-    display:flex; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto;
-    opacity:0; visibility:hidden; transition:opacity .22s ease, visibility .22s ease;
-  }
-  .sheetwrap.visible{ opacity:1; visibility:visible; }
-  .sheet{ background:var(--white); width:min(100%,8in); aspect-ratio:8/10; padding:0.45in;
-    display:flex; flex-direction:column; box-shadow:0 24px 70px rgba(0,0,0,.4); }
-  .sheet-logo{ display:block; width:100px; height:auto; margin:0 auto 8px; flex:none; }
-  .sheet-head{ text-align:center; border-bottom:1px solid var(--line); padding-bottom:8px; flex:none; }
-  .sheet-head .l1{ font-family:'EB Garamond',serif; font-size:18px; letter-spacing:.05em; }
-  .sheet-head .l2{ font-size:9px; letter-spacing:.24em; text-transform:uppercase; color:var(--brass); margin-top:4px; }
-  .sheet-photo{ flex:1.3; min-height:0; margin-top:10px; background:var(--ivory-deep); overflow:hidden;
-    display:flex; align-items:center; justify-content:center; }
-  .sheet-photo img{ max-width:100%; max-height:100%; width:auto; height:auto; display:block; }
-  .sheet-mapcap{ font-size:8.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-soft);
-    opacity:.7; margin:8px 0 4px; text-align:center; flex:none; }
-  .sheet-map{ flex:none; width:min(100%,3.1in); margin:0 auto; aspect-ratio:var(--map-aspect);
-    position:relative; border:1px solid var(--line); overflow:hidden; }
-  .sheet-map img{ position:absolute; inset:0; width:100%; height:100%; display:block; }
-  .sheet-map img.ov-tri{ opacity:var(--tri-opacity); z-index:1; }
-  .sheet-map img.ov-dot{ z-index:2; }
-  .sheet-foot{ flex:none; display:flex; justify-content:space-between; border-top:1px solid var(--line);
-    margin-top:8px; padding-top:6px; font-size:8px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); }
-  .sheet-close{ position:fixed; top:16px; right:20px; background:none; border:none; color:var(--ivory);
-    font-size:11px; letter-spacing:.18em; text-transform:uppercase; z-index:160; }
-
-  /* ============== PRINT / PDF ============== */
-  .cover, .mapsheet{ display:none; }
+  /* ---------- print ---------- */
+  .cover,.mapsheet{ display:none; }
   @page{ size:8.5in 11in; margin:0.5in; }
   @media print{
     html,body{ height:auto; background:#fff; }
-    #splash, header.topbar, .hint, .plan-wrap, .flash, .gallery-title,
-    .gallery-empty, .gcard-tools, .missing-note, .sheetwrap, .present{ display:none !important; }
+    #splash,header.topbar,.hint,.plan-wrap,.flash,.gallery-title,.gallery-empty,
+    .gcard-tools,.missing-note,.present,.speak{ display:none !important; }
     #app{ position:static; opacity:1; overflow:visible; display:block; }
     main.stage{ overflow:visible; background:none; }
     section.gallery{ border:none; padding:0; background:none; }
     .gallery-cards{ display:block; margin:0; }
-
-    .cover{
-      display:flex !important; flex-direction:column; align-items:center; justify-content:center;
-      text-align:center; height:9.6in; break-after:page; page-break-after:always;
-    }
-    .cover img{ width:76%; max-width:5.6in; height:auto; margin-bottom:.45in; }
+    .cover{ display:flex !important; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; height:9.6in; break-after:page; page-break-after:always; }
+    .cover img{ width:76%; max-width:5.6in; margin-bottom:.45in; }
     .cover .c1{ font-family:'EB Garamond',serif; font-size:26pt; letter-spacing:.04em; }
     .cover .c2{ font-size:9pt; letter-spacing:.3em; text-transform:uppercase; color:var(--brass); margin-top:12pt; }
-
-    /* page 2 — the plan with every pinned marker on it */
-    .mapsheet{
-      display:flex !important; flex-direction:column; align-items:center; justify-content:flex-start;
-      height:9.6in; break-after:page; page-break-after:always; text-align:center;
-    }
-    .mapsheet .ms-logo{ width:1.5in; height:auto; margin:0 auto .18in; }
-    .mapsheet .ms-title{ font-family:'EB Garamond',serif; font-size:15pt; margin-bottom:.05in; }
+    .mapsheet{ display:flex !important; flex-direction:column; align-items:center; height:9.6in;
+      break-after:page; page-break-after:always; text-align:center; }
+    .mapsheet .ms-logo{ width:1.5in; margin:0 auto .18in; }
+    .mapsheet .ms-title{ font-family:'EB Garamond',serif; font-size:15pt; }
     .mapsheet .ms-sub{ font-size:8pt; letter-spacing:.22em; text-transform:uppercase; color:var(--brass); margin-bottom:.2in; }
-    .mapsheet .ms-map{ position:relative; width:100%; aspect-ratio:var(--map-aspect);
-      border:1px solid var(--line); overflow:hidden; }
-    .mapsheet .ms-map img{ position:absolute; inset:0; width:100%; height:100%; }
-    .mapsheet .ms-map img.m-tri{ opacity:var(--tri-opacity); z-index:1; }
-    .mapsheet .ms-map img.m-dot{ z-index:2; }
-
-    .gcard{
-      break-inside:avoid; page-break-inside:avoid; break-after:page; page-break-after:always;
-      height:9.5in; display:flex; flex-direction:column; margin:0; padding:0;
-    }
+    .mapsheet .ms-map{ position:relative; width:100%; aspect-ratio:var(--map-aspect); border:1px solid var(--line); overflow:hidden; }
+    .mapsheet .ms-map img.mbase{ position:absolute; inset:0; width:100%; height:100%; }
+    .mapsheet .ms-map img.mtri{ position:absolute; inset:0; width:100%; height:100%; opacity:var(--tri-opacity); }
+    .mapsheet .ms-map img.mdot{ position:absolute; width:var(--tile); aspect-ratio:1; transform:translate(-50%,-50%); }
+    .gcard{ break-inside:avoid; page-break-inside:avoid; break-after:page; page-break-after:always;
+      height:9.5in; display:flex; flex-direction:column; margin:0; }
     .gcard:last-child{ break-after:auto; page-break-after:auto; }
     .card-logo{ width:1.35in; max-width:none; margin:0 auto .12in; }
     .gcard-image{ border:none; flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
@@ -364,21 +282,16 @@
   .print-foot{ display:none; justify-content:space-between; border-top:1px solid var(--line);
     margin-top:10pt; padding-top:6pt; font-size:8pt; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); }
 
-  /* ============== RESPONSIVE ============== */
-  @media (max-width:900px){
-    .widget{ width:min(52%,300px); }
-    .card-logo{ width:96px; }
-  }
-  @media (max-width:620px){
-    .plan-wrap{ padding:10px 10px 4px; }
-    .widget{ width:auto; left:10px; right:10px; top:auto; bottom:10px; max-height:56%; }
-    .widget .w-photo{ aspect-ratio:16/9; }
-    .zoombar{ left:8px; bottom:8px; }
-    section.gallery{ padding:20px 12px 50px; }
-    .gcard-tools{ gap:12px; }
-    .p-arrow{ width:42px; height:42px; font-size:17px; }
-    .p-arrow.prev{ left:6px; } .p-arrow.next{ right:6px; }
-    .sheet{ padding:16px; aspect-ratio:auto; }
+  /* ---------- phone ---------- */
+  @media (max-width:700px){
+    .plan-wrap{ padding:8px 8px 2px; }
+    .widget{ display:none !important; }         /* no widget on a phone, by request */
+    section.gallery{ padding:16px 10px 44px; }
+    .card-logo{ width:88px; }
+    .gcard-tools{ gap:11px; }
+    .p-arrow{ width:40px; height:40px; font-size:16px; }
+    .p-arrow.prev{ left:4px; } .p-arrow.next{ right:4px; }
+    .refmap{ max-width:100%; }
   }
 </style>
 </head>
@@ -390,7 +303,7 @@
       <h1 class="splash-title serif">BURLINGTON</h1>
       <div class="splash-sub serif">The Arcade Viewer</div>
       <div class="splash-rule"></div>
-      <div class="splash-cta"><span class="ring"></span> Click to Enter</div>
+      <div class="splash-cta"><span class="ring"></span> Tap to Enter</div>
     </div>
   </div>
 
@@ -406,8 +319,8 @@
         <a href="#" id="exteriorEditorLink" target="_blank" rel="noopener">Exterior Editor</a>
         <button type="button" id="btnPresent">Presentation</button>
         <button type="button" id="btnPdf">Download PDF</button>
+        <button type="button" class="speak" id="speakIntro" title="Read aloud">&#9835;</button>
       </div>
-      <div class="page-text serif" id="pageText"></div>
     </header>
 
     <div class="missing-note" id="missingNote"></div>
@@ -416,17 +329,31 @@
       <div class="plan-wrap" id="planWrap">
         <div class="plan-viewport" id="planViewport">
           <div class="plan-frame" id="planFrame">
-            <img class="base" id="baseLayer" alt="150 Worth Avenue floor plan" draggable="false">
+            <img class="base" id="baseLayer" src="m/base.jpg" alt="150 Worth Avenue floor plan" draggable="false">
+            <img class="tri" id="triLayer" alt="">
           </div>
-          <div class="zoombar">
+
+          <!-- quarter tap: four zones, hinted for the first ten seconds -->
+          <div class="quads" id="quads">
+            <button class="quad tl" type="button" data-q="tl"><span class="bub">Tap</span></button>
+            <button class="quad tr" type="button" data-q="tr"><span class="bub">Tap</span></button>
+            <button class="quad bl" type="button" data-q="bl"><span class="bub">Tap</span></button>
+            <button class="quad br" type="button" data-q="br"><span class="bub">Tap</span></button>
+          </div>
+
+          <div class="mapctl">
             <button type="button" id="zOut" title="Zoom out">&minus;</button>
-            <button type="button" class="lbl" id="zReset" title="Fit">Fit</button>
             <button type="button" id="zIn" title="Zoom in">+</button>
+            <button type="button" class="wide" id="zReset">Fit</button>
+            <button type="button" id="pLeft" title="Left">&#8249;</button>
+            <button type="button" id="pRight" title="Right">&#8250;</button>
+            <button type="button" id="pUp" title="Up">&#8963;</button>
+            <button type="button" id="pDown" title="Down">&#8964;</button>
           </div>
+
           <div class="flash" id="flash">Image added below</div>
         </div>
 
-        <!-- draggable / resizable widget, sections collapse independently -->
         <aside class="widget" id="widget">
           <div class="widget-head" id="wHead">
             <span class="wtitle" id="wTitle">View</span>
@@ -438,66 +365,62 @@
               <div class="sect-head" data-toggle="sectPhoto"><span>Rendering</span><span class="chev">&#9660;</span></div>
               <div class="sect-body">
                 <div class="w-photo" id="wPhoto"><div class="ph serif">&ndash;</div></div>
-                <div class="w-floor" id="wFloor">First Floor View</div>
+                <div class="w-floor"><span id="wFloor">First Floor View</span>
+                  <button type="button" class="speak" id="speakView" title="Read aloud">&#9835;</button></div>
               </div>
             </div>
             <div class="sect" id="sectMap">
               <div class="sect-head" data-toggle="sectMap"><span>Location on plan</span><span class="chev">&#9660;</span></div>
               <div class="sect-body">
-                <div class="cropwrap">
-                  <div class="crop" id="wCrop"><div class="crop-inner" id="wCropInner"></div></div>
-                  <div class="cropbar">
-                    <button type="button" id="cOut">&minus;</button>
-                    <button type="button" id="cReset">Centre</button>
-                    <button type="button" id="cIn">+</button>
-                  </div>
+                <div class="crop" id="wCrop"><div class="crop-inner" id="wCropInner"></div></div>
+                <div class="cropbar">
+                  <button type="button" id="cOut">&minus;</button>
+                  <button type="button" id="cReset">Centre</button>
+                  <button type="button" id="cIn">+</button>
                 </div>
               </div>
             </div>
             <div class="w-hint" id="wHint">Click the marker to pin this view below.</div>
           </div>
-          <div class="resize" id="wResize" title="Resize"></div>
+          <div class="resize" id="wResize"></div>
         </aside>
       </div>
 
-      <div class="hint">Hover a marker to preview &middot; click to pin it below &middot; drag the plan to pan, scroll to zoom</div>
+      <div class="hint" id="planHint">Tap a marker to pin it below</div>
 
       <section class="gallery">
         <div class="gallery-inner">
-
           <div class="cover">
             <img src="burlington-header.png" alt="Burlington Arcade">
             <div class="c1 serif">Burlington Arcade</div>
             <div class="c2">150 Worth Ave &mdash; Palm Beach</div>
           </div>
-
-          <div class="mapsheet" id="mapSheet">
+          <div class="mapsheet">
             <img class="ms-logo" src="fs-logo-black.png" alt="">
             <div class="ms-title serif">Selected Views</div>
             <div class="ms-sub">150 Worth Ave &mdash; Palm Beach</div>
             <div class="ms-map" id="msMap"></div>
           </div>
-
           <div class="gallery-title serif">Pinned Views</div>
-          <div class="gallery-empty" id="galleryEmpty">Click any marker above to add it here</div>
+          <div class="gallery-empty" id="galleryEmpty">Tap any marker above to add it here</div>
           <div class="gallery-cards" id="galleryCards"></div>
         </div>
       </section>
     </main>
   </div>
 
-  <!-- ============== PRESENTATION ============== -->
   <div class="present" id="present">
     <div class="p-top">
       <span class="p-label serif" id="pLabel">View</span>
+      <button type="button" class="speak" id="speakSlide" title="Read aloud">&#9835;</button>
       <button type="button" id="pDraw">Draw</button>
       <button type="button" id="pErase">Eraser</button>
       <button type="button" id="pClear">Clear</button>
-      <button type="button" id="pDownload">Download</button>
+      <button type="button" id="pDownload">Save</button>
       <button type="button" id="pFull">Full Screen</button>
       <button type="button" id="pClose">Close</button>
     </div>
-    <div class="p-stage">
+    <div class="p-stage" id="pStage">
       <button class="p-arrow prev" id="pPrev" type="button">&#8249;</button>
       <div class="p-holder nodraw" id="pHolder">
         <img id="pImg" alt="">
@@ -508,32 +431,17 @@
     <div class="p-count" id="pCount"></div>
   </div>
 
-  <!-- ============== EXPAND SHEET ============== -->
-  <div class="sheetwrap" id="sheetWrap">
-    <button class="sheet-close" id="sheetClose" type="button">Close</button>
-    <div class="sheet">
-      <img class="sheet-logo" src="fs-logo-black.png" alt="">
-      <div class="sheet-head">
-        <div class="l1 serif" id="sheetTitle">Burlington Arcade View</div>
-        <div class="l2" id="sheetSub">View</div>
-      </div>
-      <div class="sheet-photo" id="sheetPhoto"></div>
-      <div class="sheet-mapcap">Location on plan</div>
-      <div class="sheet-map" id="sheetMap"></div>
-      <div class="sheet-foot">
-        <span>Fairfax &amp; Sammons Architecture</span>
-        <span>150 Worth Ave &mdash; Palm Beach</span>
-      </div>
-    </div>
-  </div>
-
 <script>
 /* =====================================================================
    CONFIG
    ===================================================================== */
 const INTERIOR_EDITOR_LINK = "../esplanade/";
 const EXTERIOR_EDITOR_LINK = "";
-const PAGE_TEXT = "";
+
+const INTRO_TEXT =
+  "The Burlington Arcade Viewer. Seventeen renderings of the arcade at one hundred fifty Worth Avenue, " +
+  "Palm Beach, each tied to its position on the floor plan. Tap a marker to pin that view below, " +
+  "or tap a quarter of the plan to zoom into it.";
 
 const VIEW_FLOORS = {
   V1:"First Floor",  V2:"First Floor",  V3:"First Floor",  V4:"First Floor",
@@ -542,90 +450,122 @@ const VIEW_FLOORS = {
   V13:"First Floor", V14:"First Floor", V15:"First Floor", V16:"First Floor",
   V17:"First Floor"
 };
-
 const VIEW_EDITOR_LINKS = {
-  V1:"",  V2:"",  V3:"",  V4:"",  V5:"",  V6:"",  V7:"",  V8:"",  V9:"",
+  V1:"", V2:"", V3:"", V4:"", V5:"", V6:"", V7:"", V8:"", V9:"",
   V10:"", V11:"", V12:"", V13:"", V14:"", V15:"", V16:"", V17:""
 };
 
-const BASE_LAYER = "VIEWS-OF-BURLINGTON_0051_BASE-LAYER.png";
+/* Light assets in m/ — see the note at the top of this file for why. */
+const BASE = "m/base.jpg";
+const dotSrc = id => "m/dot-" + id + ".png";
+const triSrc = id => "m/tri-" + id + ".png";
 
-const VIEW_FILES = {
-  V1:  { dot:"VIEWS-OF-BURLINGTON_0032_VIEW-1-(1).png",  tri:"VIEWS-OF-BURLINGTON_0033_VIEW-1-(2).png",  image:"VIEWS-OF-BURLINGTON_0050_VIEW-1-IMAGE.jpg"  },
-  V2:  { dot:"VIEWS-OF-BURLINGTON_0030_VIEW-2-(1).png",  tri:"VIEWS-OF-BURLINGTON_0031_VIEW-2-(2).png",  image:"VIEWS-OF-BURLINGTON_0049_VIEW-2-IMAGE.jpg"  },
-  V3:  { dot:"VIEWS-OF-BURLINGTON_0028_VIEW-3-(1).png",  tri:"VIEWS-OF-BURLINGTON_0029_VIEW-3-(2).png",  image:"VIEWS-OF-BURLINGTON_0048_VIEW-3-IMAGE.jpg"  },
-  V4:  { dot:"VIEWS-OF-BURLINGTON_0026_VIEW-4-(1).png",  tri:"VIEWS-OF-BURLINGTON_0027_VIEW-4-(2).png",  image:"VIEWS-OF-BURLINGTON_0047_VIEW-4-IMAGE.jpg"  },
-  V5:  { dot:"VIEWS-OF-BURLINGTON_0024_VIEW-5-(1).png",  tri:"VIEWS-OF-BURLINGTON_0025_VIEW-5-(2).png",  image:"VIEWS-OF-BURLINGTON_0046_VIEW-5-IMAGE.jpg"  },
-  V6:  { dot:"VIEWS-OF-BURLINGTON_0022_VIEW-6-(1).png",  tri:"VIEWS-OF-BURLINGTON_0023_VIEW-6-(2).png",  image:"VIEWS-OF-BURLINGTON_0045_VIEW-6-IMAGE.jpg"  },
-  V7:  { dot:"VIEWS-OF-BURLINGTON_0020_VIEW-7-(1).png",  tri:"VIEWS-OF-BURLINGTON_0021_VIEW-7-(2).png",  image:"VIEWS-OF-BURLINGTON_0044_VIEW-7-IMAGE.jpg"  },
-  V8:  { dot:"VIEWS-OF-BURLINGTON_0018_VIEW-8-(1).png",  tri:"VIEWS-OF-BURLINGTON_0019_VIEW-8-(2).png",  image:"VIEWS-OF-BURLINGTON_0043_VIEW-8-IMAGE.jpg"  },
-  V9:  { dot:"VIEWS-OF-BURLINGTON_0016_VIEW-9-(1).png",  tri:"VIEWS-OF-BURLINGTON_0017_VIEW-9-(2).png",  image:"VIEWS-OF-BURLINGTON_0042_VIEW-9-IMAGE.jpg"  },
-  V10: { dot:"VIEWS-OF-BURLINGTON_0014_VIEW-10-(1).png", tri:"VIEWS-OF-BURLINGTON_0015_VIEW-10-(2).png", image:"VIEWS-OF-BURLINGTON_0041_VIEW-10-IMAGE.jpg" },
-  V11: { dot:"VIEWS-OF-BURLINGTON_0012_VIEW-11-(1).png", tri:"VIEWS-OF-BURLINGTON_0013_VIEW-11-(2).png", image:"VIEWS-OF-BURLINGTON_0040_VIEW-11-IMAGE.jpg" },
-  V12: { dot:"VIEWS-OF-BURLINGTON_0010_VIEW-12-(1).png", tri:"VIEWS-OF-BURLINGTON_0011_VIEW-12-(2).png", image:"VIEWS-OF-BURLINGTON_0039_VIEW-12-IMAGE.jpg" },
-  V13: { dot:"VIEWS-OF-BURLINGTON_0008_VIEW-13-(1).png", tri:"VIEWS-OF-BURLINGTON_0009_VIEW-13-(2).png", image:"VIEWS-OF-BURLINGTON_0038_VIEW-13-IMAGE.jpg" },
-  V14: { dot:"VIEWS-OF-BURLINGTON_0006_VIEW-14-(1).png", tri:"VIEWS-OF-BURLINGTON_0007_VIEW-14-(2).png", image:"VIEWS-OF-BURLINGTON_0037_VIEW-14-IMAGE.jpg" },
-  V15: { dot:"VIEWS-OF-BURLINGTON_0004_VIEW-15-(1).png", tri:"VIEWS-OF-BURLINGTON_0005_VIEW-15-(2).png", image:"VIEWS-OF-BURLINGTON_0036_VIEW-15-IMAGE.jpg" },
-  V16: { dot:"VIEWS-OF-BURLINGTON_0002_VIEW-16-(1).png", tri:"VIEWS-OF-BURLINGTON_0003_VIEW-16-(2).png", image:"VIEWS-OF-BURLINGTON_0035_VIEW-16-IMAGE.jpg" },
-  V17: { dot:"VIEWS-OF-BURLINGTON_0000_VIEW-17-(1).png", tri:"VIEWS-OF-BURLINGTON_0001_VIEW-17-(2).png", image:"VIEWS-OF-BURLINGTON_0034_VIEW-17-IMAGE.jpg" }
+const IMAGE = {
+  V1:"VIEWS-OF-BURLINGTON_0050_VIEW-1-IMAGE.jpg",  V2:"VIEWS-OF-BURLINGTON_0049_VIEW-2-IMAGE.jpg",
+  V3:"VIEWS-OF-BURLINGTON_0048_VIEW-3-IMAGE.jpg",  V4:"VIEWS-OF-BURLINGTON_0047_VIEW-4-IMAGE.jpg",
+  V5:"VIEWS-OF-BURLINGTON_0046_VIEW-5-IMAGE.jpg",  V6:"VIEWS-OF-BURLINGTON_0045_VIEW-6-IMAGE.jpg",
+  V7:"VIEWS-OF-BURLINGTON_0044_VIEW-7-IMAGE.jpg",  V8:"VIEWS-OF-BURLINGTON_0043_VIEW-8-IMAGE.jpg",
+  V9:"VIEWS-OF-BURLINGTON_0042_VIEW-9-IMAGE.jpg",  V10:"VIEWS-OF-BURLINGTON_0041_VIEW-10-IMAGE.jpg",
+  V11:"VIEWS-OF-BURLINGTON_0040_VIEW-11-IMAGE.jpg",V12:"VIEWS-OF-BURLINGTON_0039_VIEW-12-IMAGE.jpg",
+  V13:"VIEWS-OF-BURLINGTON_0038_VIEW-13-IMAGE.jpg",V14:"VIEWS-OF-BURLINGTON_0037_VIEW-14-IMAGE.jpg",
+  V15:"VIEWS-OF-BURLINGTON_0036_VIEW-15-IMAGE.jpg",V16:"VIEWS-OF-BURLINGTON_0035_VIEW-16-IMAGE.jpg",
+  V17:"VIEWS-OF-BURLINGTON_0034_VIEW-17-IMAGE.jpg"
 };
 
-/* Marker positions measured directly from each dot PNG on 2026-08-20.
-   V10 and V14 were wrong before, which is why they never responded. */
+/* Marker positions measured from the PNGs on 2026-08-20. */
 const VIEWS = [
-  {n:1, id:"V1",  label:"VIEW 1",  x_pct:15.7, y_pct:45.7},
-  {n:2, id:"V2",  label:"VIEW 2",  x_pct:8.5,  y_pct:47.2},
-  {n:3, id:"V3",  label:"VIEW 3",  x_pct:91.5, y_pct:44.1},
-  {n:4, id:"V4",  label:"VIEW 4",  x_pct:18.0, y_pct:25.8},
-  {n:5, id:"V5",  label:"VIEW 5",  x_pct:84.2, y_pct:8.8},
-  {n:6, id:"V6",  label:"VIEW 6",  x_pct:90.8, y_pct:9.2},
-  {n:7, id:"V7",  label:"VIEW 7",  x_pct:18.0, y_pct:50.7},
-  {n:8, id:"V8",  label:"VIEW 8",  x_pct:25.7, y_pct:22.5},
-  {n:9, id:"V9",  label:"VIEW 9",  x_pct:29.8, y_pct:20.6},
-  {n:10,id:"V10", label:"VIEW 10", x_pct:33.2, y_pct:74.2},
-  {n:11,id:"V11", label:"VIEW 11", x_pct:34.5, y_pct:77.3},
-  {n:12,id:"V12", label:"VIEW 12", x_pct:33.5, y_pct:25.1},
-  {n:13,id:"V13", label:"VIEW 13", x_pct:39.8, y_pct:25.4},
-  {n:14,id:"V14", label:"VIEW 14", x_pct:36.0, y_pct:73.2},
-  {n:15,id:"V15", label:"VIEW 15", x_pct:59.2, y_pct:31.0},
-  {n:16,id:"V16", label:"VIEW 16", x_pct:61.2, y_pct:35.3},
-  {n:17,id:"V17", label:"VIEW 17", x_pct:61.2, y_pct:50.7}
+  {n:1,id:"V1",label:"VIEW 1",x:15.7,y:45.7},   {n:2,id:"V2",label:"VIEW 2",x:8.5,y:47.2},
+  {n:3,id:"V3",label:"VIEW 3",x:91.5,y:44.1},   {n:4,id:"V4",label:"VIEW 4",x:18.0,y:25.8},
+  {n:5,id:"V5",label:"VIEW 5",x:84.2,y:8.8},    {n:6,id:"V6",label:"VIEW 6",x:90.8,y:9.2},
+  {n:7,id:"V7",label:"VIEW 7",x:18.0,y:50.7},   {n:8,id:"V8",label:"VIEW 8",x:25.7,y:22.5},
+  {n:9,id:"V9",label:"VIEW 9",x:29.8,y:20.6},   {n:10,id:"V10",label:"VIEW 10",x:33.2,y:74.2},
+  {n:11,id:"V11",label:"VIEW 11",x:34.5,y:77.3},{n:12,id:"V12",label:"VIEW 12",x:33.5,y:25.1},
+  {n:13,id:"V13",label:"VIEW 13",x:39.8,y:25.4},{n:14,id:"V14",label:"VIEW 14",x:36.0,y:73.2},
+  {n:15,id:"V15",label:"VIEW 15",x:59.2,y:31.0},{n:16,id:"V16",label:"VIEW 16",x:61.2,y:35.3},
+  {n:17,id:"V17",label:"VIEW 17",x:61.2,y:50.7}
 ];
+
+const QUAD_HINT_MS = 10000;   // how long the "Tap" bubbles stay up
 
 /* =====================================================================
    HELPERS
    ===================================================================== */
 const byId = id => document.getElementById(id);
-const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
+const clamp = (v,a,b) => Math.min(b, Math.max(a,v));
 const viewById = id => VIEWS.find(v => v.id === id);
+const isPhone = () => window.matchMedia('(max-width:700px)').matches;
 
 const els = {};
-["splash","app","stage","planWrap","planViewport","planFrame","baseLayer",
- "zIn","zOut","zReset","flash","widget","wHead","wTitle","wMin","wClose",
- "wPhoto","wFloor","wCrop","wCropInner","wHint","wResize","cIn","cOut","cReset",
- "galleryCards","galleryEmpty","interiorEditorLink","exteriorEditorLink",
- "pageText","missingNote","mapSheet","msMap",
- "present","pLabel","pDraw","pErase","pClear","pDownload","pFull","pClose",
- "pPrev","pNext","pHolder","pImg","pCanvas","pCount",
- "sheetWrap","sheetClose","sheetTitle","sheetSub","sheetPhoto","sheetMap",
- "btnPresent","btnPdf"].forEach(k => els[k] = byId(k));
+["splash","app","stage","planWrap","planViewport","planFrame","baseLayer","triLayer",
+ "quads","zIn","zOut","zReset","pLeft","pRight","pUp","pDown","flash","planHint",
+ "widget","wHead","wTitle","wMin","wClose","wPhoto","wFloor","wCrop","wCropInner",
+ "wHint","wResize","cIn","cOut","cReset","speakView","speakIntro","speakSlide",
+ "galleryCards","galleryEmpty","interiorEditorLink","exteriorEditorLink","missingNote","msMap",
+ "present","pLabel","pDraw","pErase","pClear","pDownload","pFull","pClose","pStage",
+ "pPrev","pNext","pHolder","pImg","pCanvas","pCount","btnPresent","btnPdf"]
+ .forEach(k => els[k] = byId(k));
 
 const state = {
-  isTouch: matchMedia("(hover:none),(pointer:coarse)").matches,
-  pinned: [],            // view ids in display order
-  locked: null,          // view the widget is holding
-  plan: {z:1, x:0, y:0},
-  crop: {z:4.5, x:0, y:0, view:null},
-  present: {i:0, drawing:false, erasing:false, strokes:{}}
+  pinned: [], locked: null, hot: null,
+  plan:{z:1,x:0,y:0}, crop:{z:4.5,x:0,y:0,view:null},
+  pres:{i:0, draw:false, erase:false, strokes:{}}
 };
-const groups = new Map();
+const marks = new Map();
 const missing = [];
 
-els.pageText.textContent = PAGE_TEXT;
+function noteMissing(f){
+  missing.push(f);
+  els.missingNote.classList.add('visible');
+  els.missingNote.textContent = 'Could not load: ' + missing.slice(0,4).join(', ') +
+    (missing.length>4 ? ' (+' + (missing.length-4) + ' more)' : '');
+}
 
-function wireLink(el, url){
+/* ---------- speech ---------- */
+let speakingBtn = null;
+function speak(text, btn){
+  if(!('speechSynthesis' in window)){ flash('Audio not supported here'); return; }
+  if(speechSynthesis.speaking){
+    speechSynthesis.cancel();
+    if(speakingBtn) speakingBtn.classList.remove('on');
+    if(speakingBtn === btn){ speakingBtn = null; return; }
+  }
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.95; u.pitch = 1;
+  u.onend = () => { btn && btn.classList.remove('on'); speakingBtn = null; };
+  btn && btn.classList.add('on');
+  speakingBtn = btn;
+  speechSynthesis.speak(u);
+}
+els.speakIntro.addEventListener('click', () => speak(INTRO_TEXT, els.speakIntro));
+els.speakView.addEventListener('click', () => {
+  const v = viewById(state.locked || state.hot);
+  if(v) speak(v.label + '. ' + (VIEW_FLOORS[v.id]||'First Floor') + ' view of the Burlington Arcade.', els.speakView);
+});
+els.speakSlide.addEventListener('click', () => {
+  const id = state.pinned[state.pres.i];
+  if(!id) return;
+  const v = viewById(id);
+  speak(v.label + '. ' + (VIEW_FLOORS[id]||'First Floor') +
+        ' view of the Burlington Arcade at one hundred fifty Worth Avenue, Palm Beach.', els.speakSlide);
+});
+
+/* ---------- image cache ---------- */
+const cache = new Map();
+function getImage(src){
+  if(cache.has(src)) return cache.get(src);
+  const p = new Promise(res => {
+    const im = new Image(); im.decoding='async';
+    im.onload = () => res(src);
+    im.onerror = () => { noteMissing(src); res(null); };
+    im.src = src;
+  });
+  cache.set(src, p);
+  return p;
+}
+
+function wireLink(el,url){
   if(url){ el.href = url; el.classList.remove('disabled'); }
-  else { el.href = '#'; el.classList.add('disabled'); el.addEventListener('click', e => e.preventDefault()); }
+  else { el.href='#'; el.classList.add('disabled'); el.addEventListener('click', e=>e.preventDefault()); }
 }
 wireLink(els.interiorEditorLink, INTERIOR_EDITOR_LINK);
 wireLink(els.exteriorEditorLink, EXTERIOR_EDITOR_LINK);
@@ -633,248 +573,195 @@ wireLink(els.exteriorEditorLink, EXTERIOR_EDITOR_LINK);
 els.splash.addEventListener('click', () => {
   els.splash.classList.add('hidden');
   els.app.classList.add('visible');
+  startQuadHint();
 });
 
-function noteMissing(what){
-  missing.push(what);
-  els.missingNote.classList.add('visible');
-  const shown = missing.slice(0,4).join(', ');
-  const more = missing.length > 4 ? ' (+' + (missing.length-4) + ' more)' : '';
-  els.missingNote.textContent = 'These files could not be loaded: ' + shown + more +
-    '. They should sit in this folder with these exact names.';
-}
-
-/* image cache — every picture is fetched at most once */
-const imgCache = new Map();
-function getImage(src){
-  if(imgCache.has(src)) return imgCache.get(src);
-  const p = new Promise(resolve => {
-    const im = new Image();
-    im.decoding = 'async';
-    im.onload = () => resolve(src);
-    im.onerror = () => { noteMissing(src); resolve(null); };
-    im.src = src;
-  });
-  imgCache.set(src, p);
-  return p;
-}
-
 /* =====================================================================
-   THE PLAN — build, pan, zoom (uniform scale, ratio can never break)
+   PLAN
    ===================================================================== */
-function buildPlan(){
-  els.baseLayer.decoding = 'async';
-  els.baseLayer.addEventListener('error', () => noteMissing(BASE_LAYER), {once:true});
-  els.baseLayer.src = BASE_LAYER;
+els.baseLayer.addEventListener('error', () => noteMissing(BASE), {once:true});
 
-  VIEWS.forEach(v => {
-    const files = VIEW_FILES[v.id];
-    const group = document.createElement('div');
-    group.className = 'view-group';
-    group.dataset.id = v.id;
+VIEWS.forEach(v => {
+  const b = document.createElement('button');
+  b.className = 'mk'; b.type = 'button';
+  b.style.left = v.x + '%'; b.style.top = v.y + '%';
+  b.setAttribute('aria-label', v.label);
+  const im = document.createElement('img');
+  im.src = dotSrc(v.id); im.alt = ''; im.decoding = 'async';
+  im.addEventListener('error', () => noteMissing(dotSrc(v.id)), {once:true});
+  b.appendChild(im);
+  els.planFrame.appendChild(b);
+  marks.set(v.id, b);
 
-    const tri = document.createElement('img');
-    tri.className = 'layer-img layer-tri';
-    tri.alt = ''; tri.decoding = 'async';
-    group.appendChild(tri);
+  if(!isPhone()){
+    b.addEventListener('mouseenter', () => { state.hot = v.id; b.classList.add('is-hot'); showTri(v.id); showWidget(v); });
+    b.addEventListener('mouseleave', () => {
+      b.classList.remove('is-hot'); state.hot = null;
+      if(state.locked){ showTri(state.locked); showWidget(viewById(state.locked)); }
+      else { hideTri(); hideWidget(); }
+    });
+  }
+  b.addEventListener('click', e => { e.stopPropagation(); togglePin(v); });
+});
 
-    const dot = document.createElement('img');
-    dot.className = 'layer-img layer-dot';
-    dot.alt = v.label + ' marker'; dot.decoding = 'async';
-    dot.addEventListener('error', () => noteMissing(files.dot), {once:true});
-    dot.src = files.dot;
-    group.appendChild(dot);
-
-    const hit = document.createElement('button');
-    hit.className = 'hit'; hit.type = 'button';
-    hit.style.left = v.x_pct + '%';
-    hit.style.top  = v.y_pct + '%';
-    hit.setAttribute('aria-label', v.label);
-    group.appendChild(hit);
-
-    els.planFrame.appendChild(group);
-    groups.set(v.id, {group, tri, dot, files, v, triLoaded:false});
-
-    if(!state.isTouch){
-      hit.addEventListener('mouseenter', () => { loadTri(v.id); group.classList.add('is-hot'); showWidget(v); });
-      hit.addEventListener('mouseleave', () => {
-        group.classList.remove('is-hot');
-        if(state.locked) showWidget(viewById(state.locked)); else hideWidget();
-      });
-    }
-    hit.addEventListener('click', e => { e.stopPropagation(); loadTri(v.id); togglePin(v); });
-  });
+/* only ever ONE sightline in memory */
+function showTri(id){
+  const src = triSrc(id);
+  if(els.triLayer.dataset.id !== id){
+    els.triLayer.dataset.id = id;
+    els.triLayer.src = src;
+  }
+  els.triLayer.classList.add('show');
 }
-function loadTri(id){
-  const g = groups.get(id);
-  if(g.triLoaded) return;
-  g.triLoaded = true;
-  g.tri.addEventListener('error', () => noteMissing(g.files.tri), {once:true});
-  g.tri.src = g.files.tri;
-}
-buildPlan();
+function hideTri(){ els.triLayer.classList.remove('show'); }
 
 function applyPlan(){
-  const p = state.plan;
-  const vp = els.planViewport;
+  const p = state.plan, vp = els.planViewport;
   const w = vp.clientWidth, h = vp.clientHeight;
-  // never let the plan be dragged away from the frame
-  const maxX = 0, minX = w - w*p.z;
-  const maxY = 0, minY = h - h*p.z;
-  p.x = clamp(p.x, minX, maxX);
-  p.y = clamp(p.y, minY, maxY);
+  p.x = clamp(p.x, w - w*p.z, 0);
+  p.y = clamp(p.y, h - h*p.z, 0);
   els.planFrame.style.transform = 'translate(' + p.x + 'px,' + p.y + 'px) scale(' + p.z + ')';
 }
-function zoomPlanAt(factor, cx, cy){
+function zoomAt(f, cx, cy){
   const p = state.plan;
-  const z2 = clamp(p.z * factor, 1, 8);
-  const r = z2 / p.z;
-  p.x = cx - (cx - p.x) * r;
-  p.y = cy - (cy - p.y) * r;
+  const z2 = clamp(p.z*f, 1, 8), r = z2/p.z;
+  p.x = cx - (cx - p.x)*r;
+  p.y = cy - (cy - p.y)*r;
   p.z = z2;
   applyPlan();
 }
-els.zIn.addEventListener('click', () => { const b = els.planViewport.getBoundingClientRect(); zoomPlanAt(1.4, b.width/2, b.height/2); });
-els.zOut.addEventListener('click', () => { const b = els.planViewport.getBoundingClientRect(); zoomPlanAt(1/1.4, b.width/2, b.height/2); });
-els.zReset.addEventListener('click', () => { state.plan = {z:1,x:0,y:0}; applyPlan(); });
+const vpBox = () => els.planViewport.getBoundingClientRect();
+els.zIn.addEventListener('click', () => { const b=vpBox(); zoomAt(1.45,b.width/2,b.height/2); });
+els.zOut.addEventListener('click', () => { const b=vpBox(); zoomAt(1/1.45,b.width/2,b.height/2); });
+els.zReset.addEventListener('click', () => { state.plan={z:1,x:0,y:0}; applyPlan(); });
+
+function nudge(dx,dy){
+  const b = vpBox();
+  state.plan.x += dx * b.width * 0.28;
+  state.plan.y += dy * b.height * 0.28;
+  applyPlan();
+}
+els.pLeft.addEventListener('click',  () => nudge( 1, 0));
+els.pRight.addEventListener('click', () => nudge(-1, 0));
+els.pUp.addEventListener('click',    () => nudge( 0, 1));
+els.pDown.addEventListener('click',  () => nudge( 0,-1));
 
 els.planViewport.addEventListener('wheel', e => {
   e.preventDefault();
-  const b = els.planViewport.getBoundingClientRect();
-  zoomPlanAt(e.deltaY < 0 ? 1.13 : 1/1.13, e.clientX - b.left, e.clientY - b.top);
+  const b = vpBox();
+  zoomAt(e.deltaY < 0 ? 1.13 : 1/1.13, e.clientX-b.left, e.clientY-b.top);
 }, {passive:false});
 
-/* one pointer = pan, two fingers = pinch. Same code path for mouse/touch/pen. */
-makePannable(els.planViewport, state.plan, applyPlan, () => els.planViewport.getBoundingClientRect(),
-             f => clamp(f, 1, 8), '.hit');
+/* ---------- quarter tap ---------- */
+let quadTimer = null;
+function startQuadHint(){
+  els.quads.classList.add('on');
+  clearTimeout(quadTimer);
+  quadTimer = setTimeout(() => els.quads.classList.remove('on'), QUAD_HINT_MS);
+}
+els.quads.addEventListener('click', e => {
+  const btn = e.target.closest('.quad');
+  if(!btn) return;
+  const q = btn.dataset.q;
+  const b = vpBox();
+  state.plan.z = 2;
+  // put the chosen quarter in the middle of the frame
+  state.plan.x = (q === 'tl' || q === 'bl') ? 0 : -b.width;
+  state.plan.y = (q === 'tl' || q === 'tr') ? 0 : -b.height;
+  applyPlan();
+  els.quads.classList.remove('on');
+  flash('Drag or use the arrows');
+});
 
-function makePannable(surface, model, apply, rect, zclamp, ignoreSel){
-  const pts = new Map();
-  let start = null;
-
+/* ---------- pan / pinch, shared by plan and crop ---------- */
+function makePannable(surface, model, apply, rect, zmax, ignore){
+  const pts = new Map(); let start = null;
   surface.addEventListener('pointerdown', e => {
-    if(ignoreSel && e.target.closest(ignoreSel)) return;
+    if(ignore && e.target.closest(ignore)) return;
     surface.setPointerCapture(e.pointerId);
-    pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
-    if(pts.size === 1){
-      start = {x:e.clientX, y:e.clientY, mx:model.x, my:model.y};
-      surface.classList.add('grabbing');
-    } else if(pts.size === 2){
-      const [a,b] = [...pts.values()];
-      start = {dist:Math.hypot(a.x-b.x, a.y-b.y), z:model.z,
-               cx:(a.x+b.x)/2, cy:(a.y+b.y)/2, mx:model.x, my:model.y};
+    pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size === 1){ start={x:e.clientX,y:e.clientY,mx:model.x,my:model.y}; surface.classList.add('grabbing'); }
+    else if(pts.size === 2){
+      const [a,b]=[...pts.values()];
+      start={dist:Math.hypot(a.x-b.x,a.y-b.y), z:model.z, cx:(a.x+b.x)/2, cy:(a.y+b.y)/2, mx:model.x, my:model.y};
     }
   });
-
   surface.addEventListener('pointermove', e => {
-    if(!pts.has(e.pointerId)) return;
-    pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
-    const r = rect();
-
-    if(pts.size === 1 && start){
-      model.x = start.mx + (e.clientX - start.x);
-      model.y = start.my + (e.clientY - start.y);
+    if(!pts.has(e.pointerId) || !start) return;
+    pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size === 1){
+      model.x = start.mx + (e.clientX-start.x);
+      model.y = start.my + (e.clientY-start.y);
       apply();
-    } else if(pts.size === 2 && start && start.dist){
-      const [a,b] = [...pts.values()];
-      const d = Math.hypot(a.x-b.x, a.y-b.y);
-      const z2 = zclamp(start.z * (d / start.dist));
-      const cx = start.cx - r.left, cy = start.cy - r.top;
-      const ratio = z2 / start.z;
-      model.x = cx - (cx - start.mx) * ratio;
-      model.y = cy - (cy - start.my) * ratio;
-      model.z = z2;
+    } else if(pts.size === 2 && start.dist){
+      const [a,b]=[...pts.values()], r0 = rect();
+      const z2 = clamp(start.z * (Math.hypot(a.x-b.x,a.y-b.y)/start.dist), 1, zmax);
+      const cx = start.cx-r0.left, cy = start.cy-r0.top, r = z2/start.z;
+      model.x = cx-(cx-start.mx)*r; model.y = cy-(cy-start.my)*r; model.z = z2;
       apply();
     }
   });
-
-  const end = e => {
-    pts.delete(e.pointerId);
-    if(pts.size === 0){ start = null; surface.classList.remove('grabbing'); }
-  };
+  const end = e => { pts.delete(e.pointerId); if(!pts.size){ start=null; surface.classList.remove('grabbing'); } };
   surface.addEventListener('pointerup', end);
   surface.addEventListener('pointercancel', end);
 }
-
+makePannable(els.planViewport, state.plan, applyPlan, vpBox, 8, '.mk,.quad');
 window.addEventListener('resize', () => { applyPlan(); if(state.crop.view) applyCrop(); });
 
 /* =====================================================================
-   WIDGET
+   WIDGET (desktop only)
    ===================================================================== */
-document.querySelectorAll('.sect-head').forEach(h => {
-  h.addEventListener('click', () => byId(h.dataset.toggle).classList.toggle('closed'));
-});
+document.querySelectorAll('.sect-head').forEach(h =>
+  h.addEventListener('click', () => byId(h.dataset.toggle).classList.toggle('closed')));
 els.wMin.addEventListener('click', e => { e.stopPropagation(); els.widget.classList.toggle('min'); });
-els.wClose.addEventListener('click', e => {
-  e.stopPropagation();
-  state.locked = null;
-  groups.forEach(g => g.group.classList.remove('is-hot'));
-  hideWidget();
-});
+els.wClose.addEventListener('click', e => { e.stopPropagation(); state.locked=null; hideTri(); hideWidget(); });
 
-let widgetSeq = 0;
+let wSeq = 0;
 function showWidget(v){
-  if(!v) return;
-  const files = VIEW_FILES[v.id];
-  const seq = ++widgetSeq;
-
+  if(isPhone() || !v) return;
+  const seq = ++wSeq;
   els.widget.classList.add('visible');
   els.wTitle.textContent = v.label;
-  els.wFloor.textContent = (VIEW_FLOORS[v.id] || 'First Floor') + ' View';
+  els.wFloor.textContent = (VIEW_FLOORS[v.id]||'First Floor') + ' View';
   els.wHint.textContent = state.pinned.includes(v.id)
-    ? 'Pinned below. Click the marker again to unpin.'
-    : 'Click the marker to pin this view below.';
-
+    ? 'Pinned below. Click again to unpin.' : 'Click the marker to pin this view below.';
   els.wPhoto.innerHTML = '<div class="ph serif">' + v.n + '</div>';
-  getImage(files.image).then(src => {
-    if(seq !== widgetSeq || !src) return;
-    const im = new Image();
-    im.src = src; im.alt = v.label; im.decoding = 'async';
-    els.wPhoto.innerHTML = ''; els.wPhoto.appendChild(im);
+  getImage(IMAGE[v.id]).then(src => {
+    if(seq !== wSeq || !src) return;
+    const im = new Image(); im.src = src; im.alt = v.label; im.decoding='async';
+    els.wPhoto.innerHTML=''; els.wPhoto.appendChild(im);
   });
-
   buildCrop(v);
 }
 function hideWidget(){ els.widget.classList.remove('visible'); }
 
-/* the plan detail: same three files, its own zoom/pan, ratio locked */
 function buildCrop(v){
-  const files = VIEW_FILES[v.id];
   if(state.crop.view !== v.id){
-    state.crop.view = v.id;
-    state.crop.z = 4.5;
+    state.crop.view = v.id; state.crop.z = 4.5;
     els.wCropInner.innerHTML = '';
-    [[BASE_LAYER,'c-base'], [files.tri,'c-tri'], [files.dot,'c-dot']].forEach(([src,cls]) => {
-      const im = document.createElement('img');
-      im.className = cls; im.src = src; im.alt = '';
-      els.wCropInner.appendChild(im);
-    });
+    const b = new Image(); b.className='cbase'; b.src = BASE; b.alt='';
+    const t = new Image(); t.className='ctri';  t.src = triSrc(v.id); t.alt='';
+    const d = new Image(); d.className='cdot';  d.src = dotSrc(v.id); d.alt='';
+    d.style.left = v.x + '%'; d.style.top = v.y + '%';
+    els.wCropInner.append(b,t,d);
     centreCrop(v);
   }
   applyCrop();
 }
 function centreCrop(v){
-  const box = els.wCrop;
-  const w = box.clientWidth || 240, h = box.clientHeight || 240;
-  const z = state.crop.z;
-  const iw = w * z;
-  const ih = iw * (3161/4500);
-  state.crop.x = w/2 - (v.x_pct/100) * iw;
-  state.crop.y = h/2 - (v.y_pct/100) * ih;
+  const box = els.wCrop, w = box.clientWidth||240, h = box.clientHeight||240, z = state.crop.z;
+  const iw = w*z, ih = iw*(3161/4500);
+  state.crop.x = w/2 - (v.x/100)*iw;
+  state.crop.y = h/2 - (v.y/100)*ih;
 }
 function applyCrop(){
   const c = state.crop;
   els.wCropInner.style.transform = 'translate(' + c.x + 'px,' + c.y + 'px) scale(' + c.z + ')';
 }
 function zoomCrop(f){
-  const box = els.wCrop;
-  const w = box.clientWidth, h = box.clientHeight;
-  const c = state.crop;
-  const z2 = clamp(c.z * f, 1, 16);
-  const r = z2 / c.z;
-  c.x = w/2 - (w/2 - c.x) * r;
-  c.y = h/2 - (h/2 - c.y) * r;
-  c.z = z2;
+  const box = els.wCrop, w = box.clientWidth, h = box.clientHeight, c = state.crop;
+  const z2 = clamp(c.z*f, 1, 16), r = z2/c.z;
+  c.x = w/2-(w/2-c.x)*r; c.y = h/2-(h/2-c.y)*r; c.z = z2;
   applyCrop();
 }
 els.cIn.addEventListener('click',  e => { e.stopPropagation(); zoomCrop(1.4); });
@@ -884,100 +771,87 @@ els.cReset.addEventListener('click', e => {
   const v = viewById(state.crop.view);
   if(v){ state.crop.z = 4.5; centreCrop(v); applyCrop(); }
 });
-els.wCrop.addEventListener('wheel', e => {
-  e.preventDefault();
-  zoomCrop(e.deltaY < 0 ? 1.15 : 1/1.15);
-}, {passive:false});
-makePannable(els.wCrop, state.crop, applyCrop, () => els.wCrop.getBoundingClientRect(), f => clamp(f,1,16), null);
+makePannable(els.wCrop, state.crop, applyCrop, () => els.wCrop.getBoundingClientRect(), 16, null);
 
-/* drag the widget by its header, anywhere over the plan */
-(function(){
-  let s = null;
+(function(){          /* drag the widget */
+  let s=null;
   els.wHead.addEventListener('pointerdown', e => {
     if(e.target.tagName === 'BUTTON') return;
     els.wHead.setPointerCapture(e.pointerId);
-    const w = els.widget.getBoundingClientRect();
-    const p = els.planWrap.getBoundingClientRect();
-    s = {x:e.clientX, y:e.clientY, l:w.left - p.left, t:w.top - p.top};
-    els.widget.style.right = 'auto'; els.widget.style.bottom = 'auto';
-    els.widget.style.left = s.l + 'px'; els.widget.style.top = s.t + 'px';
+    const w = els.widget.getBoundingClientRect(), p = els.planWrap.getBoundingClientRect();
+    s = {x:e.clientX, y:e.clientY, l:w.left-p.left, t:w.top-p.top};
+    els.widget.style.right='auto'; els.widget.style.left = s.l+'px'; els.widget.style.top = s.t+'px';
     els.wHead.classList.add('grabbing');
   });
   els.wHead.addEventListener('pointermove', e => {
     if(!s) return;
-    const p = els.planWrap.getBoundingClientRect();
-    const w = els.widget.getBoundingClientRect();
-    els.widget.style.left = clamp(s.l + e.clientX - s.x, 0, p.width  - w.width)  + 'px';
-    els.widget.style.top  = clamp(s.t + e.clientY - s.y, 0, p.height - w.height) + 'px';
+    const p = els.planWrap.getBoundingClientRect(), w = els.widget.getBoundingClientRect();
+    els.widget.style.left = clamp(s.l+e.clientX-s.x, 0, p.width-w.width)+'px';
+    els.widget.style.top  = clamp(s.t+e.clientY-s.y, 0, p.height-w.height)+'px';
   });
-  const stop = () => { s = null; els.wHead.classList.remove('grabbing'); };
+  const stop=()=>{ s=null; els.wHead.classList.remove('grabbing'); };
   els.wHead.addEventListener('pointerup', stop);
   els.wHead.addEventListener('pointercancel', stop);
 })();
 
-/* resize from the corner */
-(function(){
-  let s = null;
+(function(){          /* resize the widget */
+  let s=null;
   els.wResize.addEventListener('pointerdown', e => {
-    e.stopPropagation();
-    els.wResize.setPointerCapture(e.pointerId);
+    e.stopPropagation(); els.wResize.setPointerCapture(e.pointerId);
     const w = els.widget.getBoundingClientRect();
-    s = {x:e.clientX, y:e.clientY, w:w.width, h:w.height};
+    s = {x:e.clientX,y:e.clientY,w:w.width,h:w.height};
   });
   els.wResize.addEventListener('pointermove', e => {
     if(!s) return;
-    els.widget.style.width  = clamp(s.w + e.clientX - s.x, 170, 900) + 'px';
-    els.widget.style.maxHeight = 'none';
-    els.widget.style.height = clamp(s.h + e.clientY - s.y, 150, 1200) + 'px';
+    els.widget.style.width  = clamp(s.w+e.clientX-s.x, 170, 900)+'px';
+    els.widget.style.height = clamp(s.h+e.clientY-s.y, 150, 1200)+'px';
     if(state.crop.view) applyCrop();
   });
-  const stop = () => { s = null; };
+  const stop=()=>{ s=null; };
   els.wResize.addEventListener('pointerup', stop);
   els.wResize.addEventListener('pointercancel', stop);
 })();
 
 /* =====================================================================
-   PIN / UNPIN
+   PIN
    ===================================================================== */
-let flashTimer = null;
+let flashTimer=null;
 function flash(msg){
   els.flash.textContent = msg;
   els.flash.classList.add('show');
   clearTimeout(flashTimer);
-  flashTimer = setTimeout(() => els.flash.classList.remove('show'), 1500);
+  flashTimer = setTimeout(()=>els.flash.classList.remove('show'), 1500);
 }
 
 function togglePin(v){
-  const g = groups.get(v.id);
+  const b = marks.get(v.id);
   const i = state.pinned.indexOf(v.id);
   if(i > -1){
-    state.pinned.splice(i,1);
-    g.group.classList.remove('is-pinned');
-    if(state.locked === v.id) state.locked = null;
+    state.pinned.splice(i,1); b.classList.remove('is-pinned');
+    if(state.locked === v.id){ state.locked = null; hideTri(); }
     flash('View removed');
   } else {
-    state.pinned.push(v.id);
-    g.group.classList.add('is-pinned');
-    state.locked = v.id;
+    state.pinned.push(v.id); b.classList.add('is-pinned');
+    state.locked = v.id; showTri(v.id);
     flash('Image added below');
   }
-  if(state.locked) showWidget(v); else hideWidget();
-  renderGallery();
+  if(!isPhone()){ if(state.locked) showWidget(v); else hideWidget(); }
+  renderGallery();       /* never scrolls the page */
 }
-function move(id, d){
-  const i = state.pinned.indexOf(id), j = i + d;
-  if(i < 0 || j < 0 || j >= state.pinned.length) return;
-  [state.pinned[i], state.pinned[j]] = [state.pinned[j], state.pinned[i]];
+function move(id,d){
+  const i = state.pinned.indexOf(id), j = i+d;
+  if(i<0 || j<0 || j>=state.pinned.length) return;
+  [state.pinned[i],state.pinned[j]] = [state.pinned[j],state.pinned[i]];
   renderGallery();
 }
 
-function refMap(id){
-  const f = VIEW_FILES[id];
+function refMap(v){
   const box = document.createElement('div');
   box.className = 'refmap';
-  const b = new Image(); b.src = BASE_LAYER; b.alt = '';
-  const t = new Image(); t.src = f.tri; t.className = 'r-tri'; t.alt = '';
-  const d = new Image(); d.src = f.dot; d.className = 'r-dot'; d.alt = '';
+  const b = new Image(); b.className='rbase'; b.src = BASE; b.alt='';
+  const t = new Image(); t.className='rtri';  t.src = triSrc(v.id); t.alt='';
+  const d = new Image(); d.className='rdot';  d.src = dotSrc(v.id); d.alt='';
+  d.style.left = v.x + '%'; d.style.top = v.y + '%';
   box.append(b,t,d);
   return box;
 }
@@ -986,61 +860,53 @@ function renderGallery(){
   els.galleryEmpty.style.display = state.pinned.length ? 'none' : 'block';
   els.galleryCards.innerHTML = '';
 
-  state.pinned.forEach((id, idx) => {
-    const v = viewById(id), files = VIEW_FILES[id];
+  state.pinned.forEach((id,idx) => {
+    const v = viewById(id);
     const card = document.createElement('div');
     card.className = 'gcard';
 
     const logo = document.createElement('img');
-    logo.className = 'card-logo'; logo.src = 'fs-logo-black.png'; logo.alt = 'Fairfax & Sammons';
+    logo.className='card-logo'; logo.src='fs-logo-black.png'; logo.alt='Fairfax & Sammons';
     card.appendChild(logo);
 
     const wrap = document.createElement('div');
     wrap.className = 'gcard-image';
     wrap.innerHTML = '<div class="ph serif">' + v.n + '</div>';
-    getImage(files.image).then(src => {
+    wrap.addEventListener('click', () => openPresent(idx));
+    getImage(IMAGE[id]).then(src => {
       if(!src) return;
-      const im = new Image();
-      im.className = 'shot'; im.src = src; im.alt = v.label; im.decoding = 'async';
-      wrap.innerHTML = '';
-      wrap.appendChild(im);
+      const im = new Image(); im.className='shot'; im.src=src; im.alt=v.label; im.decoding='async'; im.loading='lazy';
+      wrap.innerHTML=''; wrap.appendChild(im);
       const tag = document.createElement('div');
-      tag.className = 'tag serif'; tag.textContent = v.label;
+      tag.className='tag serif'; tag.textContent=v.label;
       wrap.appendChild(tag);
     });
     card.appendChild(wrap);
 
-    card.appendChild(refMap(id));
+    card.appendChild(refMap(v));
     const cap = document.createElement('div');
-    cap.className = 'refcap';
-    cap.textContent = v.label + ' · ' + (VIEW_FLOORS[id] || 'First Floor');
+    cap.className='refcap';
+    cap.textContent = v.label + ' · ' + (VIEW_FLOORS[id]||'First Floor');
     card.appendChild(cap);
 
     const tools = document.createElement('div');
-    tools.className = 'gcard-tools';
-    const mk = (txt, cls, fn, title) => {
-      const b = document.createElement('button');
-      b.type = 'button'; b.textContent = txt; if(cls) b.className = cls;
-      if(title) b.title = title;
-      b.addEventListener('click', fn); return b;
-    };
+    tools.className='gcard-tools';
+    const mk=(t,c,fn)=>{ const b=document.createElement('button'); b.type='button'; b.textContent=t;
+      if(c) b.className=c; b.addEventListener('click',fn); return b; };
     tools.append(
-      mk('↑','ord',() => move(id,-1),'Move up'),
-      mk('↓','ord',() => move(id, 1),'Move down'),
-      mk('Expand view', null, () => openSheet(v)),
-      mk('Present', null, () => openPresent(idx))
+      mk('↑','ord',()=>move(id,-1)),
+      mk('↓','ord',()=>move(id,1)),
+      mk('Open',null,()=>openPresent(idx))
     );
-    if(VIEW_EDITOR_LINKS[id]){
-      tools.append(mk('Go to editor', null, () => window.open(VIEW_EDITOR_LINKS[id],'_blank','noopener')));
-    }
-    const sp = document.createElement('span'); sp.className = 'spacer';
-    tools.append(sp, mk('Unpin', null, () => togglePin(v)));
+    if(VIEW_EDITOR_LINKS[id]) tools.append(mk('Editor',null,()=>window.open(VIEW_EDITOR_LINKS[id],'_blank','noopener')));
+    const sp=document.createElement('span'); sp.className='spacer';
+    tools.append(sp, mk('Unpin',null,()=>togglePin(v)));
     card.appendChild(tools);
 
     const pf = document.createElement('div');
-    pf.className = 'print-foot';
-    pf.innerHTML = '<span>' + v.label + ' — ' + (VIEW_FLOORS[id]||'First Floor') + '</span>' +
-                   '<span>150 Worth Ave — Palm Beach · ' + (idx+1) + '</span>';
+    pf.className='print-foot';
+    pf.innerHTML = '<span>'+v.label+' — '+(VIEW_FLOORS[id]||'First Floor')+'</span>' +
+                   '<span>150 Worth Ave — Palm Beach · '+(idx+1)+'</span>';
     card.appendChild(pf);
 
     els.galleryCards.appendChild(card);
@@ -1049,53 +915,26 @@ function renderGallery(){
   buildMapSheet();
 }
 
-/* page 2 of the PDF: the plan carrying every pinned marker */
 function buildMapSheet(){
   els.msMap.innerHTML = '';
   if(!state.pinned.length) return;
-  const b = new Image(); b.src = BASE_LAYER; b.alt = '';
+  const b = new Image(); b.className='mbase'; b.src=BASE; b.alt='';
   els.msMap.appendChild(b);
   state.pinned.forEach(id => {
-    const f = VIEW_FILES[id];
-    const t = new Image(); t.src = f.tri; t.className = 'm-tri'; t.alt = '';
-    const d = new Image(); d.src = f.dot; d.className = 'm-dot'; d.alt = '';
+    const v = viewById(id);
+    const t = new Image(); t.className='mtri'; t.src=triSrc(id); t.alt='';
+    const d = new Image(); d.className='mdot'; d.src=dotSrc(id); d.alt='';
+    d.style.left = v.x+'%'; d.style.top = v.y+'%';
     els.msMap.append(t,d);
   });
 }
 
 /* =====================================================================
-   EXPAND SHEET
-   ===================================================================== */
-function openSheet(v){
-  const f = VIEW_FILES[v.id];
-  els.sheetTitle.textContent = 'Burlington Arcade View ' + v.n;
-  els.sheetSub.textContent = v.label + ' · ' + (VIEW_FLOORS[v.id] || 'First Floor');
-
-  els.sheetPhoto.innerHTML = '';
-  getImage(f.image).then(src => {
-    if(!src) return;
-    const im = new Image(); im.src = src; im.alt = v.label;
-    els.sheetPhoto.appendChild(im);
-  });
-
-  els.sheetMap.innerHTML = '';
-  const b = new Image(); b.src = BASE_LAYER; b.alt = '';
-  const t = new Image(); t.src = f.tri; t.className = 'ov-tri'; t.alt = '';
-  const d = new Image(); d.src = f.dot; d.className = 'ov-dot'; d.alt = '';
-  els.sheetMap.append(b,t,d);
-
-  els.sheetWrap.classList.add('visible');
-}
-const closeSheet = () => els.sheetWrap.classList.remove('visible');
-els.sheetClose.addEventListener('click', closeSheet);
-els.sheetWrap.addEventListener('click', e => { if(e.target === els.sheetWrap) closeSheet(); });
-
-/* =====================================================================
-   PRESENTATION — full screen, arrows, red pen, eraser, download
+   LIGHTBOX / PRESENTATION — click or swipe through every pin
    ===================================================================== */
 function openPresent(i){
   if(!state.pinned.length){ flash('Pin some views first'); return; }
-  state.present.i = clamp(i || 0, 0, state.pinned.length - 1);
+  state.pres.i = clamp(i||0, 0, state.pinned.length-1);
   els.present.classList.add('visible');
   showSlide();
 }
@@ -1105,159 +944,142 @@ function closePresent(){
   if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
 }
 function showSlide(){
-  const id = state.pinned[state.present.i];
+  const id = state.pinned[state.pres.i];
   const v = viewById(id);
-  els.pLabel.textContent = v.label + ' · ' + (VIEW_FLOORS[id] || 'First Floor');
-  els.pCount.textContent = (state.present.i + 1) + ' / ' + state.pinned.length;
-  els.pImg.src = VIEW_FILES[id].image;
-  els.pImg.alt = v.label;
-  els.pImg.onload = () => { sizeCanvas(); restoreStrokes(); };
-  if(els.pImg.complete) { sizeCanvas(); restoreStrokes(); }
+  els.pLabel.textContent = v.label + ' · ' + (VIEW_FLOORS[id]||'First Floor');
+  els.pCount.textContent = (state.pres.i+1) + ' / ' + state.pinned.length;
+  els.pImg.src = IMAGE[id]; els.pImg.alt = v.label;
+  const ready = () => { sizeCanvas(); restoreStrokes(); };
+  els.pImg.onload = ready;
+  if(els.pImg.complete) ready();
 }
 function step(d){
   const n = state.pinned.length;
   if(!n) return;
-  saveStrokes();          // save THIS slide before the index moves on
-  state.present.i = (state.present.i + d + n) % n;
+  saveStrokes();                       /* save THIS slide before moving on */
+  state.pres.i = (state.pres.i + d + n) % n;
   showSlide();
 }
-els.pPrev.addEventListener('click', () => step(-1));
-els.pNext.addEventListener('click', () => step(1));
+els.pPrev.addEventListener('click', ()=>step(-1));
+els.pNext.addEventListener('click', ()=>step(1));
 els.pClose.addEventListener('click', closePresent);
-els.btnPresent.addEventListener('click', () => openPresent(0));
-
-document.addEventListener('keydown', e => {
-  if(els.present.classList.contains('visible')){
-    if(e.key === 'ArrowRight') step(1);
-    else if(e.key === 'ArrowLeft') step(-1);
-    else if(e.key === 'Escape') closePresent();
-    return;
-  }
-  if(e.key === 'Escape') closeSheet();
-});
-
+els.btnPresent.addEventListener('click', ()=>openPresent(0));
 els.pFull.addEventListener('click', () => {
   if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
-  else els.present.requestFullscreen().catch(() => flash('Full screen was blocked'));
+  else els.present.requestFullscreen().catch(()=>flash('Full screen was blocked'));
+});
+document.addEventListener('keydown', e => {
+  if(!els.present.classList.contains('visible')) return;
+  if(e.key==='ArrowRight') step(1);
+  else if(e.key==='ArrowLeft') step(-1);
+  else if(e.key==='Escape') closePresent();
 });
 
-/* ---- drawing ---- */
+/* swipe left/right on the slide (ignored while drawing) */
+(function(){
+  let sx=null, sy=null;
+  els.pStage.addEventListener('touchstart', e => {
+    if(state.pres.draw || state.pres.erase) return;
+    if(e.touches.length !== 1) return;
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+  }, {passive:true});
+  els.pStage.addEventListener('touchend', e => {
+    if(sx === null) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - sx, dy = t.clientY - sy;
+    if(Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)*1.4) step(dx < 0 ? 1 : -1);
+    sx = sy = null;
+  }, {passive:true});
+})();
+
+/* ---------- drawing ---------- */
 const ctx = els.pCanvas.getContext('2d');
 function sizeCanvas(){
   const r = els.pImg.getBoundingClientRect();
   if(!r.width) return;
   const dpr = window.devicePixelRatio || 1;
-  els.pCanvas.width  = Math.round(r.width  * dpr);
-  els.pCanvas.height = Math.round(r.height * dpr);
+  els.pCanvas.width = Math.round(r.width*dpr);
+  els.pCanvas.height = Math.round(r.height*dpr);
   ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.lineCap='round'; ctx.lineJoin='round';
 }
 window.addEventListener('resize', () => {
   if(els.present.classList.contains('visible')){ saveStrokes(); sizeCanvas(); restoreStrokes(); }
 });
-
 function saveStrokes(){
-  const id = state.pinned[state.present.i];
+  const id = state.pinned[state.pres.i];
   if(!id || !els.pCanvas.width) return;
-  try { state.present.strokes[id] = els.pCanvas.toDataURL('image/png'); } catch(err){}
+  try { state.pres.strokes[id] = els.pCanvas.toDataURL('image/png'); } catch(e){}
 }
 function restoreStrokes(){
-  const id = state.pinned[state.present.i];
-  ctx.clearRect(0,0,els.pCanvas.width, els.pCanvas.height);
-  const data = state.present.strokes[id];
-  if(!data) return;
+  const id = state.pinned[state.pres.i];
+  ctx.clearRect(0,0,els.pCanvas.width,els.pCanvas.height);
+  const d = state.pres.strokes[id];
+  if(!d) return;
   const im = new Image();
-  im.onload = () => {
-    const r = els.pImg.getBoundingClientRect();
-    ctx.drawImage(im, 0, 0, r.width, r.height);
-  };
-  im.src = data;
+  im.onload = () => { const r = els.pImg.getBoundingClientRect(); ctx.drawImage(im,0,0,r.width,r.height); };
+  im.src = d;
 }
-
 function setMode(draw, erase){
-  state.present.drawing = draw;
-  state.present.erasing = erase;
+  state.pres.draw = draw; state.pres.erase = erase;
   els.pDraw.classList.toggle('on', draw && !erase);
   els.pErase.classList.toggle('on', erase);
   els.pHolder.classList.toggle('nodraw', !draw && !erase);
 }
-els.pDraw.addEventListener('click', () => setMode(!(state.present.drawing && !state.present.erasing), false));
-els.pErase.addEventListener('click', () => setMode(true, !state.present.erasing));
+els.pDraw.addEventListener('click', () => setMode(!(state.pres.draw && !state.pres.erase), false));
+els.pErase.addEventListener('click', () => setMode(true, !state.pres.erase));
 els.pClear.addEventListener('click', () => {
-  ctx.clearRect(0,0,els.pCanvas.width, els.pCanvas.height);
-  delete state.present.strokes[state.pinned[state.present.i]];
+  ctx.clearRect(0,0,els.pCanvas.width,els.pCanvas.height);
+  delete state.pres.strokes[state.pinned[state.pres.i]];
 });
-
 (function(){
-  let drawing = false;
-  const pos = e => {
-    const r = els.pCanvas.getBoundingClientRect();
-    return {x:e.clientX - r.left, y:e.clientY - r.top};
-  };
+  let drawing=false;
+  const pos = e => { const r = els.pCanvas.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; };
   els.pCanvas.addEventListener('pointerdown', e => {
-    if(!state.present.drawing && !state.present.erasing) return;
+    if(!state.pres.draw && !state.pres.erase) return;
     els.pCanvas.setPointerCapture(e.pointerId);
     drawing = true;
-    const p = pos(e);
-    ctx.beginPath(); ctx.moveTo(p.x, p.y);
+    const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y);
   });
   els.pCanvas.addEventListener('pointermove', e => {
     if(!drawing) return;
     const p = pos(e);
-    if(state.present.erasing){
-      ctx.globalCompositeOperation = 'destination-out';
-      ctx.lineWidth = 26;
-    } else {
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.strokeStyle = '#C0392B';
-      ctx.lineWidth = 3.5;
-    }
-    ctx.lineTo(p.x, p.y); ctx.stroke();
+    if(state.pres.erase){ ctx.globalCompositeOperation='destination-out'; ctx.lineWidth=26; }
+    else { ctx.globalCompositeOperation='source-over'; ctx.strokeStyle='#C0392B'; ctx.lineWidth=3.5; }
+    ctx.lineTo(p.x,p.y); ctx.stroke();
   });
-  const end = e => {
-    if(!drawing) return;
-    drawing = false;
-    ctx.globalCompositeOperation = 'source-over';
-    saveStrokes();
-  };
+  const end = () => { if(!drawing) return; drawing=false; ctx.globalCompositeOperation='source-over'; saveStrokes(); };
   els.pCanvas.addEventListener('pointerup', end);
   els.pCanvas.addEventListener('pointercancel', end);
 })();
 
-/* download the current slide with the drawing burned in */
+/* ---------- save ---------- */
 els.pDownload.addEventListener('click', () => {
-  const id = state.pinned[state.present.i];
-  const v = viewById(id);
-  const img = els.pImg;
+  const id = state.pinned[state.pres.i], v = viewById(id), img = els.pImg;
   if(!img.naturalWidth){ flash('Image still loading'); return; }
-
   const out = document.createElement('canvas');
-  out.width = img.naturalWidth;
-  out.height = img.naturalHeight;
-  const octx = out.getContext('2d');
-  octx.drawImage(img, 0, 0, out.width, out.height);
-  if(els.pCanvas.width) octx.drawImage(els.pCanvas, 0, 0, out.width, out.height);
-
-  try {
-    const url = out.toDataURL('image/jpeg', 0.92);
+  out.width = img.naturalWidth; out.height = img.naturalHeight;
+  const o = out.getContext('2d');
+  o.drawImage(img,0,0,out.width,out.height);
+  if(els.pCanvas.width) o.drawImage(els.pCanvas,0,0,out.width,out.height);
+  try{
     const a = document.createElement('a');
-    a.href = url;
+    a.href = out.toDataURL('image/jpeg',0.92);
     a.download = 'Burlington-' + v.label.replace(/\s+/g,'-') + '.jpg';
     document.body.appendChild(a); a.click(); a.remove();
-  } catch(err){
-    // happens when the page is opened straight off disk (file://) rather
-    // than from the site — the browser will not let a canvas be exported.
-    flash('Open the site online to download');
+    flash('Saved');
+  } catch(e){
+    flash('Open the site online to save');
   }
 });
 
-/* =====================================================================
-   PDF
-   ===================================================================== */
 els.btnPdf.addEventListener('click', () => {
   if(!state.pinned.length){ flash('Pin some views first'); return; }
   window.print();
 });
+
+/* phones get a plainer instruction line */
+if(isPhone()) els.planHint.textContent = 'Tap a quarter to zoom · tap a marker to pin it below';
 
 applyPlan();
 </script>

@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>Burlington Arcade — 150 Worth Avenue — Fairfax &amp; Sammons</title>
+<title>Burlington Arcade â 150 Worth Avenue â Fairfax &amp; Sammons</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <!-- =====================================================================
-     BURLINGTON ARCADE — PROJECT DASHBOARD
-     150 Worth Avenue, Palm Beach · Fairfax & Sammons Architecture
+     BURLINGTON ARCADE â PROJECT DASHBOARD
+     150 Worth Avenue, Palm Beach Â· Fairfax & Sammons Architecture
 
      THE ONLY THINGS YOU EDIT are in the CONFIG block near the bottom of
      this file (search for "CONFIG"). Links, the description paragraph,
@@ -121,29 +121,55 @@
     .card{ grid-template-columns:1fr; }
     .card-media{ min-height:200px; }
   }
+  /* ---------- read-aloud ---------- */
+  .speak{ border:1px solid var(--line); background:var(--white); color:var(--ink-soft);
+    width:30px; height:30px; padding:0; font-size:13px; line-height:1; flex:none;
+    display:inline-flex; align-items:center; justify-content:center; transition:all .16s ease; }
+  .speak:hover{ background:var(--ink); color:var(--ivory); border-color:var(--ink); }
+  .speak.on{ background:var(--brass); border-color:var(--brass); color:var(--ivory); }
+  .lede-row{ display:flex; align-items:flex-start; gap:14px; justify-content:center; max-width:700px; margin:0 auto; }
+
+  /* ---------- essays ---------- */
+  .essay{ background:var(--white); border:1px solid var(--line); padding:32px 34px; }
+  .essay + .essay{ margin-top:14px; }
+  .essay-head{ display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  .essay h3{ font-family:'EB Garamond',Georgia,serif; font-weight:600; font-size:1.5rem; margin:0; flex:1; }
+  .essay .kicker{ font-size:9.5px; letter-spacing:.24em; text-transform:uppercase; color:var(--brass); margin:0 0 14px; }
+  .essay p{ margin:0 0 14px; font-size:.97rem; color:var(--ink-soft); font-family:'EB Garamond',Georgia,serif;
+    font-size:1.06rem; line-height:1.75; }
+  .essay p:last-of-type{ margin-bottom:0; }
+  .essay .more{ display:inline-flex; align-items:center; gap:8px; margin-top:18px; font-size:10px;
+    letter-spacing:.18em; text-transform:uppercase; color:var(--ink); text-decoration:none;
+    border-bottom:1px solid var(--line); padding-bottom:3px; }
+  .essay .more:hover{ border-color:var(--brass); color:var(--brass); }
+  @media (max-width:620px){ .essay{ padding:24px 20px; } }
+
 </style>
 </head>
 <body>
 
 <div class="header-band">
-  <img src="assets/burlington-header.png" alt="Burlington Arcade — Fairfax &amp; Sammons, New York ~ Palm Beach">
+  <img src="assets/burlington-header.png" alt="Burlington Arcade â Fairfax &amp; Sammons, New York ~ Palm Beach">
 </div>
 
 <div class="wrap">
 
   <div class="titleblock">
-    <p class="eyebrow">150 Worth Avenue · Palm Beach, Florida</p>
+    <p class="eyebrow">150 Worth Avenue Â· Palm Beach, Florida</p>
     <h1 class="serif">Burlington Arcade</h1>
     <p class="subtitle">Design Viewer</p>
     <div class="rule"></div>
-    <p class="lede" id="lede"></p>
+    <div class="lede-row">
+      <p class="lede" id="lede"></p>
+      <button type="button" class="speak" id="speakLede" title="Read aloud">&#9835;</button>
+    </div>
   </div>
 
   <div class="section-label">Floorplan &amp; Renderings</div>
 
   <a class="card" href="floorplan/">
     <div class="card-media">
-      <img src="assets/views-of-burlington.jpg" alt="Views of Burlington — numbered view plan">
+      <img src="assets/views-of-burlington.jpg" alt="Views of Burlington â numbered view plan">
     </div>
     <div class="card-body">
       <h2>Floorplan &amp; Renderings</h2>
@@ -157,7 +183,7 @@
   <a class="editor-row" id="rowInterior" href="esplanade/">
     <div>
       <h3>Interior Facade Editor</h3>
-      <p>Mock up arcade retail shopfronts — awnings, colour, signage, logos and retail category.</p>
+      <p>Mock up arcade retail shopfronts â awnings, colour, signage, logos and retail category.</p>
     </div>
     <span class="badge live">Live</span>
   </a>
@@ -170,6 +196,38 @@
     <span class="badge soon">Coming soon</span>
   </a>
 
+  <div class="section-label">The Arcade Tradition</div>
+
+  <div class="essay">
+    <div class="essay-head">
+      <h3 class="serif">Burlington Arcade, London</h3>
+      <button type="button" class="speak" data-read="e1" title="Read aloud">&#9835;</button>
+    </div>
+    <p class="kicker">Piccadilly &middot; opened 20 March 1819</p>
+    <div id="e1">
+      <p>Lord George Cavendish, later the first Earl of Burlington, commissioned the architect Samuel Ware to roof a narrow lane beside Burlington House and line it with shops. The stated purpose was elegant; the private one was practical, since he wanted to stop passers-by tossing oyster shells over his garden wall. What opened in 1819 became one of Britain's first covered shopping arcades and the model for every one that followed.</p>
+      <p>It is still policed by its own beadles, recruited originally from Cavendish's own regiment, the 10th Royal Hussars, and still dressed in frock coats and gold-braided top hats. Running, whistling and singing remain forbidden â whistling because it was once the pickpockets' signal that a beadle was coming.</p>
+      <p>That is the lineage Burlington Arcade at 150 Worth Avenue draws on: a covered street of small shopfronts, daylit from above, held to a standard of behaviour and finish that a department store floor plate cannot produce.</p>
+    </div>
+    <a class="more" href="https://burlingtonarcade.com" target="_blank" rel="noopener">Visit burlingtonarcade.com &rarr;</a>
+  </div>
+
+  <div class="section-label">Worth Avenue</div>
+
+  <div class="essay">
+    <div class="essay-head">
+      <h3 class="serif">Where Palm Beach Learned to Build</h3>
+      <button type="button" class="speak" data-read="e2" title="Read aloud">&#9835;</button>
+    </div>
+    <p class="kicker">Palm Beach, Florida &middot; 1918 to today</p>
+    <div id="e2">
+      <p>In 1918 Addison Mizner arrived in Palm Beach at the invitation of Paris Singer, the sewing-machine heir, who commissioned him to build a club on what was then a sand track. The Everglades Club opened in February 1919, pink-stuccoed and Moorish-inflected, and it set the terms for everything after it.</p>
+      <p>Mizner's instinct was not to design a building but to imply a history. He wanted a Mediterranean village that looked as though it had accumulated over centuries, mixing motifs across countries and eras so that a structure finished in 1919 already read as a hundred years old. In 1923 he cut Via Mizner through the block behind the club â a pedestrian lane of shopfronts, courtyards and balconies, terracotta barrel tile over white stucco, Venice by way of Spain.</p>
+      <p>The Vias are the point. Worth Avenue works because it is not one frontage but a series of intimate passages cut through depth, and that is precisely the move Burlington Arcade makes at 150 Worth: a covered street through a building that had turned its back on the idea.</p>
+    </div>
+    <a class="more" href="https://worth-avenue.com/information/legacy/" target="_blank" rel="noopener">Worth Avenue legacy &rarr;</a>
+  </div>
+
   <div class="section-label">Project Files</div>
 
   <div class="links">
@@ -179,7 +237,7 @@
     </a>
     <a class="linkbtn" id="btnDropbox" href="#" target="_blank" rel="noopener">
       <span class="lb-title">Dropbox</span>
-      <span class="lb-sub">150 Worth Ave — published &amp; social</span>
+      <span class="lb-sub">150 Worth Ave â published &amp; social</span>
     </a>
     <button class="linkbtn" id="btnPath" type="button">
       <span class="lb-title">Drive Location</span>
@@ -188,7 +246,7 @@
   </div>
 
   <footer>
-    Internal reference — Fairfax &amp; Sammons Architecture. Not for public distribution.
+    Internal reference â Fairfax &amp; Sammons Architecture. Not for public distribution.
   </footer>
 
 </div>
@@ -196,7 +254,7 @@
 <div class="modal" id="pathModal">
   <div class="modal-box">
     <h3 class="serif">Internal drive location</h3>
-    <p class="note">This is a folder on the office server, not a web link — it only opens on a computer connected to the office network. Copy it and paste it into the address bar of a File Explorer window.</p>
+    <p class="note">This is a folder on the office server, not a web link â it only opens on a computer connected to the office network. Copy it and paste it into the address bar of a File Explorer window.</p>
     <p class="pathbox" id="pathText"></p>
     <div class="modal-actions">
       <button class="btn" id="btnCopyPath" type="button">Copy path</button>
@@ -208,15 +266,20 @@
 
 <script>
 /* =====================================================================
-   CONFIG — everything you might want to change lives here
+   CONFIG â everything you might want to change lives here
    ===================================================================== */
 
 // The paragraph under the title.
 // NOTE (2026-08-20): drafted from public reporting and the firm's own
-// portfolio page. Please read it and correct anything wrong — this is the
+// portfolio page. Please read it and correct anything wrong â this is the
 // one paragraph on the page that makes a claim about the project.
 const DESCRIPTION =
-  "Burlington Arcade reimagines the former Saks Fifth Avenue space at the Esplanade, 150 Worth Avenue, as a pedestrian shopping arcade in the Mizner tradition. Two levels of shopfronts face a sky-lit walk cut through the depth of the block, bringing light, air and a street of small storefronts into what had been a single large-plate department store. This viewer holds the current design set — the numbered view renderings tied to their positions on the plan, and the facade tools used to mock up individual shopfronts.";
+  "Burlington Arcade takes the Esplanade at 150 Worth Avenue to a different order of experience — " +
+  "the covered shopping street, borrowed from the London original of 1819 and set down in Palm Beach. " +
+  "Two levels of shopfronts face a sky-lit walk cut through the depth of the block, turning what had been " +
+  "a single large-plate department store into a street of small storefronts with light, air and a way through. " +
+  "This viewer holds the current design set: the numbered renderings tied to their positions on the plan, " +
+  "and the facade tools used to mock up individual shopfronts.";
 
 const DRIVE_LINK    = "https://drive.google.com/drive/folders/1yZgQ2N9G5BVkX0fcC3ViBomkR256XQah";
 const DROPBOX_LINK  = "https://www.dropbox.com/home/Fairfax%20%26%20Sammons%20Project%20Resources/PROJECTS/PUBLISHED/INSTAGRAM%20POSTS/150%20Worth%20Ave%20-%20Esplanade";
@@ -226,7 +289,7 @@ const INTERNAL_PATH = "Y:\\FAIRFAX_SAMMONS_PARTNERS_PB\\PROJECTS\\CURRENT PROJEC
 const EXTERIOR_EDITOR_LINK = "";
 
 /* =====================================================================
-   Wiring — nothing below here needs editing
+   Wiring â nothing below here needs editing
    ===================================================================== */
 document.getElementById('lede').textContent = DESCRIPTION;
 document.getElementById('btnDrive').href = DRIVE_LINK;
@@ -265,6 +328,40 @@ document.getElementById('btnCopyPath').addEventListener('click', async () => {
   }
   copied.classList.add('show');
 });
+/* ---------------------------------------------------------------------
+   Read aloud. Uses the voice already built into the browser, so there
+   are no audio files to host and nothing to keep in sync with the text.
+   Press again to stop.
+   --------------------------------------------------------------------- */
+let speakingBtn = null;
+function speak(text, btn){
+  if(!('speechSynthesis' in window)){ alert('This browser cannot read text aloud.'); return; }
+  const wasSame = (speakingBtn === btn);
+  if(speechSynthesis.speaking || speechSynthesis.pending){
+    speechSynthesis.cancel();
+    if(speakingBtn) speakingBtn.classList.remove('on');
+    speakingBtn = null;
+    if(wasSame) return;
+  }
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.95;
+  u.onend = () => { btn.classList.remove('on'); speakingBtn = null; };
+  btn.classList.add('on');
+  speakingBtn = btn;
+  speechSynthesis.speak(u);
+}
+
+document.getElementById('speakLede').addEventListener('click', function(){
+  speak(document.getElementById('lede').textContent, this);
+});
+document.querySelectorAll('.speak[data-read]').forEach(btn => {
+  btn.addEventListener('click', function(){
+    const src = document.getElementById(this.dataset.read);
+    speak(src ? src.innerText : '', this);
+  });
+});
+window.addEventListener('beforeunload', () => { try{ speechSynthesis.cancel(); }catch(e){} });
+
 </script>
 
 </body>
