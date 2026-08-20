@@ -2,235 +2,281 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>The Burlington Arcade Viewer — 150 Worth Ave — Palm Beach FL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Burlington Arcade Viewer — 150 Worth Ave — Palm Beach FL</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,500,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- ============================================================
+     THE BURLINGTON ARCADE VIEWER — 150 Worth Ave, Palm Beach FL
+     Fairfax & Sammons Architecture
+     ============================================================
+
+     WHAT CHANGED (2026-08-20) — and why views 10 and 14 were broken
+
+     The previous version did not know its own filenames. It GUESSED,
+     firing about 61 requests per image ("is it _0000_? is it _0001_?")
+     across ~52 images — roughly 3,000 requests at once. Under that
+     load some requests fail, and a failure was cached permanently, so
+     whichever views lost the race stayed broken until a hard reload.
+     Views 10 and 14 were the ones losing it.
+
+     Now every filename is listed explicitly in VIEW_FILES below. Same
+     files, no guessing: ~3,000 requests became 35. That is also the
+     single biggest reason the map now appears almost instantly.
+
+     WHAT YOU EDIT — all in the CONFIG block at the top of the script:
+       VIEW_FLOORS         which floor each view is on
+       VIEW_EDITOR_LINKS   the per-view "Go to Editor" links
+       INTERIOR/EXTERIOR_EDITOR_LINK
+       PAGE_TEXT           optional blurb under the title
+
+     IF YOU RE-EXPORT and the numeric prefixes change, the filenames in
+     VIEW_FILES need updating to match. Ask and it takes a minute.
+     ============================================================ -->
+
 <style>
-/* ============================================================
-   THE BURLINGTON ARCADE VIEWER — 150 Worth Ave, Palm Beach FL
-   Built for Moz Vicentes Media / Fairfax & Sammons Architects
-   ============================================================
-   HOW TO USE THIS FILE
-
-   Save this HTML file in the SAME FOLDER as your exported PNGs
-   (the "VIEWS-OF-BURLINGTON_..." files) and just double-click it
-   to open — no upload step, no picker, nothing to select. It loads
-   your files straight off disk by their exact filenames, the same
-   way an <img> tag in any webpage does.
-
-   Filenames are NOT hardcoded — every time you re-export, your tool
-   changes the number in front of each filename (e.g. "_0048_" becomes
-   "_0000_"), so this file automatically searches for each one by its
-   stable part of the name instead (e.g. "VIEW-3-(1)"), trying numeric
-   prefixes until it finds a match. Re-export as often as you like;
-   nothing here needs to be touched. The only fixed part is the shared
-   prefix all your files start with — search "FILENAME_PREFIX" below if
-   that ever changes.
-
-   ------------------------------------------------------------
-   THINGS TO FILL IN (near the top of the <script> below):
-   1) INTERIOR_EDITOR_LINK / EXTERIOR_EDITOR_LINK — top-bar links
-   2) VIEW_EDITOR_LINKS — one line per view, its "Go to Editor" link
-   3) PAGE_TEXT — paste the contents of "TEXT for BURLINGTON MAP"
-      directly in (a double-clicked local file can't read a .txt
-      file off disk the way it can an image, so this one has to be
-      pasted in rather than referenced by filename)
-   4) POSITIONS — nudge any view's x_pct / y_pct if its click target
-      feels off from where its dot actually sits
-
-   ------------------------------------------------------------
-   ABOUT SPEED — the single biggest lever is file size, not code.
-   Several of the "-IMAGE" photos in your export are 20–47MB each.
-   That's a full-resolution print/render file, not a web image — at
-   that size, decoding just ONE of them on hover will feel slow no
-   matter what. The (1) dot / (2) triangle layers are already
-   several hundred KB each purely because they're exported at the
-   SAME full canvas size as the base layer, even though each one only
-   contains a small graphic — that's 32 large transparent PNGs the
-   browser has to decode just to show 16 little dots and triangles.
-   Two changes on the export side would speed this up more than
-   anything in this file possibly could:
-     - Export the "-IMAGE" photos as web-sized JPGs (photos rarely
-       need to be more than ~2000px wide / 1–3MB for on-screen use).
-     - If your tool allows it, crop the (1) and (2) layers down to
-       just their local area instead of the full canvas — or export
-       them as SVG if they're simple shapes.
-   This file already does what it can on its side: photos only load
-   the moment you hover/click a dot (never all 16 up front), and
-   every image uses async decoding so it doesn't freeze the page
-   while it loads.
-   ============================================================ */
-
   :root{
     --ivory:#F4EFE4; --ivory-deep:#ECE4D2; --ink:#161310; --ink-soft:#3A342C;
     --line:#C9BFA6; --line-soft:#DAD2BB; --brass:#8A6D3B; --brass-light:#B79A5E;
     --white:#FFFFFF; --warn:#9C4A34;
-    --shadow: 0 18px 50px rgba(20,16,10,0.28);
+    --tri-opacity:0.44;              /* the (2) sightline layer, per request */
+    --shadow:0 18px 50px rgba(20,16,10,0.28);
   }
-  *{box-sizing:border-box;}
+  *{ box-sizing:border-box; }
   html,body{ margin:0; padding:0; height:100%; background:var(--ink); color:var(--ink);
     font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
   ::selection{ background:var(--brass-light); color:var(--ink); }
-  .serif{ font-family:'EB Garamond', serif; }
+  .serif{ font-family:'EB Garamond',serif; }
   button{ font-family:inherit; cursor:pointer; }
   a{ color:inherit; }
 
   /* ============== SPLASH ============== */
   #splash{
     position:fixed; inset:0; z-index:100;
-    background: radial-gradient(ellipse at 50% 30%, #1c1811 0%, var(--ink) 70%);
-    display:flex; align-items:center; justify-content:center; flex-direction:column;
-    cursor:pointer; text-align:center;
-    transition:opacity 0.9s ease, visibility 0.9s ease;
+    background:radial-gradient(ellipse at 50% 30%, #1c1811 0%, var(--ink) 70%);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; text-align:center;
+    transition:opacity .9s ease, visibility .9s ease;
   }
   #splash.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
-  .splash-inner{ text-align:center; color:var(--ivory); padding:0 24px; animation: splashIn 1.4s ease both; }
-  @keyframes splashIn{ from{ opacity:0; transform:translateY(14px); letter-spacing:0.5em; } to{ opacity:1; transform:translateY(0); } }
-  .splash-eyebrow{ font-size:11px; letter-spacing:0.42em; text-transform:uppercase; color:var(--brass-light); margin-bottom:22px; }
-  .splash-rule{ width:56px; height:1px; background:var(--line-soft); margin:22px auto; opacity:0.55; }
-  .splash-title{ font-family:'EB Garamond', serif; font-weight:500; font-size:clamp(52px, 11vw, 128px); letter-spacing:0.12em; line-height:1; margin:0; color:var(--ivory); }
-  .splash-sub{ font-family:'EB Garamond', serif; font-style:italic; font-size:clamp(14px, 2vw, 19px); letter-spacing:0.06em; color:#C9BFA6; margin-top:6px; }
-  .splash-cta{ margin-top:40px; font-size:11px; letter-spacing:0.32em; text-transform:uppercase; color:var(--ivory); opacity:0.75; display:inline-flex; align-items:center; gap:10px; }
-  .splash-cta .ring{ width:9px;height:9px;border-radius:50%; border:1px solid var(--brass-light); animation: pulse 1.8s ease-in-out infinite; }
-  @keyframes pulse{ 0%,100%{ transform:scale(1); opacity:0.5; } 50%{ transform:scale(1.7); opacity:1; } }
+  .splash-inner{ color:var(--ivory); padding:0 24px; animation:splashIn 1.3s ease both; }
+  @keyframes splashIn{ from{ opacity:0; transform:translateY(14px); letter-spacing:.5em; } to{ opacity:1; transform:translateY(0); } }
+  .splash-eyebrow{ font-size:11px; letter-spacing:.42em; text-transform:uppercase; color:var(--brass-light); margin-bottom:22px; }
+  .splash-rule{ width:56px; height:1px; background:var(--line-soft); margin:22px auto; opacity:.55; }
+  .splash-title{ font-family:'EB Garamond',serif; font-weight:500; font-size:clamp(52px,11vw,128px); letter-spacing:.12em; line-height:1; margin:0; }
+  .splash-sub{ font-family:'EB Garamond',serif; font-style:italic; font-size:clamp(14px,2vw,19px); color:#C9BFA6; margin-top:6px; }
+  .splash-cta{ margin-top:40px; font-size:11px; letter-spacing:.32em; text-transform:uppercase; opacity:.75; display:inline-flex; align-items:center; gap:10px; }
+  .splash-cta .ring{ width:9px; height:9px; border-radius:50%; border:1px solid var(--brass-light); animation:pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ transform:scale(1); opacity:.5; } 50%{ transform:scale(1.7); opacity:1; } }
 
-  /* ============== APP SHELL ============== */
-  #app{ position:fixed; inset:0; background:var(--ivory); display:flex; flex-direction:column; opacity:0; transition:opacity 0.8s ease; overflow:hidden; }
+  /* ============== SHELL ============== */
+  #app{ position:fixed; inset:0; background:var(--ivory); display:flex; flex-direction:column;
+        opacity:0; transition:opacity .8s ease; overflow:hidden; }
   #app.visible{ opacity:1; }
 
   header.topbar{
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
-    padding:16px 20px; background:var(--ivory); border-bottom:1px solid var(--line);
-    z-index:20; text-align:center;
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    padding:14px 20px; background:var(--ivory); border-bottom:1px solid var(--line);
+    z-index:20; text-align:center; flex:none;
   }
-  .brandblock{ display:flex; flex-direction:column; gap:3px; align-items:center; }
-  .brandblock .title{ font-family:'EB Garamond', serif; font-size:23px; letter-spacing:0.04em; color:var(--ink); }
-  .brandblock .addr{ font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--ink-soft); opacity:0.75; }
-
-  .editor-links{ display:flex; gap:8px; justify-content:center; }
-  .editor-links a{
-    display:inline-block; text-decoration:none;
-    border:1px solid var(--ink); padding:8px 16px;
-    font-size:10.5px; letter-spacing:0.16em; text-transform:uppercase;
-    color:var(--ink); background:transparent; transition:all 0.2s ease;
+  .brandblock .title{ font-family:'EB Garamond',serif; font-size:22px; letter-spacing:.03em; }
+  .brandblock .addr{ font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-soft); opacity:.75; margin-top:2px; }
+  .toolrow{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .toolrow a, .toolrow button{
+    border:1px solid var(--ink); background:transparent; color:var(--ink);
+    padding:8px 15px; font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+    text-decoration:none; transition:all .18s ease;
   }
-  .editor-links a:hover{ background:var(--ink); color:var(--ivory); }
-  .editor-links a.disabled{ opacity:0.35; pointer-events:none; }
-
-  .page-text{ max-width:640px; margin:2px auto 0; text-align:center; font-family:'EB Garamond', serif; font-size:13.5px; line-height:1.6; color:var(--ink-soft); }
+  .toolrow a:hover, .toolrow button:hover{ background:var(--ink); color:var(--ivory); }
+  .toolrow a.disabled{ opacity:.32; pointer-events:none; }
+  .toolrow button.on{ background:var(--brass); border-color:var(--brass); color:var(--ivory); }
+  .page-text{ max-width:640px; font-family:'EB Garamond',serif; font-size:13.5px; line-height:1.6; color:var(--ink-soft); }
   .page-text:empty{ display:none; }
 
-  .missing-note{
-    display:none; max-width:900px; margin:0 auto; padding:10px 20px 0;
-    font-size:11.5px; color:var(--warn); text-align:center; line-height:1.6;
-  }
+  .missing-note{ display:none; max-width:900px; margin:0 auto; padding:10px 20px 0;
+    font-size:11.5px; color:var(--warn); text-align:center; line-height:1.6; }
   .missing-note.visible{ display:block; }
 
-  /* ============== PLAN STAGE ============== */
+  /* ============== STAGE ============== */
   main.stage{
     flex:1; position:relative; overflow-y:auto; overflow-x:hidden;
     background:
-      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(20,16,10,0.028) 40px),
-      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(20,16,10,0.028) 40px),
+      repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(20,16,10,.028) 40px),
+      repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(20,16,10,.028) 40px),
       var(--ivory);
+    scroll-behavior:smooth;
   }
-  .plan-wrap{ position:relative; width:100%; max-width:1900px; margin:0 auto; padding:22px 22px 6px; text-align:center; }
-  .plan-frame{ position:relative; display:inline-block; width:100%; min-height:200px; background:var(--white); box-shadow: var(--shadow); border:1px solid var(--line); line-height:0; }
+  .plan-wrap{ position:relative; width:100%; max-width:1900px; margin:0 auto; padding:20px 20px 4px; text-align:center; }
+  .plan-frame{ position:relative; display:inline-block; width:100%; min-height:180px;
+    background:var(--white); box-shadow:var(--shadow); border:1px solid var(--line); line-height:0; }
   .plan-frame img.base{ display:block; width:100%; height:auto; user-select:none; -webkit-user-drag:none; }
-  .plan-placeholder{ padding:80px 20px; color:var(--warn); font-size:13px; letter-spacing:0.02em; line-height:1.7; }
-  /* dot (1) always paints above triangle (2) — enforced with z-index, not just DOM order */
-  .layer-img{ position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; user-select:none; -webkit-user-drag:none; }
-  .layer-tri{ opacity:0; transition:opacity 0.22s ease; z-index:1; }
-  .layer-dot{ opacity:0.4; transition:opacity 0.18s ease; z-index:2; }
-  .view-group.is-hot .layer-dot, .view-group.is-pinned .layer-dot{ opacity:1; }
-  .view-group.is-hot .layer-tri, .view-group.is-pinned .layer-tri{ opacity:1; }
-  .hit{ position:absolute; width:26px; height:26px; margin:-13px 0 0 -13px; border-radius:50%; background:transparent; border:none; cursor:pointer; z-index:5; }
 
-  .hint{ text-align:center; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-soft); opacity:0.55; padding:10px 20px 4px; }
+  .layer-img{ position:absolute; inset:0; width:100%; height:100%; display:block;
+    pointer-events:none; user-select:none; -webkit-user-drag:none; }
+  .layer-tri{ opacity:0; transition:opacity .18s ease; z-index:1; }
+  .layer-dot{ opacity:.4; transition:opacity .14s ease; z-index:2; }
+  .view-group.is-hot .layer-dot,
+  .view-group.is-pinned .layer-dot{ opacity:1; }
+  .view-group.is-hot .layer-tri,
+  .view-group.is-pinned .layer-tri{ opacity:var(--tri-opacity); }
 
-  /* ============== CURSOR-FOLLOW PREVIEW (desktop hover only) ============== */
-  .cursor-preview{
-    position:absolute; top:0; left:0; width:130px;
-    background:var(--white); z-index:60;
-    opacity:0; transform:scale(0.96); pointer-events:none;
-    transition:opacity 0.14s ease, transform 0.14s ease;
-  }
-  .cursor-preview.visible{ opacity:1; transform:scale(1); }
-  .cursor-preview .frame{
-    position:relative; width:100%; aspect-ratio:4/3; overflow:hidden; background:var(--ivory-deep);
-    box-shadow:0 10px 26px rgba(20,16,10,0.32);
-  }
-  .cursor-preview .frame img{ width:100%; height:100%; object-fit:cover; object-position:center bottom; display:block; }
-  .cursor-preview .frame .fallback{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; text-align:center; color:var(--ink-soft); }
-  .cursor-preview .frame .fallback .num{ font-family:'Inter',sans-serif; font-weight:600; font-size:18px; color:var(--ink); }
-  /* corner brackets, architectural viewfinder style */
-  .cursor-preview .frame::before, .cursor-preview .frame::after,
-  .cursor-preview .corner-tl, .cursor-preview .corner-br{ content:''; position:absolute; width:11px; height:11px; pointer-events:none; z-index:2; }
-  .cursor-preview .frame::before{ top:4px; left:4px; border-top:1.5px solid var(--ivory); border-left:1.5px solid var(--ivory); }
-  .cursor-preview .frame::after{ bottom:4px; right:4px; border-bottom:1.5px solid var(--ivory); border-right:1.5px solid var(--ivory); }
-  .cursor-preview .label{
-    margin-top:6px; padding:4px 2px; font-family:'Inter',sans-serif; font-size:9.5px; letter-spacing:0.16em; text-transform:uppercase;
-    text-align:center; color:var(--ivory); background:var(--ink);
-  }
+  .hit{ position:absolute; width:30px; height:30px; margin:-15px 0 0 -15px; border-radius:50%;
+    background:transparent; border:none; cursor:pointer; z-index:5; }
 
-  /* ============== BELOW-PLAN PINNED GALLERY ============== */
-  section.gallery{ border-top:1px solid var(--line); background:var(--white); padding:26px 20px 40px; }
-  .gallery-inner{ max-width:900px; margin:0 auto; }
-  .gallery-empty{ text-align:center; color:var(--ink-soft); opacity:0.6; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; padding:10px 0 4px; }
-  .gallery-title{ text-align:center; font-family:'EB Garamond', serif; font-size:18px; color:var(--ink); margin-bottom:18px; }
-  .gallery-cards{ display:flex; flex-direction:column; gap:26px; }
-  /* one single box: cream border, image floods it edge-to-edge, buttons flush underneath — no nested boxes */
-  .gcard{ border:1px solid var(--line); background:var(--ivory); animation: cardIn 0.35s ease both; overflow:hidden; }
+  /* ============== SIDE WIDGET (overlays the map, never moves it) ============== */
+  .widget{
+    position:absolute; top:14px; right:14px; width:26%; min-width:210px; max-width:330px;
+    background:var(--white); border:1px solid var(--line); box-shadow:0 14px 40px rgba(20,16,10,.22);
+    z-index:40; text-align:left; line-height:1.5;
+    opacity:0; visibility:hidden; transform:translateY(-6px);
+    transition:opacity .16s ease, visibility .16s ease, transform .16s ease;
+  }
+  .widget.visible{ opacity:1; visibility:visible; transform:translateY(0); }
+  .widget-head{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:9px 12px; background:var(--ink); color:var(--ivory);
+  }
+  .widget-head .wtitle{ font-size:10px; letter-spacing:.18em; text-transform:uppercase; }
+  .widget-head button{ background:none; border:none; color:var(--ivory); font-size:14px; line-height:1; padding:2px 4px; opacity:.8; }
+  .widget-head button:hover{ opacity:1; }
+  .widget-body{ display:block; }
+  .widget.min .widget-body{ display:none; }
+
+  .w-photo{ position:relative; width:100%; aspect-ratio:4/3; overflow:hidden; background:var(--ivory-deep); }
+  .w-photo img{ width:100%; height:100%; object-fit:cover; object-position:center bottom; display:block; }
+  .w-photo .ph{ width:100%; height:100%; display:flex; align-items:center; justify-content:center;
+    font-family:'EB Garamond',serif; font-size:30px; color:var(--ink-soft); opacity:.4; }
+
+  .w-floor{ padding:10px 12px 8px; font-size:10px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--brass); border-bottom:1px solid var(--line-soft); }
+  .w-croplabel{ padding:9px 12px 6px; font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); opacity:.7; }
+  .crop{ position:relative; width:calc(100% - 24px); margin:0 12px 12px; aspect-ratio:1;
+    overflow:hidden; border:1px solid var(--line); background:var(--ivory-deep); }
+  .crop img{ position:absolute; max-width:none; height:auto; display:block; }
+  .crop img.c-dot{ z-index:2; }
+  .crop img.c-tri{ z-index:1; opacity:var(--tri-opacity); }
+
+  .w-hint{ padding:0 12px 12px; font-size:10.5px; color:var(--ink-soft); opacity:.75; font-family:'EB Garamond',serif; font-style:italic; }
+
+  /* ============== "ADDED BELOW" FLASH ============== */
+  .flash{
+    position:absolute; left:50%; bottom:18px; transform:translateX(-50%) translateY(8px);
+    background:var(--ink); color:var(--ivory); padding:9px 18px;
+    font-size:10px; letter-spacing:.2em; text-transform:uppercase; z-index:50;
+    opacity:0; transition:opacity .25s ease, transform .25s ease; pointer-events:none;
+  }
+  .flash.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  .hint{ text-align:center; font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink-soft); opacity:.55; padding:10px 20px 4px; }
+
+  /* ============== PINNED VIEWS ============== */
+  section.gallery{ border-top:1px solid var(--line); background:var(--white); padding:26px 20px 60px; }
+  .gallery-inner{ max-width:1000px; margin:0 auto; }
+  .gallery-title{ text-align:center; font-family:'EB Garamond',serif; font-size:18px; margin-bottom:6px; }
+  .gallery-empty{ text-align:center; color:var(--ink-soft); opacity:.6; font-size:12px;
+    letter-spacing:.08em; text-transform:uppercase; padding:10px 0 4px; }
+  .gallery-cards{ display:flex; flex-direction:column; gap:34px; margin-top:20px; }
+
+  .gcard{ animation:cardIn .3s ease both; }
   @keyframes cardIn{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
-  .gcard-image{
-    position:relative; width:100%; aspect-ratio:4/3; overflow:hidden; background:var(--ivory-deep);
-    cursor:zoom-in;
-  }
-  /* crop from the top, keep the bottom of the image anchored */
-  .gcard-image img{ width:100%; height:100%; object-fit:cover; object-position:center bottom; display:block; }
-  .gcard-image .fallback{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; text-align:center; color:var(--ink-soft); }
-  .gcard-image .fallback .num{ font-family:'EB Garamond',serif; font-size:32px; color:var(--ink); }
-  .gcard-image .zoom-hint{
-    position:absolute; bottom:10px; right:12px; font-family:'Inter',sans-serif; font-size:9.5px;
-    letter-spacing:0.14em; text-transform:uppercase; color:var(--ivory);
-    background:rgba(22,19,16,0.55); padding:5px 9px; pointer-events:none;
-  }
-  .gcard-image .tag{
-    position:absolute; top:10px; left:12px; font-family:'EB Garamond', serif; font-size:15px;
-    color:var(--ivory); background:rgba(22,19,16,0.55); padding:4px 12px; pointer-events:none;
-  }
-  .gcard-actions{ display:flex; }
-  .gcard-actions a, .gcard-actions button{
-    flex:1; border:none; border-top:1px solid var(--line); background:var(--ink); color:var(--ivory);
-    padding:14px 10px; font-size:11px; letter-spacing:0.16em; text-transform:uppercase; text-decoration:none; transition:all 0.2s ease;
-    text-align:center;
-  }
-  .gcard-actions a{ border-right:1px solid rgba(244,239,228,0.25); }
-  .gcard-actions a:hover{ background:var(--brass); }
-  .gcard-actions a.disabled{ background:var(--ivory-deep); color:var(--ink-soft); opacity:0.7; pointer-events:none; }
-  .gcard-actions button.remove{ background:var(--ink-soft); }
-  .gcard-actions button.remove:hover{ background:var(--warn); }
+  .gcard-image{ position:relative; width:100%; background:var(--ivory-deep); border:1px solid var(--line); overflow:hidden; }
+  .gcard-image img.shot{ width:100%; height:auto; display:block; }
+  .gcard-image .ph{ padding:90px 0; text-align:center; font-family:'EB Garamond',serif; font-size:40px; color:var(--ink-soft); opacity:.35; }
+  .gcard-image .tag{ position:absolute; top:12px; left:14px; font-family:'EB Garamond',serif; font-size:15px;
+    color:var(--ivory); background:rgba(22,19,16,.55); padding:4px 12px; }
+  /* small F&S mark over the centre of every pinned view */
+  .watermark{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:11%; min-width:64px; max-width:120px; opacity:.5; pointer-events:none; }
 
-  /* ============== LIGHTBOX (click image to expand, click to close) ============== */
-  .lightbox{
-    position:fixed; inset:0; z-index:120; background:var(--white);
-    display:flex; align-items:center; justify-content:center;
-    opacity:0; visibility:hidden; transition:opacity 0.25s ease, visibility 0.25s ease;
-    cursor:zoom-out; padding:36px;
+  .gcard-tools{ display:flex; gap:18px; align-items:center; padding:9px 2px 0; flex-wrap:wrap; }
+  .gcard-tools button{
+    background:none; border:none; padding:2px 0; color:var(--ink-soft);
+    font-size:10px; letter-spacing:.16em; text-transform:uppercase; transition:color .16s ease;
   }
-  .lightbox.visible{ opacity:1; visibility:visible; }
-  .lightbox img{ max-width:100%; max-height:100%; object-fit:contain; box-shadow:0 20px 60px rgba(20,16,10,0.2); }
-  .lightbox-close{
-    position:fixed; top:20px; right:26px; font-family:'Inter',sans-serif; font-size:11px;
-    letter-spacing:0.18em; text-transform:uppercase; color:var(--ink-soft); background:none; border:none;
+  .gcard-tools button:hover{ color:var(--brass); }
+  .gcard-tools .spacer{ flex:1; }
+  .gcard-tools .ord{ font-size:13px; letter-spacing:0; }
+
+  /* ============== EXPAND VIEW — 8x10 sheet ============== */
+  .sheetwrap{
+    position:fixed; inset:0; z-index:150; background:rgba(22,19,16,.72);
+    display:flex; align-items:flex-start; justify-content:center; padding:26px; overflow-y:auto;
+    opacity:0; visibility:hidden; transition:opacity .22s ease, visibility .22s ease;
+  }
+  .sheetwrap.visible{ opacity:1; visibility:visible; }
+  .sheet{
+    background:var(--white); width:min(100%,8in); aspect-ratio:8/10; padding:0.5in;
+    display:flex; flex-direction:column; box-shadow:0 24px 70px rgba(0,0,0,.4);
+  }
+  .sheet-head{ text-align:center; border-bottom:1px solid var(--line); padding-bottom:10px; flex:none; }
+  .sheet-head .l1{ font-family:'EB Garamond',serif; font-size:19px; letter-spacing:.05em; }
+  .sheet-head .l2{ font-size:10px; letter-spacing:.26em; text-transform:uppercase; color:var(--brass); margin-top:5px; }
+  .sheet-photo{ flex:1.35; min-height:0; margin-top:12px; position:relative; background:var(--ivory-deep); overflow:hidden; }
+  .sheet-photo img{ width:100%; height:100%; object-fit:contain; display:block; }
+  .sheet-mapcap{ font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-soft); opacity:.7; margin:10px 0 5px; text-align:center; flex:none; }
+  .sheet-map{ flex:1; min-height:0; position:relative; border:1px solid var(--line); overflow:hidden; background:var(--white); }
+  .sheet-map .sm-inner{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+  .sheet-map .sm-stack{ position:relative; max-width:100%; max-height:100%; line-height:0; }
+  .sheet-map img{ display:block; max-width:100%; max-height:100%; width:auto; height:auto; }
+  .sheet-map img.ov{ position:absolute; inset:0; width:100%; height:100%; }
+  .sheet-map img.ov-dot{ opacity:1; z-index:2; }
+  .sheet-map img.ov-tri{ opacity:var(--tri-opacity); z-index:1; }
+  .sheet-foot{ flex:none; display:flex; justify-content:space-between; align-items:center;
+    border-top:1px solid var(--line); margin-top:10px; padding-top:8px;
+    font-size:8.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-soft); }
+  .sheet-close{ position:fixed; top:18px; right:24px; background:none; border:none; color:var(--ivory);
+    font-size:11px; letter-spacing:.18em; text-transform:uppercase; z-index:160; }
+
+  /* ============== PRESENTATION MODE ============== */
+  body.presenting section.gallery{ background:var(--ivory-deep); }
+  body.presenting .gcard{
+    background:var(--white); padding:0.4in; border:1px solid var(--line);
+    box-shadow:0 10px 30px rgba(20,16,10,.10);
+  }
+  body.presenting .gcard-tools{ padding-top:12px; }
+
+  .cover{ display:none; }
+
+  /* ============== PRINT / PDF ============== */
+  @page{ size:8.5in 11in; margin:0.5in; }
+  @media print{
+    html,body{ height:auto; background:var(--white); }
+    #splash, header.topbar, .hint, .plan-wrap, .widget, .flash,
+    .gallery-title, .gallery-empty, .gcard-tools, .missing-note, .sheetwrap{ display:none !important; }
+    #app{ position:static; opacity:1; overflow:visible; display:block; }
+    main.stage{ overflow:visible; background:none; }
+    section.gallery{ border:none; padding:0; background:none; }
+    .gallery-cards{ display:block; margin:0; }
+    .cover{
+      display:flex !important; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; height:9.6in; break-after:page; page-break-after:always;
+    }
+    .cover img{ width:80%; max-width:6in; height:auto; margin-bottom:0.5in; }
+    .cover .c1{ font-family:'EB Garamond',serif; font-size:26pt; letter-spacing:.04em; }
+    .cover .c2{ font-size:9pt; letter-spacing:.3em; text-transform:uppercase; color:var(--brass); margin-top:12pt; }
+    .gcard{
+      break-inside:avoid; page-break-inside:avoid; break-after:page; page-break-after:always;
+      padding:0; border:none; box-shadow:none; margin:0;
+      height:9.4in; display:flex; flex-direction:column;
+    }
+    .gcard:last-child{ break-after:auto; page-break-after:auto; }
+    .gcard-image{ border:none; flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
+    .gcard-image img.shot{ max-height:100%; width:auto; max-width:100%; object-fit:contain; }
+    .print-foot{ display:flex !important; }
+    .watermark{ opacity:.42; }
+  }
+  .print-foot{ display:none; justify-content:space-between; border-top:1px solid var(--line);
+    margin-top:10pt; padding-top:6pt; font-size:8pt; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); }
+
+  @media (max-width:820px){
+    .widget{ width:44%; min-width:170px; }
   }
 </style>
 </head>
 <body>
 
-  <!-- ============== SPLASH ============== -->
   <div id="splash">
     <div class="splash-inner">
       <div class="splash-eyebrow">150 Worth Avenue · Palm Beach, Florida</div>
@@ -241,16 +287,18 @@
     </div>
   </div>
 
-  <!-- ============== APP ============== -->
   <div id="app">
     <header class="topbar">
       <div class="brandblock">
         <div class="title serif">The Burlington Arcade Viewer</div>
         <div class="addr">150 Worth Ave · Palm Beach, FL</div>
       </div>
-      <div class="editor-links">
+      <div class="toolrow">
+        <a href="../">← Dashboard</a>
         <a href="#" id="interiorEditorLink" target="_blank" rel="noopener">Interior Editor</a>
         <a href="#" id="exteriorEditorLink" target="_blank" rel="noopener">Exterior Editor</a>
+        <button type="button" id="btnPresent">View as Presentation</button>
+        <button type="button" id="btnPdf">Download PDF</button>
       </div>
       <div class="page-text serif" id="pageText"></div>
     </header>
@@ -260,386 +308,494 @@
     <main class="stage" id="stage">
       <div class="plan-wrap">
         <div class="plan-frame" id="planFrame">
-          <img class="base" id="baseLayer" alt="150 Worth Avenue floor plan — base layer" draggable="false">
+          <img class="base" id="baseLayer" alt="150 Worth Avenue floor plan" draggable="false">
+
+          <!-- side widget: overlays the map, never displaces it -->
+          <aside class="widget" id="widget">
+            <div class="widget-head">
+              <span class="wtitle" id="wTitle">View</span>
+              <button type="button" id="wMin" title="Minimise">–</button>
+            </div>
+            <div class="widget-body">
+              <div class="w-photo" id="wPhoto"><div class="ph serif">–</div></div>
+              <div class="w-floor" id="wFloor">First Floor View</div>
+              <div class="w-croplabel">Location on plan</div>
+              <div class="crop" id="wCrop"></div>
+              <div class="w-hint" id="wHint">Click the marker to pin this view below.</div>
+            </div>
+          </aside>
+
+          <div class="flash" id="flash">Image added below ↓</div>
         </div>
       </div>
 
-      <div class="hint">Hover a view marker to preview · click to pin it below</div>
+      <div class="hint">Hover a marker to preview · click to pin it below</div>
 
       <section class="gallery">
         <div class="gallery-inner">
+          <div class="cover">
+            <img src="burlington-header.png" alt="Burlington Arcade">
+            <div class="c1 serif">Burlington Arcade</div>
+            <div class="c2">150 Worth Ave — Palm Beach</div>
+          </div>
           <div class="gallery-title serif">Pinned Views</div>
-          <div class="gallery-empty" id="galleryEmpty">Click any view marker above to add it here</div>
+          <div class="gallery-empty" id="galleryEmpty">Click any marker above to add it here</div>
           <div class="gallery-cards" id="galleryCards"></div>
         </div>
       </section>
-
-      <!-- lives inside the scroll container so it scrolls with the page
-           (a viewport-fixed tooltip looks disconnected in a full-page screenshot) -->
-      <div class="cursor-preview" id="cursorPreview">
-        <div class="frame" id="cursorFrame"></div>
-        <div class="label" id="cursorLabel">View</div>
-      </div>
     </main>
   </div>
 
-  <!-- ============== LIGHTBOX ============== -->
-  <div class="lightbox" id="lightbox">
-    <button class="lightbox-close" id="lightboxClose">Close</button>
-    <img id="lightboxImg" alt="">
+  <!-- ============== EXPAND VIEW SHEET ============== -->
+  <div class="sheetwrap" id="sheetWrap">
+    <button class="sheet-close" id="sheetClose" type="button">Close</button>
+    <div class="sheet" id="sheet">
+      <div class="sheet-head">
+        <div class="l1 serif" id="sheetTitle">Burlington Arcade View</div>
+        <div class="l2" id="sheetSub">View</div>
+      </div>
+      <div class="sheet-photo" id="sheetPhoto"></div>
+      <div class="sheet-mapcap">Location on plan</div>
+      <div class="sheet-map"><div class="sm-inner"><div class="sm-stack" id="sheetMap"></div></div></div>
+      <div class="sheet-foot">
+        <span>Fairfax &amp; Sammons Architecture</span>
+        <span>150 Worth Ave — Palm Beach</span>
+      </div>
+    </div>
   </div>
 
 <script>
-/* ============================================================
-   CONFIG — edit these
-   ============================================================ */
-const INTERIOR_EDITOR_LINK = "https://svetlanawunnenberg.github.io/ESPLANADE-FACADE-1-2/"; // <-- paste the Basic Interior Editor link here
-const EXTERIOR_EDITOR_LINK = ""; // <-- paste the Basic Exterior Editor link here
-const PAGE_TEXT = ""; // <-- paste the contents of "TEXT for BURLINGTON MAP" here
+/* =====================================================================
+   CONFIG
+   ===================================================================== */
 
-// Each view's own editor link. Paste a URL between the quotes to enable
-// that view's "Go to Editor" button.
+const INTERIOR_EDITOR_LINK = "../esplanade/";   // the live facade editor
+const EXTERIOR_EDITOR_LINK = "";                // paste when it exists
+const PAGE_TEXT = "";                           // optional blurb under the title
+
+// Which floor each view sits on. Everything defaults to First Floor —
+// change the ones that are wrong and the widget/sheets update themselves.
+const VIEW_FLOORS = {
+  V1:"First Floor",  V2:"First Floor",  V3:"First Floor",  V4:"First Floor",
+  V5:"Second Floor", V6:"Second Floor", V7:"First Floor",  V8:"First Floor",
+  V9:"First Floor",  V10:"First Floor", V11:"First Floor", V12:"First Floor",
+  V13:"First Floor", V14:"First Floor", V15:"First Floor", V16:"First Floor",
+  V17:"First Floor"
+};
+
+// Per-view "Go to Editor" links. Paste a URL to switch one on.
 const VIEW_EDITOR_LINKS = {
-  "V1": "", // VIEW 1 EDITOR LINK
-  "V2": "", // VIEW 2 EDITOR LINK
-  "V3": "", // VIEW 3 EDITOR LINK
-  "V4": "", // VIEW 4 EDITOR LINK
-  "V5": "", // VIEW 5 EDITOR LINK
-  "V6": "", // VIEW 6 EDITOR LINK
-  "V7": "", // VIEW 7 EDITOR LINK
-  "V8": "", // VIEW 8 EDITOR LINK
-  "V9": "", // VIEW 9 EDITOR LINK
-  "V10": "", // VIEW 10 EDITOR LINK
-  "V11": "", // VIEW 11 EDITOR LINK
-  "V12": "", // VIEW 12 EDITOR LINK
-  "V13": "", // VIEW 13 EDITOR LINK
-  "V14": "", // VIEW 14 EDITOR LINK
-  "V15": "", // VIEW 15 EDITOR LINK
-  "V16": "", // VIEW 16 EDITOR LINK
-  "V17": "", // VIEW 17 EDITOR LINK
+  V1:"",  V2:"",  V3:"",  V4:"",  V5:"",  V6:"",  V7:"",  V8:"",  V9:"",
+  V10:"", V11:"", V12:"", V13:"", V14:"", V15:"", V16:"", V17:""
 };
 
-// Your export tool renumbers the "_0048_", "_0000_", etc. prefix on every
-// export, so filenames are no longer hardcoded here — hardcoding them was
-// why views disappeared the moment you re-exported. Instead this file
-// automatically finds each file by its stable part of the name
-// (e.g. "VIEW-3-(1)") regardless of what number currently comes before it.
-// The one part that must stay the same across exports is this base prefix:
-const FILENAME_PREFIX = "VIEWS-OF-BURLINGTON_";
-const FILENAME_EXTS = ["png", "jpg", "jpeg"]; // tried in this order, png first since that's what you export
-const FILENAME_MAX_INDEX = 60; // how high to search the numeric prefix — raise this if you ever have more source files than that (higher = slower first load)
+const BASE_LAYER = "VIEWS-OF-BURLINGTON_0051_BASE-LAYER.png";
 
-const VIEWS = [{"n": 1, "id": "V1", "label": "VIEW 1", "x_pct": 15.689, "y_pct": 45.872}, {"n": 2, "id": "V2", "label": "VIEW 2", "x_pct": 8.622, "y_pct": 47.2}, {"n": 3, "id": "V3", "label": "VIEW 3", "x_pct": 91.467, "y_pct": 44.037}, {"n": 4, "id": "V4", "label": "VIEW 4", "x_pct": 18.044, "y_pct": 25.815}, {"n": 5, "id": "V5", "label": "VIEW 5", "x_pct": 84.044, "y_pct": 8.858}, {"n": 6, "id": "V6", "label": "VIEW 6", "x_pct": 90.844, "y_pct": 9.174}, {"n": 7, "id": "V7", "label": "VIEW 7", "x_pct": 18.044, "y_pct": 50.68}, {"n": 8, "id": "V8", "label": "VIEW 8", "x_pct": 25.644, "y_pct": 22.461}, {"n": 9, "id": "V9", "label": "VIEW 9", "x_pct": 29.733, "y_pct": 20.626}, {"n": 10, "id": "V10", "label": "VIEW 10", "x_pct": 56.4, "y_pct": 73.205}, {"n": 11, "id": "V11", "label": "VIEW 11", "x_pct": 34.444, "y_pct": 77.254}, {"n": 12, "id": "V12", "label": "VIEW 12", "x_pct": 33.556, "y_pct": 25.055}, {"n": 13, "id": "V13", "label": "VIEW 13", "x_pct": 39.733, "y_pct": 25.372}, {"n": 14, "id": "V14", "label": "VIEW 14", "x_pct": 28.578, "y_pct": 73.015}, {"n": 15, "id": "V15", "label": "VIEW 15", "x_pct": 59.156, "y_pct": 31.129}, {"n": 16, "id": "V16", "label": "VIEW 16", "x_pct": 61.156, "y_pct": 35.432}, {"n": 17, "id": "V17", "label": "VIEW 17", "x_pct": 61.244, "y_pct": 50.68}];
+/* Exact filenames. No guessing — this is the fix for views 10 and 14.  */
+const VIEW_FILES = {
+  V1:  { dot:"VIEWS-OF-BURLINGTON_0032_VIEW-1-(1).png",  tri:"VIEWS-OF-BURLINGTON_0033_VIEW-1-(2).png",  image:"VIEWS-OF-BURLINGTON_0050_VIEW-1-IMAGE.jpg"  },
+  V2:  { dot:"VIEWS-OF-BURLINGTON_0030_VIEW-2-(1).png",  tri:"VIEWS-OF-BURLINGTON_0031_VIEW-2-(2).png",  image:"VIEWS-OF-BURLINGTON_0049_VIEW-2-IMAGE.jpg"  },
+  V3:  { dot:"VIEWS-OF-BURLINGTON_0028_VIEW-3-(1).png",  tri:"VIEWS-OF-BURLINGTON_0029_VIEW-3-(2).png",  image:"VIEWS-OF-BURLINGTON_0048_VIEW-3-IMAGE.jpg"  },
+  V4:  { dot:"VIEWS-OF-BURLINGTON_0026_VIEW-4-(1).png",  tri:"VIEWS-OF-BURLINGTON_0027_VIEW-4-(2).png",  image:"VIEWS-OF-BURLINGTON_0047_VIEW-4-IMAGE.jpg"  },
+  V5:  { dot:"VIEWS-OF-BURLINGTON_0024_VIEW-5-(1).png",  tri:"VIEWS-OF-BURLINGTON_0025_VIEW-5-(2).png",  image:"VIEWS-OF-BURLINGTON_0046_VIEW-5-IMAGE.jpg"  },
+  V6:  { dot:"VIEWS-OF-BURLINGTON_0022_VIEW-6-(1).png",  tri:"VIEWS-OF-BURLINGTON_0023_VIEW-6-(2).png",  image:"VIEWS-OF-BURLINGTON_0045_VIEW-6-IMAGE.jpg"  },
+  V7:  { dot:"VIEWS-OF-BURLINGTON_0020_VIEW-7-(1).png",  tri:"VIEWS-OF-BURLINGTON_0021_VIEW-7-(2).png",  image:"VIEWS-OF-BURLINGTON_0044_VIEW-7-IMAGE.jpg"  },
+  V8:  { dot:"VIEWS-OF-BURLINGTON_0018_VIEW-8-(1).png",  tri:"VIEWS-OF-BURLINGTON_0019_VIEW-8-(2).png",  image:"VIEWS-OF-BURLINGTON_0043_VIEW-8-IMAGE.jpg"  },
+  V9:  { dot:"VIEWS-OF-BURLINGTON_0016_VIEW-9-(1).png",  tri:"VIEWS-OF-BURLINGTON_0017_VIEW-9-(2).png",  image:"VIEWS-OF-BURLINGTON_0042_VIEW-9-IMAGE.jpg"  },
+  V10: { dot:"VIEWS-OF-BURLINGTON_0014_VIEW-10-(1).png", tri:"VIEWS-OF-BURLINGTON_0015_VIEW-10-(2).png", image:"VIEWS-OF-BURLINGTON_0041_VIEW-10-IMAGE.jpg" },
+  V11: { dot:"VIEWS-OF-BURLINGTON_0012_VIEW-11-(1).png", tri:"VIEWS-OF-BURLINGTON_0013_VIEW-11-(2).png", image:"VIEWS-OF-BURLINGTON_0040_VIEW-11-IMAGE.jpg" },
+  V12: { dot:"VIEWS-OF-BURLINGTON_0010_VIEW-12-(1).png", tri:"VIEWS-OF-BURLINGTON_0011_VIEW-12-(2).png", image:"VIEWS-OF-BURLINGTON_0039_VIEW-12-IMAGE.jpg" },
+  V13: { dot:"VIEWS-OF-BURLINGTON_0008_VIEW-13-(1).png", tri:"VIEWS-OF-BURLINGTON_0009_VIEW-13-(2).png", image:"VIEWS-OF-BURLINGTON_0038_VIEW-13-IMAGE.jpg" },
+  V14: { dot:"VIEWS-OF-BURLINGTON_0006_VIEW-14-(1).png", tri:"VIEWS-OF-BURLINGTON_0007_VIEW-14-(2).png", image:"VIEWS-OF-BURLINGTON_0037_VIEW-14-IMAGE.jpg" },
+  V15: { dot:"VIEWS-OF-BURLINGTON_0004_VIEW-15-(1).png", tri:"VIEWS-OF-BURLINGTON_0005_VIEW-15-(2).png", image:"VIEWS-OF-BURLINGTON_0036_VIEW-15-IMAGE.jpg" },
+  V16: { dot:"VIEWS-OF-BURLINGTON_0002_VIEW-16-(1).png", tri:"VIEWS-OF-BURLINGTON_0003_VIEW-16-(2).png", image:"VIEWS-OF-BURLINGTON_0035_VIEW-16-IMAGE.jpg" },
+  V17: { dot:"VIEWS-OF-BURLINGTON_0000_VIEW-17-(1).png", tri:"VIEWS-OF-BURLINGTON_0001_VIEW-17-(2).png", image:"VIEWS-OF-BURLINGTON_0034_VIEW-17-IMAGE.jpg" }
+};
 
-/* ============================================================
-   APP LOGIC
-   ============================================================ */
-const state = { isTouch: matchMedia("(hover: none), (pointer: coarse)").matches, pinned: new Set() };
+const VIEWS = [
+  {n:1,id:"V1",label:"VIEW 1",x_pct:15.689,y_pct:45.872},
+  {n:2,id:"V2",label:"VIEW 2",x_pct:8.622,y_pct:47.2},
+  {n:3,id:"V3",label:"VIEW 3",x_pct:91.467,y_pct:44.037},
+  {n:4,id:"V4",label:"VIEW 4",x_pct:18.044,y_pct:25.815},
+  {n:5,id:"V5",label:"VIEW 5",x_pct:84.044,y_pct:8.858},
+  {n:6,id:"V6",label:"VIEW 6",x_pct:90.844,y_pct:9.174},
+  {n:7,id:"V7",label:"VIEW 7",x_pct:18.044,y_pct:50.68},
+  {n:8,id:"V8",label:"VIEW 8",x_pct:25.644,y_pct:22.461},
+  {n:9,id:"V9",label:"VIEW 9",x_pct:29.733,y_pct:20.626},
+  {n:10,id:"V10",label:"VIEW 10",x_pct:56.4,y_pct:73.205},
+  {n:11,id:"V11",label:"VIEW 11",x_pct:34.444,y_pct:77.254},
+  {n:12,id:"V12",label:"VIEW 12",x_pct:33.556,y_pct:25.055},
+  {n:13,id:"V13",label:"VIEW 13",x_pct:39.733,y_pct:25.372},
+  {n:14,id:"V14",label:"VIEW 14",x_pct:28.578,y_pct:73.015},
+  {n:15,id:"V15",label:"VIEW 15",x_pct:59.156,y_pct:31.129},
+  {n:16,id:"V16",label:"VIEW 16",x_pct:61.156,y_pct:35.432},
+  {n:17,id:"V17",label:"VIEW 17",x_pct:61.244,y_pct:50.68}
+];
 
+const CROP_ZOOM = 4.5;   // how tight the little square detail is
+
+/* =====================================================================
+   APP
+   ===================================================================== */
+const byId = id => document.getElementById(id);
 const els = {
-  splash: document.getElementById('splash'),
-  app: document.getElementById('app'),
-  stage: document.getElementById('stage'),
-  baseLayer: document.getElementById('baseLayer'),
-  planFrame: document.getElementById('planFrame'),
-  cursorPreview: document.getElementById('cursorPreview'),
-  cursorFrame: document.getElementById('cursorFrame'),
-  cursorLabel: document.getElementById('cursorLabel'),
-  galleryCards: document.getElementById('galleryCards'),
-  galleryEmpty: document.getElementById('galleryEmpty'),
-  interiorEditorLink: document.getElementById('interiorEditorLink'),
-  exteriorEditorLink: document.getElementById('exteriorEditorLink'),
-  pageText: document.getElementById('pageText'),
-  missingNote: document.getElementById('missingNote'),
-  lightbox: document.getElementById('lightbox'),
-  lightboxImg: document.getElementById('lightboxImg'),
-  lightboxClose: document.getElementById('lightboxClose'),
+  splash:byId('splash'), app:byId('app'), stage:byId('stage'),
+  baseLayer:byId('baseLayer'), planFrame:byId('planFrame'),
+  widget:byId('widget'), wTitle:byId('wTitle'), wPhoto:byId('wPhoto'),
+  wFloor:byId('wFloor'), wCrop:byId('wCrop'), wHint:byId('wHint'), wMin:byId('wMin'),
+  flash:byId('flash'),
+  galleryCards:byId('galleryCards'), galleryEmpty:byId('galleryEmpty'),
+  interiorEditorLink:byId('interiorEditorLink'), exteriorEditorLink:byId('exteriorEditorLink'),
+  pageText:byId('pageText'), missingNote:byId('missingNote'),
+  sheetWrap:byId('sheetWrap'), sheet:byId('sheet'), sheetTitle:byId('sheetTitle'),
+  sheetSub:byId('sheetSub'), sheetPhoto:byId('sheetPhoto'), sheetMap:byId('sheetMap'),
+  sheetClose:byId('sheetClose'),
+  btnPresent:byId('btnPresent'), btnPdf:byId('btnPdf')
 };
 
-/* ---- lightbox ---- */
-function openLightbox(src, alt){
-  els.lightboxImg.src = src;
-  els.lightboxImg.alt = alt;
-  els.lightbox.classList.add('visible');
-}
-function closeLightbox(){ els.lightbox.classList.remove('visible'); }
-els.lightbox.addEventListener('click', closeLightbox);
-els.lightboxClose.addEventListener('click', (e)=>{ e.stopPropagation(); closeLightbox(); });
+const state = {
+  isTouch: matchMedia("(hover: none), (pointer: coarse)").matches,
+  pinnedOrder: [],       // array of view ids, in display order
+  widgetLocked: null,    // a pinned view keeps the widget showing
+  baseW: 0, baseH: 0
+};
+const groups = new Map();
+const missing = [];
 
 els.pageText.textContent = PAGE_TEXT;
+byId('wMin').addEventListener('click', e => { e.stopPropagation(); els.widget.classList.toggle('min'); });
 
-function wireTopEditorLink(el, url){
+function wireLink(el, url){
   if(url){ el.href = url; el.classList.remove('disabled'); }
-  else{ el.href = '#'; el.classList.add('disabled'); el.addEventListener('click', e=>e.preventDefault()); }
+  else { el.href = '#'; el.classList.add('disabled'); el.addEventListener('click', e => e.preventDefault()); }
 }
-wireTopEditorLink(els.interiorEditorLink, INTERIOR_EDITOR_LINK);
-wireTopEditorLink(els.exteriorEditorLink, EXTERIOR_EDITOR_LINK);
+wireLink(els.interiorEditorLink, INTERIOR_EDITOR_LINK);
+wireLink(els.exteriorEditorLink, EXTERIOR_EDITOR_LINK);
 
-/* ---- Splash ---- */
-els.splash.addEventListener('click', enterApp);
-function enterApp(){
+/* ---- splash ---- */
+els.splash.addEventListener('click', () => {
   els.splash.classList.add('hidden');
   els.app.classList.add('visible');
-  setTimeout(buildPlan, 150);
+});
+
+/* ---- build the plan immediately (do not wait for the splash click) ---- */
+buildPlan();
+
+function noteMissing(what){
+  missing.push(what);
+  els.missingNote.classList.add('visible');
+  const shown = missing.slice(0,4).join(', ');
+  const more = missing.length > 4 ? ` (+${missing.length-4} more)` : '';
+  els.missingNote.textContent =
+    `These files could not be loaded: ${shown}${more}. They should sit in this same folder with these exact names.`;
 }
 
-const missing = [];
-const mismatched = [];
-
-// If a (1)/(2) layer PNG was exported at different pixel dimensions than
-// the base layer, stretching it to fill the same box distorts it — that's
-// what makes a dot/triangle graphic suddenly show stray blown-up plan
-// content or text. Flag it clearly instead of silently rendering it warped.
-let baseNaturalW = 0, baseNaturalH = 0;
-function checkDims(label, img){
-  if(!baseNaturalW || !img.naturalWidth) return;
-  const dw = Math.abs(img.naturalWidth - baseNaturalW) / baseNaturalW;
-  const dh = Math.abs(img.naturalHeight - baseNaturalH) / baseNaturalH;
-  if(dw > 0.01 || dh > 0.01){
-    mismatched.push(`${label} (${img.naturalWidth}×${img.naturalHeight}, base is ${baseNaturalW}×${baseNaturalH})`);
-    updateMissingNote();
-  }
-}
-
-/* ============================================================
-   FILENAME RESOLVER — finds a file by its stable suffix
-   (e.g. "VIEW-3-(1)" or "BASE-LAYER") no matter what numeric
-   prefix your export tool put in front of it this time.
-   Results are cached so nothing gets probed twice.
-   ============================================================ */
-const resolveCache = new Map();
-
-// Fires every candidate numeric prefix at once for a given extension and
-// takes whichever one actually exists — much faster than trying them one
-// at a time. Tries .png across the whole range first (that's what you
-// export), and only falls back to trying .jpg/.jpeg if no .png matched,
-// since firing every extension at once for every file bogs the browser
-// down with thousands of simultaneous requests for no real benefit.
-function probeExt(suffix, ext){
-  const attempts = [];
-  for(let i=0; i<=FILENAME_MAX_INDEX; i++){
-    const url = `${FILENAME_PREFIX}${String(i).padStart(4,'0')}_${suffix}.${ext}`;
-    attempts.push(new Promise((resolve, reject)=>{
-      const probe = new Image();
-      probe.onload = ()=> resolve(url);
-      probe.onerror = reject;
-      probe.src = url;
-    }));
-  }
-  return Promise.any(attempts).catch(()=> null);
-}
-async function resolveAsset(suffix){
-  if(resolveCache.has(suffix)) return resolveCache.get(suffix);
-  const promise = (async ()=>{
-    // Photos were converted to web-sized JPG (2026-08-20); overlays are still PNG.
-    // Try the likely extension first so we do not fire dozens of doomed probes.
-    const exts = /IMAGE/i.test(suffix) ? ["jpg","png","jpeg"] : FILENAME_EXTS;
-    for(const ext of exts){
-      const found = await probeExt(suffix, ext);
-      if(found) return found;
-    }
-    return null;
-  })();
-  resolveCache.set(suffix, promise);
-  return promise;
-}
-
-/* ---- Build the plan: base layer + per-view dot/triangle layers + hit targets ---- */
-async function buildPlan(){
+function buildPlan(){
   els.baseLayer.decoding = 'async';
-  els.baseLayer.addEventListener('load', ()=>{
-    baseNaturalW = els.baseLayer.naturalWidth;
-    baseNaturalH = els.baseLayer.naturalHeight;
-  }, { once:true });
-  resolveAsset('BASE-LAYER').then(url=>{
-    if(url){ els.baseLayer.src = url; }
-    else{ missing.push('BASE-LAYER'); updateMissingNote(); }
-  });
+  els.baseLayer.addEventListener('load', () => {
+    state.baseW = els.baseLayer.naturalWidth;
+    state.baseH = els.baseLayer.naturalHeight;
+    // if the widget was already open before the plan finished loading, redraw the crop
+    if(state.widgetLocked && els.widget.classList.contains("visible")) drawCrop(viewById(state.widgetLocked));
+  }, {once:true});
+  els.baseLayer.addEventListener('error', () => noteMissing(BASE_LAYER), {once:true});
+  els.baseLayer.src = BASE_LAYER;
 
-  VIEWS.forEach(v=>{
+  VIEWS.forEach(v => {
+    const files = VIEW_FILES[v.id];
     const group = document.createElement('div');
     group.className = 'view-group';
     group.dataset.id = v.id;
 
-    // triangle goes into the DOM first, dot second — combined with the
-    // z-index rule in CSS this guarantees the (1) dot always sits above
-    // the (2) triangle, no matter what.
-    const triImg = document.createElement('img');
-    triImg.className = 'layer-img layer-tri';
-    triImg.alt = v.label + ' sightline';
-    triImg.decoding = 'async';
-    triImg.addEventListener('load', ()=> checkDims(`${v.label} (2)`, triImg));
-    group.appendChild(triImg);
-    resolveAsset(`VIEW-${v.n}-(2)`).then(url=>{
-      if(url){ triImg.src = url; } else { missing.push(`VIEW-${v.n}-(2)`); updateMissingNote(); }
-    });
+    // (2) sightline — created empty and only fetched on first hover/pin.
+    // 17 fewer full-canvas PNGs on first paint is most of the speed-up.
+    const tri = document.createElement('img');
+    tri.className = 'layer-img layer-tri';
+    tri.alt = v.label + ' sightline';
+    tri.decoding = 'async';
+    group.appendChild(tri);
 
-    const dotImg = document.createElement('img');
-    dotImg.className = 'layer-img layer-dot';
-    dotImg.alt = v.label + ' marker';
-    dotImg.decoding = 'async';
-    dotImg.addEventListener('load', ()=> checkDims(`${v.label} (1)`, dotImg));
-    group.appendChild(dotImg);
-    resolveAsset(`VIEW-${v.n}-(1)`).then(url=>{
-      if(url){ dotImg.src = url; } else { missing.push(`VIEW-${v.n}-(1)`); updateMissingNote(); }
-    });
+    // (1) marker dot — needed straight away, it is what you aim at
+    const dot = document.createElement('img');
+    dot.className = 'layer-img layer-dot';
+    dot.alt = v.label + ' marker';
+    dot.decoding = 'async';
+    dot.addEventListener('error', () => noteMissing(files.dot), {once:true});
+    dot.src = files.dot;
+    group.appendChild(dot);
 
     const hit = document.createElement('button');
     hit.className = 'hit';
-    hit.style.left = v.x_pct + '%';
-    hit.style.top = v.y_pct + '%';
-    hit.setAttribute('aria-label', v.label);
     hit.type = 'button';
+    hit.style.left = v.x_pct + '%';
+    hit.style.top  = v.y_pct + '%';
+    hit.setAttribute('aria-label', v.label);
     group.appendChild(hit);
 
     els.planFrame.appendChild(group);
+    groups.set(v.id, {group, tri, dot, files, v, triLoaded:false});
 
     if(!state.isTouch){
-      hit.addEventListener('mouseenter', (e)=>{ group.classList.add('is-hot'); showCursorPreview(v, e); });
-      hit.addEventListener('mousemove', (e)=> positionCursorPreview(e));
-      hit.addEventListener('mouseleave', ()=>{ group.classList.remove('is-hot'); hideCursorPreview(); });
+      hit.addEventListener('mouseenter', () => { loadTri(v.id); group.classList.add('is-hot'); showWidget(v); });
+      hit.addEventListener('mouseleave', () => {
+        group.classList.remove('is-hot');
+        if(state.widgetLocked) showWidget(viewById(state.widgetLocked));
+        else hideWidget();
+      });
     }
-    hit.addEventListener('click', (e)=>{ e.stopPropagation(); togglePin(v, group); });
+    hit.addEventListener('click', e => { e.stopPropagation(); loadTri(v.id); togglePin(v); });
   });
 }
 
-function updateMissingNote(){
-  const parts = [];
-  if(missing.length){
-    const shown = missing.slice(0,3).join(', ');
-    const more = missing.length > 3 ? ` (+${missing.length-3} more)` : '';
-    parts.push(`Some files weren't found next to this HTML file: ${shown}${more}. Make sure this file sits in the same folder as your exports and the filenames match exactly.`);
-  }
-  if(mismatched.length){
-    const shown = mismatched.slice(0,3).join('; ');
-    const more = mismatched.length > 3 ? ` (+${mismatched.length-3} more)` : '';
-    parts.push(`These layers were exported at a different size than BASE LAYER, so they're being stretched and will look distorted: ${shown}${more}. Re-export them at the exact same canvas size as BASE LAYER to fix it.`);
-  }
-  if(!parts.length){ els.missingNote.classList.remove('visible'); return; }
-  els.missingNote.classList.add('visible');
-  els.missingNote.textContent = parts.join(' ');
+const viewById = id => VIEWS.find(v => v.id === id);
+
+function loadTri(id){
+  const g = groups.get(id);
+  if(g.triLoaded) return;
+  g.triLoaded = true;
+  g.tri.addEventListener('error', () => noteMissing(g.files.tri), {once:true});
+  g.tri.src = g.files.tri;
 }
 
-/* ---- cursor-follow preview (desktop hover only) ---- */
-function showCursorPreview(v, e){
-  els.cursorFrame.innerHTML = `<div class="fallback"><div class="num">${v.n}</div></div>`;
-  els.cursorLabel.textContent = v.label;
-  els.cursorPreview.classList.add('visible');
-  positionCursorPreview(e);
-  const requestId = v.id + ':' + (++cursorRequestSeq);
-  cursorActiveRequest = requestId;
-  resolveAsset(`VIEW-${v.n}-IMAGE`).then(url=>{
-    if(cursorActiveRequest !== requestId) return; // hovered elsewhere already
-    if(!url) return;
-    const img = new Image();
-    img.alt = v.label;
-    img.decoding = 'async';
-    img.onload = ()=>{
-      if(cursorActiveRequest !== requestId) return;
-      els.cursorFrame.innerHTML = "";
-      els.cursorFrame.appendChild(img);
-    };
-    img.src = url;
+/* ---- image cache so a view is only fetched once ---- */
+const imgCache = new Map();
+function getImage(src){
+  if(imgCache.has(src)) return imgCache.get(src);
+  const p = new Promise(resolve => {
+    const im = new Image();
+    im.decoding = 'async';
+    im.onload = () => resolve(src);
+    im.onerror = () => resolve(null);
+    im.src = src;
+  });
+  imgCache.set(src, p);
+  return p;
+}
+
+/* =====================================================================
+   SIDE WIDGET
+   ===================================================================== */
+let widgetSeq = 0;
+function showWidget(v){
+  if(!v) return;
+  const files = VIEW_FILES[v.id];
+  const seq = ++widgetSeq;
+
+  els.widget.classList.add('visible');
+  els.wTitle.textContent = v.label;
+  els.wFloor.textContent = (VIEW_FLOORS[v.id] || 'First Floor') + ' View';
+  els.wHint.textContent = state.pinnedOrder.includes(v.id)
+    ? 'Pinned below. Click the marker again to unpin.'
+    : 'Click the marker to pin this view below.';
+
+  els.wPhoto.innerHTML = `<div class="ph serif">${v.n}</div>`;
+  getImage(files.image).then(src => {
+    if(seq !== widgetSeq || !src) return;
+    const im = new Image();
+    im.src = src; im.alt = v.label; im.decoding = 'async';
+    els.wPhoto.innerHTML = '';
+    els.wPhoto.appendChild(im);
+  });
+
+  drawCrop(v);
+}
+function hideWidget(){ els.widget.classList.remove('visible'); }
+
+/* Square detail of the plan, centred on this view's marker. Built from the
+   same base + (1) + (2) files already loaded — no extra downloads. */
+function drawCrop(v){
+  const box = els.wCrop;
+  box.innerHTML = '';
+  if(!state.baseW) return;
+
+  const files = VIEW_FILES[v.id];
+  const w = box.clientWidth || 220;
+  const imgW = w * CROP_ZOOM;
+  const imgH = imgW * (state.baseH / state.baseW);
+  const left = w/2 - (v.x_pct/100) * imgW;
+  const top  = w/2 - (v.y_pct/100) * imgH;
+
+  [[BASE_LAYER,'c-base'], [files.tri,'c-tri'], [files.dot,'c-dot']].forEach(([src, cls]) => {
+    const im = document.createElement('img');
+    im.className = cls;
+    im.src = src;
+    im.style.width = imgW + 'px';
+    im.style.left = left + 'px';
+    im.style.top = top + 'px';
+    box.appendChild(im);
   });
 }
-let cursorRequestSeq = 0, cursorActiveRequest = null;
-function positionCursorPreview(e){
-  const stage = els.stage;
-  const stageBox = stage.getBoundingClientRect();
-  const offset = 18;
-  let left = (e.clientX - stageBox.left) + stage.scrollLeft + offset;
-  let top = (e.clientY - stageBox.top) + stage.scrollTop + offset;
-  const w = 130, h = 130*3/4 + 26;
-  const viewRight = stage.scrollLeft + stage.clientWidth;
-  const viewBottom = stage.scrollTop + stage.clientHeight;
-  if(left + w > viewRight - 10) left = (e.clientX - stageBox.left) + stage.scrollLeft - offset - w;
-  if(top + h > viewBottom - 10) top = (e.clientY - stageBox.top) + stage.scrollTop - offset - h;
-  els.cursorPreview.style.left = left + 'px';
-  els.cursorPreview.style.top = top + 'px';
-}
-function hideCursorPreview(){ els.cursorPreview.classList.remove('visible'); }
 
-/* ---- click to pin / unpin ---- */
-function togglePin(v, group){
-  if(state.pinned.has(v.id)){
-    state.pinned.delete(v.id);
-    group.classList.remove('is-pinned');
-    removeCard(v.id);
+/* =====================================================================
+   PIN / UNPIN
+   ===================================================================== */
+let flashTimer = null;
+function flash(msg){
+  els.flash.textContent = msg;
+  els.flash.classList.add('show');
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => els.flash.classList.remove('show'), 1600);
+}
+
+function togglePin(v){
+  const g = groups.get(v.id);
+  const i = state.pinnedOrder.indexOf(v.id);
+  if(i > -1){
+    state.pinnedOrder.splice(i,1);
+    g.group.classList.remove('is-pinned');
+    if(state.widgetLocked === v.id) state.widgetLocked = null;
+    flash('View removed');
   } else {
-    state.pinned.add(v.id);
-    group.classList.add('is-pinned');
-    addCard(v);
-    hideCursorPreview();
-    document.querySelector('.gallery').scrollIntoView({behavior:'smooth', block:'nearest'});
+    state.pinnedOrder.push(v.id);
+    g.group.classList.add('is-pinned');
+    state.widgetLocked = v.id;
+    flash('Image added below ↓');
   }
-  els.galleryEmpty.style.display = state.pinned.size ? 'none' : 'block';
+  if(state.widgetLocked) showWidget(v); else hideWidget();
+  renderGallery();          // no auto-scroll, by request
 }
 
-function addCard(v){
-  const card = document.createElement('div');
-  card.className = 'gcard';
-  card.dataset.id = v.id;
+function move(id, delta){
+  const i = state.pinnedOrder.indexOf(id);
+  const j = i + delta;
+  if(i < 0 || j < 0 || j >= state.pinnedOrder.length) return;
+  [state.pinnedOrder[i], state.pinnedOrder[j]] = [state.pinnedOrder[j], state.pinnedOrder[i]];
+  renderGallery();
+}
 
-  // single flooded image box — no nested frame, image fills edge-to-edge,
-  // cropped from the top (bottom-anchored) when the aspect ratio doesn't match
-  const imgWrap = document.createElement('div');
-  imgWrap.className = 'gcard-image';
-  imgWrap.innerHTML = `<div class="fallback"><div class="num serif">${v.n}</div></div>`;
-  let loadedSrc = null;
-  resolveAsset(`VIEW-${v.n}-IMAGE`).then(url=>{
-    if(!url) return;
-    loadedSrc = url;
-    const img = new Image();
-    img.alt = v.label;
-    img.decoding = 'async';
-    img.loading = 'lazy';
-    img.onload = ()=>{
-      imgWrap.innerHTML = "";
-      imgWrap.appendChild(img);
+function renderGallery(){
+  els.galleryEmpty.style.display = state.pinnedOrder.length ? 'none' : 'block';
+  els.galleryCards.innerHTML = '';
+
+  state.pinnedOrder.forEach((id, idx) => {
+    const v = viewById(id);
+    const files = VIEW_FILES[id];
+
+    const card = document.createElement('div');
+    card.className = 'gcard';
+
+    const imgWrap = document.createElement('div');
+    imgWrap.className = 'gcard-image';
+    imgWrap.innerHTML = `<div class="ph serif">${v.n}</div>`;
+
+    getImage(files.image).then(src => {
+      if(!src) return;
+      const im = new Image();
+      im.className = 'shot'; im.src = src; im.alt = v.label; im.decoding = 'async';
+      imgWrap.innerHTML = '';
+      imgWrap.appendChild(im);
+      const tag = document.createElement('div');
+      tag.className = 'tag serif'; tag.textContent = v.label;
       imgWrap.appendChild(tag);
-      imgWrap.appendChild(zoomHint);
-    };
-    img.src = url;
+      const mark = document.createElement('img');
+      mark.className = 'watermark'; mark.src = 'fs-logo-black.png'; mark.alt = '';
+      imgWrap.appendChild(mark);
+    });
+    card.appendChild(imgWrap);
+
+    const tools = document.createElement('div');
+    tools.className = 'gcard-tools';
+
+    const up = document.createElement('button');
+    up.className = 'ord'; up.type = 'button'; up.textContent = '↑'; up.title = 'Move up';
+    up.addEventListener('click', () => move(id,-1));
+
+    const down = document.createElement('button');
+    down.className = 'ord'; down.type = 'button'; down.textContent = '↓'; down.title = 'Move down';
+    down.addEventListener('click', () => move(id, 1));
+
+    const expand = document.createElement('button');
+    expand.type = 'button'; expand.textContent = 'Expand view';
+    expand.addEventListener('click', () => openSheet(v));
+
+    const editorUrl = VIEW_EDITOR_LINKS[id];
+    let editor = null;
+    if(editorUrl){
+      editor = document.createElement('button');
+      editor.type = 'button'; editor.textContent = 'Go to editor';
+      editor.addEventListener('click', () => window.open(editorUrl,'_blank','noopener'));
+    }
+
+    const unpin = document.createElement('button');
+    unpin.type = 'button'; unpin.textContent = 'Unpin';
+    unpin.addEventListener('click', () => togglePin(v));
+
+    const spacer = document.createElement('span');
+    spacer.className = 'spacer';
+
+    tools.append(up, down, expand);
+    if(editor) tools.append(editor);
+    tools.append(spacer, unpin);
+    card.appendChild(tools);
+
+    const pf = document.createElement('div');
+    pf.className = 'print-foot';
+    pf.innerHTML = `<span>${v.label} — ${(VIEW_FLOORS[id]||'First Floor')}</span>` +
+                   `<span>150 Worth Ave — Palm Beach · ${idx+1}</span>`;
+    card.appendChild(pf);
+
+    els.galleryCards.appendChild(card);
   });
-  const tag = document.createElement('div');
-  tag.className = 'tag';
-  tag.textContent = v.label;
-  imgWrap.appendChild(tag);
-  const zoomHint = document.createElement('div');
-  zoomHint.className = 'zoom-hint';
-  zoomHint.textContent = 'Click to expand';
-  imgWrap.appendChild(zoomHint);
-  imgWrap.addEventListener('click', ()=>{ if(loadedSrc) openLightbox(loadedSrc, v.label); });
-  card.appendChild(imgWrap);
-
-  const actions = document.createElement('div');
-  actions.className = 'gcard-actions';
-
-  const editorUrl = VIEW_EDITOR_LINKS[v.id];
-  const go = document.createElement('a');
-  go.target = '_blank'; go.rel = 'noopener';
-  if(editorUrl){ go.href = editorUrl; go.textContent = 'Go to Editor'; }
-  else{ go.href = '#'; go.classList.add('disabled'); go.textContent = `Editor link pending`; }
-  actions.appendChild(go);
-
-  const remove = document.createElement('button');
-  remove.className = 'remove';
-  remove.type = 'button';
-  remove.textContent = 'Unpin';
-  remove.addEventListener('click', ()=>{
-    const group = els.planFrame.querySelector(`.view-group[data-id="${v.id}"]`);
-    togglePin(v, group);
-  });
-  actions.appendChild(remove);
-
-  card.appendChild(actions);
-  els.galleryCards.appendChild(card);
 }
 
-function removeCard(id){
-  const card = els.galleryCards.querySelector(`.gcard[data-id="${id}"]`);
-  if(card) card.remove();
+/* =====================================================================
+   EXPAND VIEW — the 8x10 sheet
+   ===================================================================== */
+function openSheet(v){
+  const files = VIEW_FILES[v.id];
+  els.sheetTitle.textContent = `Burlington Arcade View ${v.n}`;
+  els.sheetSub.textContent = `${v.label} · ${VIEW_FLOORS[v.id] || 'First Floor'}`;
+
+  els.sheetPhoto.innerHTML = '';
+  getImage(files.image).then(src => {
+    if(!src) return;
+    const im = new Image(); im.src = src; im.alt = v.label;
+    els.sheetPhoto.appendChild(im);
+  });
+
+  // the plan with only this view's overlays: (1) at full, (2) at 44%
+  els.sheetMap.innerHTML = '';
+  const base = new Image(); base.src = BASE_LAYER; base.alt = 'Plan';
+  const tri = new Image();  tri.src = files.tri;  tri.className = 'ov ov-tri'; tri.alt = '';
+  const dot = new Image();  dot.src = files.dot;  dot.className = 'ov ov-dot'; dot.alt = '';
+  els.sheetMap.append(base, tri, dot);
+
+  els.sheetWrap.classList.add('visible');
 }
+function closeSheet(){ els.sheetWrap.classList.remove('visible'); }
+els.sheetClose.addEventListener('click', closeSheet);
+els.sheetWrap.addEventListener('click', e => { if(e.target === els.sheetWrap) closeSheet(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeSheet(); });
+
+/* =====================================================================
+   PRESENTATION / PDF
+   ===================================================================== */
+els.btnPresent.addEventListener('click', () => {
+  const on = document.body.classList.toggle('presenting');
+  els.btnPresent.classList.toggle('on', on);
+  els.btnPresent.textContent = on ? 'Exit Presentation' : 'View as Presentation';
+});
+
+els.btnPdf.addEventListener('click', () => {
+  if(!state.pinnedOrder.length){
+    flash('Pin some views first');
+    return;
+  }
+  // Browsers make PDFs through the print dialog — choose "Save as PDF"
+  // as the destination. The cover page and page numbers are built into
+  // the print stylesheet.
+  window.print();
+});
+
+/* keep the little crop square correct when the window resizes */
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    const id = state.widgetLocked;
+    if(id && els.widget.classList.contains('visible')) drawCrop(viewById(id));
+  }, 150);
+});
 </script>
 </body>
 </html>

@@ -3,282 +3,269 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<!-- Keeps this page out of Google search results. Leave it in. -->
 <meta name="robots" content="noindex, nofollow">
-
-<title>150 Worth Avenue — Fairfax &amp; Sammons</title>
-
+<title>Burlington Arcade — 150 Worth Avenue — Fairfax &amp; Sammons</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <!-- =====================================================================
-     150 WORTH AVENUE — PROJECT HUB
-     Fairfax & Sammons Architecture
-     =====================================================================
+     BURLINGTON ARCADE — PROJECT DASHBOARD
+     150 Worth Avenue, Palm Beach · Fairfax & Sammons Architecture
 
-     WHAT THIS IS
-     One page that links to every Worth Avenue tool and file, so the team
-     has a single address to remember instead of five.
-
-     THE ONLY THING YOU EDIT
-     Scroll down to the section marked "THE LINKS". Each tile has one line
-     that starts with  href="..."  — that is the address it points to.
-     Paste your link between the quotation marks. Nothing else needs
-     touching, ever.
-
-     A tile with  href="#"  is not linked yet, and shows as "Coming soon".
-     Replace the  #  with a real address and it turns into a live link.
-
+     THE ONLY THINGS YOU EDIT are in the CONFIG block near the bottom of
+     this file (search for "CONFIG"). Links, the description paragraph,
+     and the internal drive path all live there in plain quotes.
      ===================================================================== -->
 
 <style>
-  :root {
-    --ink:      #23201c;
-    --ink-soft: #5d564d;
-    --paper:    #f7f4ee;
-    --card:     #ffffff;
-    --line:     #ddd6c9;
-    --accent:   #7a6a52;
-    --live:     #4a6b4f;
+  :root{
+    --ivory:#F4EFE4; --ivory-deep:#ECE4D2; --ink:#161310; --ink-soft:#3A342C;
+    --line:#C9BFA6; --brass:#8A6D3B; --white:#FFFFFF; --live:#4A6B4F;
   }
-
-  * { box-sizing: border-box; }
-
-  body {
-    margin: 0;
-    padding: 0;
-    background: var(--paper);
-    color: var(--ink);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--ivory); color:var(--ink);
+    font-family:'Inter',-apple-system,'Segoe UI',sans-serif; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
   }
+  .serif{ font-family:'EB Garamond',Georgia,serif; }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 26px 90px; }
 
-  .wrap {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 64px 28px 96px;
+  .header-band{ background:var(--white); border-bottom:1px solid var(--line); padding:34px 26px 30px; text-align:center; }
+  .header-band img{ display:block; width:100%; max-width:900px; height:auto; margin:0 auto; }
+
+  .titleblock{ text-align:center; padding:52px 0 0; }
+  .eyebrow{ font-size:10.5px; letter-spacing:0.32em; text-transform:uppercase; color:var(--brass); margin:0 0 20px; }
+  h1{ font-family:'EB Garamond',Georgia,serif; font-weight:500; font-size:clamp(2.1rem,5.4vw,3.2rem);
+      letter-spacing:0.02em; line-height:1.12; margin:0; }
+  .subtitle{ font-family:'EB Garamond',Georgia,serif; font-style:italic; font-size:1.1rem; color:var(--ink-soft); margin:10px 0 0; }
+  .rule{ width:54px; height:1px; background:var(--line); margin:30px auto; }
+  .lede{ max-width:660px; margin:0 auto; text-align:center; font-family:'EB Garamond',Georgia,serif;
+         font-size:1.12rem; line-height:1.75; color:var(--ink-soft); }
+
+  .section-label{
+    display:flex; align-items:center; gap:16px; margin:64px 0 22px;
+    font-size:10.5px; letter-spacing:0.26em; text-transform:uppercase; color:var(--brass);
   }
+  .section-label::after{ content:''; flex:1; height:1px; background:var(--line); }
 
-  /* ---------- Masthead ---------- */
-
-  header {
-    text-align: center;
-    padding-bottom: 48px;
-    margin-bottom: 56px;
-    border-bottom: 1px solid var(--line);
+  .card{
+    display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+    background:var(--white); border:1px solid var(--line); text-decoration:none; color:inherit;
+    transition:border-color .2s ease, box-shadow .2s ease, transform .2s ease;
   }
+  .card:hover{ border-color:var(--brass); transform:translateY(-2px); box-shadow:0 10px 34px rgba(22,19,16,.10); }
+  .card-media{ position:relative; overflow:hidden; background:var(--ivory-deep); min-height:230px; }
+  .card-media img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .card-body{ padding:34px 34px 30px; display:flex; flex-direction:column; justify-content:center; }
+  .card-body h2{ font-family:'EB Garamond',Georgia,serif; font-weight:600; font-size:1.62rem; margin:0 0 10px; letter-spacing:.01em; }
+  .card-body p{ margin:0 0 20px; font-size:.94rem; color:var(--ink-soft); }
+  .enter{ font-size:10.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink); display:inline-flex; align-items:center; gap:9px; }
+  .enter::after{ content:'\2192'; transition:transform .2s ease; }
+  .card:hover .enter::after{ transform:translateX(5px); }
 
-  .firm {
-    font-family: 'Inter', sans-serif;
-    font-size: 0.72rem;
-    font-weight: 500;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin: 0 0 22px;
+  .editor-row{
+    display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
+    background:var(--white); border:1px solid var(--line); padding:22px 26px; text-decoration:none; color:inherit;
+    transition:border-color .2s ease, transform .2s ease;
   }
+  .editor-row + .editor-row{ border-top:none; }
+  .editor-row:not(.is-off):hover{ border-color:var(--brass); transform:translateY(-1px); }
+  .editor-row h3{ font-family:'EB Garamond',Georgia,serif; font-weight:600; font-size:1.22rem; margin:0 0 3px; }
+  .editor-row p{ margin:0; font-size:.86rem; color:var(--ink-soft); }
+  .badge{ font-size:9.5px; letter-spacing:.18em; text-transform:uppercase; padding:5px 12px; border:1px solid; white-space:nowrap; }
+  .badge.live{ color:var(--live); border-color:var(--live); }
+  .badge.soon{ color:var(--ink-soft); border-color:var(--line); opacity:.75; }
+  .editor-row.is-off{ opacity:.6; pointer-events:none; }
 
-  h1 {
-    font-family: 'EB Garamond', Georgia, serif;
-    font-size: clamp(2.4rem, 6vw, 3.6rem);
-    font-weight: 500;
-    letter-spacing: 0.01em;
-    margin: 0 0 14px;
-    line-height: 1.1;
+  .links{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
+  .linkbtn{
+    display:flex; flex-direction:column; gap:5px;
+    background:var(--ink); color:var(--ivory); border:1px solid var(--ink);
+    padding:20px 22px; text-decoration:none; text-align:left; font:inherit; cursor:pointer;
+    transition:background .2s ease;
   }
+  .linkbtn:hover{ background:var(--brass); border-color:var(--brass); }
+  .linkbtn .lb-title{ font-size:11px; letter-spacing:.18em; text-transform:uppercase; }
+  .linkbtn .lb-sub{ font-size:.82rem; opacity:.72; font-family:'EB Garamond',Georgia,serif; font-style:italic; }
 
-  .place {
-    font-family: 'EB Garamond', Georgia, serif;
-    font-style: italic;
-    font-size: 1.15rem;
-    color: var(--ink-soft);
-    margin: 0;
+  .modal{
+    position:fixed; inset:0; z-index:200; background:rgba(22,19,16,.55);
+    display:flex; align-items:center; justify-content:center; padding:26px;
+    opacity:0; visibility:hidden; transition:opacity .22s ease, visibility .22s ease;
   }
-
-  /* ---------- Section headings ---------- */
-
-  h2 {
-    font-family: 'EB Garamond', Georgia, serif;
-    font-size: 1.5rem;
-    font-weight: 500;
-    margin: 56px 0 8px;
+  .modal.visible{ opacity:1; visibility:visible; }
+  .modal-box{ background:var(--white); border:1px solid var(--line); max-width:620px; width:100%; padding:34px; }
+  .modal-box h3{ font-family:'EB Garamond',Georgia,serif; font-weight:600; font-size:1.4rem; margin:0 0 8px; }
+  .modal-box .note{ font-size:.86rem; color:var(--ink-soft); margin:0 0 20px; }
+  .pathbox{
+    font-family:ui-monospace,Consolas,monospace; font-size:.86rem; background:var(--ivory);
+    border:1px solid var(--line); padding:16px; word-break:break-all; user-select:all; margin:0 0 18px;
   }
-
-  h2:first-of-type { margin-top: 0; }
-
-  .section-note {
-    color: var(--ink-soft);
-    font-size: 0.92rem;
-    margin: 0 0 26px;
+  .modal-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+  .btn{
+    border:1px solid var(--ink); background:var(--ink); color:var(--ivory);
+    padding:12px 22px; font:inherit; font-size:10.5px; letter-spacing:.18em; text-transform:uppercase; cursor:pointer;
+    transition:background .2s ease;
   }
+  .btn:hover{ background:var(--brass); border-color:var(--brass); }
+  .btn.ghost{ background:transparent; color:var(--ink); }
+  .btn.ghost:hover{ background:var(--ivory-deep); }
+  .copied{ font-size:.82rem; color:var(--live); margin:12px 0 0; display:none; }
+  .copied.show{ display:block; }
 
-  /* ---------- Tiles ---------- */
+  footer{ margin-top:76px; padding-top:26px; border-top:1px solid var(--line); text-align:center; font-size:.8rem; color:var(--ink-soft); }
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 18px;
-  }
-
-  .tile {
-    display: block;
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 3px;
-    padding: 26px 26px 24px;
-    text-decoration: none;
-    color: inherit;
-    transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
-  }
-
-  .tile:hover {
-    border-color: var(--accent);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(35, 32, 28, 0.07);
-  }
-
-  /* Tiles that aren't linked yet: greyed out, not clickable */
-  .tile[href="#"] {
-    opacity: 0.55;
-    pointer-events: none;
-  }
-
-  .tile h3 {
-    font-family: 'EB Garamond', Georgia, serif;
-    font-size: 1.32rem;
-    font-weight: 600;
-    margin: 0 0 8px;
-  }
-
-  .tile p {
-    margin: 0 0 18px;
-    font-size: 0.9rem;
-    color: var(--ink-soft);
-  }
-
-  .status {
-    font-size: 0.68rem;
-    font-weight: 500;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
-
-  .status.live   { color: var(--live); }
-  .status.soon   { color: var(--ink-soft); }
-
-  .tile[href="#"] .status.live { display: none; }
-  .tile:not([href="#"]) .status.soon { display: none; }
-
-  /* ---------- Footer ---------- */
-
-  footer {
-    margin-top: 72px;
-    padding-top: 28px;
-    border-top: 1px solid var(--line);
-    text-align: center;
-    font-size: 0.82rem;
-    color: var(--ink-soft);
-  }
-
-  @media (max-width: 600px) {
-    .wrap { padding: 44px 20px 64px; }
+  @media (max-width:760px){
+    .card{ grid-template-columns:1fr; }
+    .card-media{ min-height:200px; }
   }
 </style>
 </head>
 <body>
 
+<div class="header-band">
+  <img src="assets/burlington-header.png" alt="Burlington Arcade — Fairfax &amp; Sammons, New York ~ Palm Beach">
+</div>
+
 <div class="wrap">
 
-  <header>
-    <p class="firm">Fairfax &amp; Sammons Architecture</p>
-    <h1>150 Worth Avenue</h1>
-    <p class="place">Palm Beach, Florida</p>
-  </header>
+  <div class="titleblock">
+    <p class="eyebrow">150 Worth Avenue · Palm Beach, Florida</p>
+    <h1 class="serif">Burlington Arcade</h1>
+    <p class="subtitle">Design Viewer</p>
+    <div class="rule"></div>
+    <p class="lede" id="lede"></p>
+  </div>
 
+  <div class="section-label">Floorplan &amp; Renderings</div>
 
-  <!-- =================================================================
-       THE LINKS — this is the only part you edit.
-       Paste each address between the quotation marks after href=
-       ================================================================= -->
+  <a class="card" href="floorplan/">
+    <div class="card-media">
+      <img src="assets/views-of-burlington.jpg" alt="Views of Burlington — numbered view plan">
+    </div>
+    <div class="card-body">
+      <h2>Floorplan &amp; Renderings</h2>
+      <p>Every rendering connected to its place on the plan. Hover a marker to preview the view, click to pin it, and open any view full size.</p>
+      <span class="enter">Open the viewer</span>
+    </div>
+  </a>
 
+  <div class="section-label">Facade Renderer</div>
 
-  <h2>Editors</h2>
-  <p class="section-note">Live tools for building and adjusting renderings.</p>
-
-  <div class="grid">
-
-    <a class="tile" href="esplanade/">
-      <h3>Esplanade Facade Editor</h3>
-      <p>Awnings, colour, logos, retail category, signage and text. Export a finished storefront rendering.</p>
-      <span class="status live">Live</span>
-      <span class="status soon">Coming soon</span>
-    </a>
-
-    <a class="tile" href="interior/">
+  <a class="editor-row" id="rowInterior" href="esplanade/">
+    <div>
       <h3>Interior Facade Editor</h3>
-      <p>Interior views of the arcade on a clickable plan.</p>
-      <span class="status live">Live</span>
-      <span class="status soon">Coming soon</span>
-    </a>
+      <p>Mock up arcade retail shopfronts — awnings, colour, signage, logos and retail category.</p>
+    </div>
+    <span class="badge live">Live</span>
+  </a>
 
-    <a class="tile" href="#">
-      <!--                  ^ paste the EXTERIOR editor link here -->
-      <h3>Exterior Editor</h3>
-      <p>Exterior view configurator.</p>
-      <span class="status live">Live</span>
-      <span class="status soon">Coming soon</span>
-    </a>
+  <a class="editor-row is-off" id="rowExterior" href="#">
+    <div>
+      <h3>Exterior Facade Editor</h3>
+      <p>The Worth Avenue street elevation. Same tools, exterior shopfronts.</p>
+    </div>
+    <span class="badge soon">Coming soon</span>
+  </a>
 
+  <div class="section-label">Project Files</div>
+
+  <div class="links">
+    <a class="linkbtn" id="btnDrive" href="#" target="_blank" rel="noopener">
+      <span class="lb-title">Google Drive</span>
+      <span class="lb-sub">Worth Ave Esplanade folder</span>
+    </a>
+    <a class="linkbtn" id="btnDropbox" href="#" target="_blank" rel="noopener">
+      <span class="lb-title">Dropbox</span>
+      <span class="lb-sub">150 Worth Ave — published &amp; social</span>
+    </a>
+    <button class="linkbtn" id="btnPath" type="button">
+      <span class="lb-title">Drive Location</span>
+      <span class="lb-sub">Internal office server path</span>
+    </button>
   </div>
-
-
-  <h2>Views</h2>
-  <p class="section-note">Walk the arcade and open any view.</p>
-
-  <div class="grid">
-
-    <a class="tile" href="floorplan/">
-      <h3>Floorplan &amp; Views</h3>
-      <p>Seventeen numbered views on a clickable plan. Hover a marker to preview, click to open.</p>
-      <span class="status live">Live</span>
-      <span class="status soon">Coming soon</span>
-    </a>
-
-  </div>
-
-
-  <h2>Files</h2>
-  <p class="section-note">Decks, drawings and image libraries. These open in Dropbox or Google Drive.</p>
-
-  <div class="grid">
-
-    <a class="tile" href="#">
-      <!--                  ^ paste a Dropbox or Drive SHARE LINK here -->
-      <h3>Leasing Deck</h3>
-      <p>The current Burlington Arcade leasing presentation.</p>
-      <span class="status live">Live</span>
-      <span class="status soon">Coming soon</span>
-    </a>
-
-    <a class="tile" href="#">
-      <!--                  ^ paste a Dropbox or Drive SHARE LINK here -->
-      <h3>Image Library</h3>
-      <p>High-resolution renderings and photography for 150 Worth.</p>
-      <span class="status live">Live</span>
-      <span class="status soon">Coming soon</span>
-    </a>
-
-  </div>
-
 
   <footer>
     Internal reference — Fairfax &amp; Sammons Architecture. Not for public distribution.
   </footer>
 
 </div>
+
+<div class="modal" id="pathModal">
+  <div class="modal-box">
+    <h3 class="serif">Internal drive location</h3>
+    <p class="note">This is a folder on the office server, not a web link — it only opens on a computer connected to the office network. Copy it and paste it into the address bar of a File Explorer window.</p>
+    <p class="pathbox" id="pathText"></p>
+    <div class="modal-actions">
+      <button class="btn" id="btnCopyPath" type="button">Copy path</button>
+      <button class="btn ghost" id="btnCloseModal" type="button">Close</button>
+    </div>
+    <p class="copied" id="copiedNote">Copied to clipboard.</p>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   CONFIG — everything you might want to change lives here
+   ===================================================================== */
+
+// The paragraph under the title.
+// NOTE (2026-08-20): drafted from public reporting and the firm's own
+// portfolio page. Please read it and correct anything wrong — this is the
+// one paragraph on the page that makes a claim about the project.
+const DESCRIPTION =
+  "Burlington Arcade reimagines the former Saks Fifth Avenue space at the Esplanade, 150 Worth Avenue, as a pedestrian shopping arcade in the Mizner tradition. Two levels of shopfronts face a sky-lit walk cut through the depth of the block, bringing light, air and a street of small storefronts into what had been a single large-plate department store. This viewer holds the current design set — the numbered view renderings tied to their positions on the plan, and the facade tools used to mock up individual shopfronts.";
+
+const DRIVE_LINK    = "https://drive.google.com/drive/folders/1yZgQ2N9G5BVkX0fcC3ViBomkR256XQah";
+const DROPBOX_LINK  = "https://www.dropbox.com/home/Fairfax%20%26%20Sammons%20Project%20Resources/PROJECTS/PUBLISHED/INSTAGRAM%20POSTS/150%20Worth%20Ave%20-%20Esplanade";
+const INTERNAL_PATH = "Y:\\FAIRFAX_SAMMONS_PARTNERS_PB\\PROJECTS\\CURRENT PROJECTS\\24_ESPLANADE_SAKS";
+
+// When the exterior editor exists, paste its link here and the row turns on by itself.
+const EXTERIOR_EDITOR_LINK = "";
+
+/* =====================================================================
+   Wiring — nothing below here needs editing
+   ===================================================================== */
+document.getElementById('lede').textContent = DESCRIPTION;
+document.getElementById('btnDrive').href = DRIVE_LINK;
+document.getElementById('btnDropbox').href = DROPBOX_LINK;
+document.getElementById('pathText').textContent = INTERNAL_PATH;
+
+if (EXTERIOR_EDITOR_LINK) {
+  const row = document.getElementById('rowExterior');
+  row.href = EXTERIOR_EDITOR_LINK;
+  row.classList.remove('is-off');
+  const b = row.querySelector('.badge');
+  b.className = 'badge live';
+  b.textContent = 'Live';
+}
+
+const modal = document.getElementById('pathModal');
+const copied = document.getElementById('copiedNote');
+
+document.getElementById('btnPath').addEventListener('click', () => {
+  copied.classList.remove('show');
+  modal.classList.add('visible');
+});
+document.getElementById('btnCloseModal').addEventListener('click', () => modal.classList.remove('visible'));
+modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('visible'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.classList.remove('visible'); });
+
+document.getElementById('btnCopyPath').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(INTERNAL_PATH);
+  } catch (err) {
+    const ta = document.createElement('textarea');
+    ta.value = INTERNAL_PATH; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+  copied.classList.add('show');
+});
+</script>
 
 </body>
 </html>
