@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESPLANADE RENDER MAKER</title>
+<style>
+    body {
+        font-family: Georgia, 'Times New Roman', Times, serif;
+        background-color: #f8f9fa;
+        color: #111;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: flex-start;
+        gap: 24px;
+    }
+    .controls {
+        flex: 0 0 380px;
+        width: 380px;
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        max-height: 92vh;
+        overflow-y: auto;
+        box-sizing: border-box;
+    }
+    h2 { margin-top: 0; font-weight: 400; letter-spacing: 2px; color: #111; }
+    .control-group { margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+    label { display: block; margin-bottom: 10px; font-weight: bold; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #555; }
+
+    .bubble-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; align-items: center; }
+    .bubble {
+        padding: 8px 16px; background: #fff; border: 1px solid #d1d1d1; border-radius: 20px;
+        font-size: 12px; font-weight: bold; color: #333; cursor: pointer; transition: all 0.2s ease;
+    }
+    .bubble:hover { border-color: #888; }
+    .bubble.active { background: #e6f4ea; border-color: #34a853; color: #0d652d; }
+
+    .color-preset {
+        width: 25px; height: 25px; border-radius: 50%; border: 1px solid #ccc; cursor: pointer;
+        display: inline-block; margin-right: 5px; box-sizing: border-box;
+    }
+    .color-preset.active { border: 3px solid #333; }
+
+    input[type="color"] {
+        width: 34px; height: 34px; border: 1px dashed #888; border-radius: 50%;
+        padding: 0; background: none; cursor: pointer;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper { padding: 2px; }
+    input[type="color"]::-webkit-color-swatch { border-radius: 50%; border: none; }
+    .picker-label { font-size: 10px; color: #888; margin-left: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+    input[type="range"] { width: 100%; margin-bottom: 15px; accent-color: #333; }
+    input[type="text"], select {
+        width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; margin-bottom: 10px;
+    }
+    input[type="file"] { width: 100%; margin-bottom: 10px; font-size: 12px; }
+
+    .action-row { display: flex; gap: 10px; margin-bottom: 20px; }
+    button.action-btn {
+        flex: 1; padding: 12px; background: #111; color: white;
+        border: none; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; letter-spacing: 1px;
+        font-family: Georgia, 'Times New Roman', Times, serif;
+    }
+    button.action-btn:hover { background: #333; }
+    button.action-btn.outline { background: white; color: #111; border: 1px solid #111; }
+    button.action-btn.outline:hover { background: #f0f0f0; }
+    button.action-btn.toggled { background: #e6f4ea; color: #0d652d; border: 1px solid #34a853; }
+
+    .sticky-top {
+        flex: 1 1 480px;
+        max-width: 800px;
+        min-width: 320px;
+    }
+    .preview-container {
+        position: relative;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 4 / 3;
+        background: #e9ecef;
+        border: 1px solid #ccc; border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    .layer-canvas {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        object-fit: cover; pointer-events: none;
+    }
+
+    .draggable-text {
+        position: absolute; top: 45%; left: 40%;
+        font-family: 'Garamond', serif; text-transform: uppercase;
+        color: #ffffff; cursor: move; user-select: none;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5); white-space: nowrap; z-index: 10;
+    }
+    .draggable-logo {
+        position: absolute; top: 30%; left: 30%;
+        cursor: move; user-select: none; z-index: 9;
+    }
+    .inline-inputs { display: flex; gap: 10px; }
+    .inline-inputs div { flex: 1; }
+
+    #missing-toast {
+        position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+        background: rgba(20,20,20,0.92); color: #fff; border-radius: 8px;
+        padding: 10px 16px; font-size: 11px; font-weight: bold; letter-spacing: .3px;
+        max-width: 88vw; z-index: 500; opacity: 0; pointer-events: none;
+        transition: opacity 0.35s ease; text-align: center;
+    }
+    #missing-toast.show { opacity: 1; }
+
+    /* ---------- collapsible sections (mobile-friendly) ---------- */
+    details.control-group { margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid #eee; }
+    details.control-group summary {
+        margin-bottom: 10px; font-weight: bold; font-size: 12px; text-transform: uppercase;
+        letter-spacing: 1px; color: #555; cursor: pointer; list-style: none; user-select: none;
+    }
+    details.control-group summary::-webkit-details-marker { display: none; }
+    details.control-group summary::before { content: "▸ "; color: #999; }
+    details.control-group[open] summary::before { content: "▾ "; color: #333; }
+    details.control-group > *:not(summary) { margin-top: 4px; }
+
+    /* ---------- text-box selection ---------- */
+    .draggable-text.selected { outline: 1px dashed rgba(255,255,255,0.85); outline-offset: 5px; }
+
+    /* ---------- swipe dots (shared: awning + category) ---------- */
+    .swipe-dots { display: none; gap: 8px; justify-content: center; margin: 10px 0 4px; }
+    .swipe-dots .dot {
+        width: 9px; height: 9px; border-radius: 50%; background: #ccc; cursor: pointer;
+        transition: all .2s ease;
+    }
+    .swipe-dots .dot.active { background: #34a853; transform: scale(1.3); }
+    .swipe-hint { display: none; text-align: center; font-size: 10px; color: #999; letter-spacing: 1px; margin-top: 2px; }
+
+    /* ---------- category swipe carousel ---------- */
+    .cat-carousel {
+        display: none; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
+        padding: 4px 2px 10px; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .cat-carousel::-webkit-scrollbar { display: none; }
+    .cat-card {
+        scroll-snap-align: center; flex: 0 0 88px; height: 60px; display: flex;
+        align-items: center; justify-content: center; border-radius: 10px;
+        border: 1px solid #d1d1d1; background: #fff; cursor: pointer; font-size: 11px; font-weight: bold;
+        letter-spacing: .5px; color: #111; font-family: Georgia, 'Times New Roman', Times, serif;
+    }
+    .cat-card.active { border-color: #111; background: #111; color: #fff; }
+
+    /* ---------- text-box confirm ---------- */
+    button.action-btn.confirm { background: #34a853; }
+    button.action-btn.confirm:hover { background: #2c8f46; }
+
+    /* ---------- download ---------- */
+    .preview-toolbar { display: flex; justify-content: flex-end; padding: 8px 2px 0; }
+    #download-btn {
+        background: #111; color: #fff; border: none; border-radius: 6px;
+        padding: 8px 16px; font-size: 11px; font-weight: bold; letter-spacing: 1px; cursor: pointer;
+        font-family: Georgia, 'Times New Roman', Times, serif;
+    }
+    #download-btn:hover { background: #333; }
+
+    .mobile-nav { display: none; }
+    .step-dots { display: none; gap: 6px; justify-content: center; padding: 8px 0 4px; }
+    .step-dots .dot { width: 6px; height: 6px; border-radius: 50%; background: #ddd; cursor: pointer; transition: all .2s ease; }
+    .step-dots .dot.active { background: #111; transform: scale(1.3); }
+    .welcome-slide { display: none; }
+
+    /* ---------- MOBILE LAYOUT ----------
+       Catches: all phones (any orientation, width <= 900px) AND
+       portrait tablets up to 1024px wide (iPad Pro 12.9" portrait = 1024px).
+       Landscape tablets (1024px+ AND landscape) fall through to the
+       desktop layout above, which now flexes/shrinks to fit.
+
+       The render stays pinned (sticky) at the top of the screen at all
+       times. Below it, each numbered section is its own full-screen
+       slide you swipe left/right between (or step through with the
+       arrows) — nothing to scroll through, one step at a time. */
+    @media (max-width: 900px), (max-width: 1024px) and (orientation: portrait) {
+        html, body { height: 100%; }
+        body { flex-direction: column; padding: 0; gap: 0; overflow: hidden; }
+
+        .sticky-top {
+            position: sticky; top: 0; z-index: 15; order: 1;
+            flex: 0 0 auto; width: 100%; max-width: none; min-width: 0;
+            background: #f8f9fa; padding: 10px 10px 0;
+            box-sizing: border-box;
+        }
+        .preview-container { width: 100%; height: 42vh; aspect-ratio: auto; }
+
+        .desktop-title { display: none; }
+        .mobile-nav { display: flex; align-items: center; justify-content: space-between; padding: 10px 6px 2px; }
+        .nav-arrow {
+            background: none; border: none; color: #ccc; font-size: 36px; line-height: 1;
+            padding: 4px 16px; cursor: pointer; font-family: Georgia, serif;
+        }
+        .nav-arrow:active { color: #999; }
+        .mobile-title { flex: 1; text-align: center; font-size: 12px; letter-spacing: 2px; color: #111; }
+        .step-dots { display: flex; }
+
+        .controls {
+            order: 2; flex: 1 1 auto; width: 100%; max-width: none; min-width: 0;
+            display: flex; flex-direction: row; flex-wrap: nowrap;
+            overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory;
+            max-height: none; padding: 0; margin: 0; border-radius: 0; box-shadow: none;
+            background: #f8f9fa; -webkit-overflow-scrolling: touch;
+        }
+        .controls > details.control-group {
+            flex: 0 0 100vw; max-width: 100vw; box-sizing: border-box;
+            padding: 20px 22px 40px; margin-bottom: 0; border-bottom: none;
+            overflow-y: auto; scroll-snap-align: start; background: #fff;
+        }
+        .controls > details.control-group > summary { display: none; }
+
+        .welcome-slide { display: block; }
+        .welcome-slide[open] { display: flex; align-items: center; justify-content: center; text-align: center; }
+        .welcome-text {
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            font-size: 26px; color: #ccc; line-height: 1.6; letter-spacing: 1px;
+        }
+        .welcome-address { font-size: 15px; color: #bbb; margin-top: 22px; letter-spacing: 2px; line-height: 1.6; }
+
+        /* big, simple touch targets for the awning-number step */
+        .awning-number-slide .bubble {
+            font-size: 16px; padding: 20px 18px; flex: 1 1 auto; text-align: center;
+        }
+        .awning-number-slide .bubble-container { gap: 10px; }
+
+        h2 { font-size: 16px; }
+        .action-row { flex-wrap: wrap; }
+        .swipe-dots, .swipe-hint { display: flex; }
+        .swipe-hint { display: block; }
+        .cat-carousel { display: flex; }
+        #category-bubbles { display: none; }
+    }
+</style>
+</head>
+
+<body>
+
+<!-- ============================================================= -->
+<!-- FILE MANIFEST — matches your real filenames exactly            -->
+<!-- ============================================================= -->
+<script>
+const FILES = {
+
+    // ---------- BASE LAYERS ----------
+    BASE:            "BASE IMAGE HERE.png",
+    BASE_VAGUE:      "BASE VAGUE IMAGE HERE.png",
+    BASE_VAGUE_BLUR: "BASE VAGUE BLUR IMAGE HERE.png",
+    PEOPLE_FRONT:    "PEOPLE IMAGE.png",       // FRONT PEOPLE — drawn over everything
+    PEOPLE_BG:       "PEOPLE IMAGE 2.png",      // BACKGROUND PEOPLE — drawn behind awning/category
+
+    // ---------- AWNINGS ----------
+    AWNING_1:        "1 AWNING IMAGE HERE.png",
+    AWNING_2:        "2 AWNINGS IMAGE HERE.png",
+
+    // ---------- CATEGORIES : 1-AWNING VERSIONS ----------
+    // RULE: CRAFT and SALON have no dedicated color file in the asset
+    // folder (confirmed against the actual file list) — color is set to
+    // null so the compositor never attempts that fetch at all and just
+    // tints the base directly. This is what stopped the category-step
+    // glitch: it wasn't a fallback needed after a failed load, it was a
+    // load that should never have been attempted in the first place.
+    CAT_1: {
+        ART:     { base: "1 ART BASE IMAGE HERE.png",             color: "1 ART COLOR IMAGE HERE.png" },
+        CRAFT:   { base: "1 CRAFT BASE IMAGE HERE.png",           color: null },
+        JEWELRY: { base: "1 JEWELRY BASE IMAGE HERE.png",         color: "1 JEWELRY COLOR IMAGE HERE.png" },
+        WOMENS:  { base: "1 WOMENS CLOTHES BASE IMAGE HERE.png",  color: "1 WOMENS COLOR IMAGE HERE.png" },
+        PERFUME: { base: "1 PERFUME BASE IMAGE HERE.png",         color: "1 PERFUME COLOR IMAGE HERE.png" },
+        SALON:   { base: "1 SALON BASE IMAGE HERE.png",           color: null },
+        MENS:    { base: "1 MENS CLOTHES BASE IMAGE HERE.png",    color: "1 MENS CLOTHES COLOR IMAGE HERE.png" }
+    },
+
+    // ---------- CATEGORIES : 2-AWNING VERSIONS ----------
+    CAT_2: {
+        ART:     { base: "2 ART BASE IMAGE HERE.png",             color: "2 ART COLOR IMAGE HERE.png" },
+        CRAFT:   { base: "2 CRAFT BASE IMAGE HERE.png",           color: null },
+        JEWELRY: { base: "2 JEWELRY BASE IMAGE HERE.png",         color: "2 JEWELRY COLOR IMAGE HERE.png" },
+        WOMENS:  { base: "2 WOMENS BASE IMAGE HERE.png",          color: "2 WOMENS COLOR IMAGE HERE.png" },
+        PERFUME: { base: "2 PERFUME BASE IMAGE HERE.png",         color: "2 PERFUME COLOR IMAGE HERE.png" },
+        SALON:   { base: "2 SALON BASE IMAGE HERE.png",           color: null },
+        MENS:    { base: "2 MENS CLOTHES BASE IMAGE HERE.png",    color: "2 MENS CLOTHES COLOR IMAGE HERE.png" }
+    }
+
+    // ---------- NOT WIRED YET — waiting on exact roles ----------
+    // Confirmed these exist in your folder but I still don't know which
+    // retail bay each represents, so I haven't guessed:
+    //   "BASE IMAGE 1 STORE IMAGE EMPTY.png"     -> which retail bay?
+    //   "BASE IMAGE 2 STORE IMAGE EMPTY.png"     -> which retail bay?
+    //   "BASE IMAGE ALL 1 STORE IMAGE EMPTY.png" -> all 4 bays combined?
+};
+</script>
+<!-- ================== END FILE MANIFEST ======================== -->
+
+
+<!-- CONTROL PANEL -->
+<div class="controls" id="controls-deck">
+    <h2 class="desktop-title">ESPLANADE RENDER MAKER</h2>
+
+    <!-- WELCOME — mobile only, first slide -->
+    <details class="control-group welcome-slide" open>
+        <summary>Welcome</summary>
+        <div class="welcome-text">
+            WELCOME TO<br>ESPLANADE RENDER MAKER
+            <div class="welcome-address">150 Worth Ave.<br>Palm Beach, FL</div>
+        </div>
+    </details>
+
+    <details class="control-group" open>
+        <summary>1. People</summary>
+        <div class="action-row">
+            <button class="action-btn outline" id="btn-people-front" onclick="toggleFrontPeople()">1ST FLOOR PEOPLE : OFF</button>
+        </div>
+        <div class="action-row" style="margin-bottom:0;">
+            <button class="action-btn outline" id="btn-people-bg" onclick="toggleBgPeople()">2ND FLOOR PEOPLE : OFF</button>
+        </div>
+    </details>
+
+    <details class="control-group awning-number-slide" open>
+        <summary>2. Awning Number</summary>
+        <div class="bubble-container" id="awning-bubbles">
+            <div class="bubble active" data-val="NONE" onclick="setAwning('NONE')">NO AWNING</div>
+            <div class="bubble" data-val="1" onclick="setAwning('1')">1 AWNING</div>
+            <div class="bubble" data-val="2" onclick="setAwning('2')">2 AWNINGS</div>
+        </div>
+        <div class="swipe-dots" id="awning-dots">
+            <span class="dot active" data-val="NONE" onclick="setAwning('NONE')"></span>
+            <span class="dot" data-val="1" onclick="setAwning('1')"></span>
+            <span class="dot" data-val="2" onclick="setAwning('2')"></span>
+        </div>
+        <div class="swipe-hint">SWIPE TO CHANGE</div>
+    </details>
+
+    <details class="control-group" open>
+        <summary>3. Awning Color</summary>
+        <div class="bubble-container" style="margin-bottom:10px;" id="awn-presets">
+            <div class="color-preset" style="background:#c8102e;" onclick="setAwnColor('#c8102e', this)"></div>
+            <div class="color-preset" style="background:#e8622a;" onclick="setAwnColor('#e8622a', this)"></div>
+            <div class="color-preset" style="background:#f2c200;" onclick="setAwnColor('#f2c200', this)"></div>
+            <div class="color-preset" style="background:#2e7d32;" onclick="setAwnColor('#2e7d32', this)"></div>
+            <div class="color-preset" style="background:#1565c0;" onclick="setAwnColor('#1565c0', this)"></div>
+            <div class="color-preset" style="background:#6a2ea8;" onclick="setAwnColor('#6a2ea8', this)"></div>
+            <div class="color-preset" style="background:#d81b7a;" onclick="setAwnColor('#d81b7a', this)"></div>
+            <div class="color-preset" style="background:#ffffff;" onclick="setAwnColor(null, this)" title="Original / no tint"></div>
+            <div class="color-preset" style="background:#808080;" onclick="setAwnColor('#808080', this)"></div>
+            <div class="color-preset" style="background:#1a1a1a;" onclick="setAwnColor('#1a1a1a', this)"></div>
+            <input type="color" id="awn-picker" value="#c8102e" oninput="setAwnColor(this.value, null)">
+            <span class="picker-label">Custom</span>
+        </div>
+        <label>Tint Strength</label>
+        <input type="range" id="awn-strength" min="0" max="100" value="100" oninput="requestDraw()">
+        <label>Shadow Depth</label>
+        <input type="range" id="awn-shadow" min="0" max="100" value="45" oninput="requestDraw()">
+        <label>Contrast</label>
+        <input type="range" id="awn-con" min="50" max="250" value="100" oninput="requestDraw()">
+        <label>Brightness</label>
+        <input type="range" id="awn-bri" min="40" max="180" value="100" oninput="requestDraw()">
+    </details>
+
+    <details class="control-group" open>
+        <summary>4. Logo</summary>
+        <label>Custom Awning Logo / Pattern (PNG)</label>
+        <input type="file" id="logo-upload" accept="image/png,image/jpeg,image/webp" onchange="addLogo(event)">
+        <label>Logo Size</label>
+        <input type="range" id="logo-size" min="20" max="500" value="120" oninput="updateLogoSizes()">
+        <div class="action-row">
+            <button class="action-btn" onclick="duplicateLogo()">DUPLICATE LOGO</button>
+            <button class="action-btn outline" onclick="clearLogos()">CLEAR LOGOS</button>
+        </div>
+    </details>
+
+    <details class="control-group" open>
+        <summary>5. Retail Category</summary>
+        <div class="bubble-container" id="category-bubbles">
+            <div class="bubble active" data-val="NONE" onclick="setCategory('NONE')">NONE</div>
+            <div class="bubble" data-val="ART" onclick="setCategory('ART')">ART</div>
+            <div class="bubble" data-val="CRAFT" onclick="setCategory('CRAFT')">CRAFT</div>
+            <div class="bubble" data-val="JEWELRY" onclick="setCategory('JEWELRY')">JEWELRY</div>
+            <div class="bubble" data-val="WOMENS" onclick="setCategory('WOMENS')">WOMENS CLOTHES</div>
+            <div class="bubble" data-val="PERFUME" onclick="setCategory('PERFUME')">PERFUME</div>
+            <div class="bubble" data-val="SALON" onclick="setCategory('SALON')">SALON</div>
+            <div class="bubble" data-val="MENS" onclick="setCategory('MENS')">MENS CLOTHES</div>
+        </div>
+
+        <div class="cat-carousel" id="cat-carousel">
+            <div class="cat-card active" data-val="NONE" onclick="setCategory('NONE')">NONE</div>
+            <div class="cat-card" data-val="ART" onclick="setCategory('ART')">ART</div>
+            <div class="cat-card" data-val="CRAFT" onclick="setCategory('CRAFT')">CRAFT</div>
+            <div class="cat-card" data-val="JEWELRY" onclick="setCategory('JEWELRY')">JEWELRY</div>
+            <div class="cat-card" data-val="WOMENS" onclick="setCategory('WOMENS')">WOMENS</div>
+            <div class="cat-card" data-val="PERFUME" onclick="setCategory('PERFUME')">PERFUME</div>
+            <div class="cat-card" data-val="SALON" onclick="setCategory('SALON')">SALON</div>
+            <div class="cat-card" data-val="MENS" onclick="setCategory('MENS')">MENS</div>
+        </div>
+        <div class="swipe-dots" id="category-dots">
+            <span class="dot active" data-val="NONE" onclick="setCategory('NONE')"></span>
+            <span class="dot" data-val="ART" onclick="setCategory('ART')"></span>
+            <span class="dot" data-val="CRAFT" onclick="setCategory('CRAFT')"></span>
+            <span class="dot" data-val="JEWELRY" onclick="setCategory('JEWELRY')"></span>
+            <span class="dot" data-val="WOMENS" onclick="setCategory('WOMENS')"></span>
+            <span class="dot" data-val="PERFUME" onclick="setCategory('PERFUME')"></span>
+            <span class="dot" data-val="SALON" onclick="setCategory('SALON')"></span>
+            <span class="dot" data-val="MENS" onclick="setCategory('MENS')"></span>
+        </div>
+
+        <div id="cat-hint" style="font-size:11px; color:#a00; display:none;">Pick 1 AWNING or 2 AWNINGS above — category files are layout-specific.</div>
+    </details>
+
+    <details class="control-group" open>
+        <summary>6. Retail Color</summary>
+
+        <label>Hue Shift</label>
+        <input type="range" id="acc-hueshift" min="0" max="360" value="0" oninput="clearAccSwatch(); requestDraw()">
+
+        <label>Or Pick An Exact Color</label>
+        <div class="bubble-container" style="margin-bottom:10px;" id="acc-presets">
+            <div class="color-preset" style="background:#c8102e;" onclick="setAccColor('#c8102e', this)"></div>
+            <div class="color-preset" style="background:#e8622a;" onclick="setAccColor('#e8622a', this)"></div>
+            <div class="color-preset" style="background:#f2c200;" onclick="setAccColor('#f2c200', this)"></div>
+            <div class="color-preset" style="background:#2e7d32;" onclick="setAccColor('#2e7d32', this)"></div>
+            <div class="color-preset" style="background:#1565c0;" onclick="setAccColor('#1565c0', this)"></div>
+            <div class="color-preset" style="background:#6a2ea8;" onclick="setAccColor('#6a2ea8', this)"></div>
+            <div class="color-preset" style="background:#d81b7a;" onclick="setAccColor('#d81b7a', this)"></div>
+            <div class="color-preset" style="background:conic-gradient(red,orange,yellow,green,blue,purple,red); border:1px solid #999;" onclick="setAccColor(null, this)" title="Back to original green"></div>
+            <input type="color" id="acc-picker" value="#c8102e" oninput="setAccColor(this.value, null)">
+            <span class="picker-label">Custom</span>
+        </div>
+
+        <label>Accent Opacity</label>
+        <input type="range" id="acc-opacity" min="0" max="100" value="100" oninput="requestDraw()">
+        <label>Tint Strength</label>
+        <input type="range" id="acc-strength" min="0" max="100" value="100" oninput="requestDraw()">
+        <label>Shadow Depth</label>
+        <input type="range" id="acc-shadow" min="0" max="100" value="45" oninput="requestDraw()">
+        <label>Contrast</label>
+        <input type="range" id="acc-con" min="50" max="250" value="100" oninput="requestDraw()">
+        <label>Brightness</label>
+        <input type="range" id="acc-bri" min="40" max="200" value="100" oninput="requestDraw()">
+        <label>Feather</label>
+        <input type="range" id="acc-blur" min="0" max="40" value="0" oninput="requestDraw()">
+    </details>
+
+    <details class="control-group" open>
+        <summary>7. Text</summary>
+        <div style="font-size:11px; color:#888; margin-bottom:8px; line-height:1.5;">
+            Tap a text box to select it, then type below.
+        </div>
+        <input type="text" id="store-name" placeholder="TYPE INTO SELECTED BOX..." oninput="updateAllText()">
+        <div class="inline-inputs">
+            <div>
+                <label>Size</label>
+                <input type="range" id="txt-size" min="5" max="150" value="40" oninput="updateAllTextStyles()">
+            </div>
+            <div>
+                <label>Spacing</label>
+                <input type="range" id="txt-space" min="-10" max="30" value="0" oninput="updateAllTextStyles()">
+            </div>
+        </div>
+        <label>Font Opacity</label>
+        <input type="range" id="txt-opacity" min="5" max="100" value="100" oninput="updateAllTextStyles()">
+        <div class="action-row" style="margin-top: 15px;">
+            <button class="action-btn outline" id="btn-bold" onclick="toggleBold()">BOLD</button>
+            <button class="action-btn outline" id="btn-italic" onclick="toggleItalic()">ITALICIZE</button>
+            <button class="action-btn outline" id="btn-underline" onclick="toggleUnderline()">UNDERLINE</button>
+        </div>
+        <div class="action-row">
+            <button class="action-btn outline" onclick="addTextBox()">ADD TEXT</button>
+            <button class="action-btn outline" onclick="deleteSelectedText()">DELETE</button>
+        </div>
+        <div class="action-row">
+            <button class="action-btn confirm" onclick="confirmTextEdit()">DONE</button>
+        </div>
+        <div class="action-row">
+            <button class="action-btn" onclick="duplicateAllText()">DUPLICATE ALL</button>
+        </div>
+    </details>
+
+    <details class="control-group" open>
+        <summary>8. Preview & Export</summary>
+        <div class="action-row">
+            <button class="action-btn outline toggled" id="btn-empty" onclick="emptyRetail()">EMPTY RETAIL</button>
+            <button class="action-btn outline" id="btn-fill" onclick="fillRetail()">FILL RETAIL</button>
+        </div>
+        <div class="action-row" style="margin-bottom:10px;">
+            <button class="action-btn outline" id="btn-blur" onclick="toggleBlur()">BLUR OFF</button>
+        </div>
+        <label>Blur Intensity</label>
+        <input type="range" id="vague-blur" min="0" max="30" value="5" oninput="requestDraw()">
+        <label>Side Retail Opacity</label>
+        <input type="range" id="fill-opacity" min="0" max="100" value="100" oninput="requestDraw()">
+        <label>Side Retail Darkness</label>
+        <input type="range" id="fill-dark" min="0" max="100" value="0" oninput="requestDraw()">
+        <div class="action-row">
+            <button class="action-btn" style="background:#a33;" onclick="resetAll()">RESET ALL</button>
+        </div>
+    </details>
+</div>
+
+<!-- STICKY TOP (mobile): render always visible while scrolling through steps -->
+<div class="sticky-top" id="sticky-top">
+    <!-- PREVIEW WINDOW -->
+    <div class="preview-container" id="preview-box">
+        <canvas id="stage" class="layer-canvas" width="800" height="600"></canvas>
+        <div id="logo-layer-container"></div>
+        <div id="text-layer-container">
+            <div class="draggable-text" id="text-1"></div>
+        </div>
+    </div>
+    <div class="preview-toolbar">
+        <button id="download-btn" onclick="downloadImage()">DOWNLOAD</button>
+    </div>
+
+    <div class="mobile-nav" id="mobile-nav">
+        <button class="nav-arrow" id="nav-prev" onclick="stepPrev()" aria-label="Back">&#8249;</button>
+        <span class="mobile-title">ESPLANADE RENDER MAKER</span>
+        <button class="nav-arrow" id="nav-next" onclick="stepNext()" aria-label="Next">&#8250;</button>
+    </div>
+    <div class="step-dots" id="step-dots"></div>
+</div>
+
+<div id="missing-toast"></div>
+
+<script>
+/* ==========================================================
+   STATE — every toggle is fully independent
+========================================================== */
+let retailFilled  = false;   // EMPTY / FILL RETAIL (the vague layer)
+let blurOn        = false;
+let showFrontPeople = false;
+let showBgPeople    = false;
+let currentAwning = 'NONE';
+let currentCategory = 'NONE';
+let awnColor      = null;
+let accColor      = null;
+let isBold        = false;
+let isItalic      = false;
+let isUnderline   = false;
+
+/* ==========================================================
+   IMAGE LOADER + LOUD MISSING FILE REPORTER
+========================================================== */
+const imgCache = {};
+const missing  = new Set();
+
+function loadImg(src) {
+    if (!src) return Promise.resolve(null);
+    if (imgCache[src]) return imgCache[src];
+    imgCache[src] = new Promise(resolve => {
+        const img = new Image();
+        img.onload  = () => resolve(img);
+        img.onerror = () => { missing.add(src); reportMissing(); requestDraw(); resolve(null); };
+        img.src = src;
+    });
+    return imgCache[src];
+}
+
+let toastTimer = null;
+function reportMissing() {
+    const box = document.getElementById('missing-toast');
+    if (missing.size === 0) return;
+    const list = [...missing];
+    const shown = list.slice(-1)[0]; // most recent miss — avoids an ever-growing wall of text
+    const extra = list.length > 1 ? ` (+${list.length - 1} more)` : '';
+    box.textContent = 'Image not found: ' + shown + extra;
+    box.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => box.classList.remove('show'), 3500);
+}
+
+/* ==========================================================
+   OFFSCREEN HELPERS
+========================================================== */
+const OFF_W = 1600, OFF_H = 1200;
+
+function makeOffscreen() {
+    const c = document.createElement('canvas');
+    c.width = OFF_W; c.height = OFF_H;
+    return c;
+}
+
+/* ==========================================================
+   NATIVE COORDINATE SYSTEM for text + logo overlays
+   ----------------------------------------------------------
+   Text/logo position, width, and font-size are stored ONLY in the
+   native 1600x1200 space (as data-nx/ny/nfs/nls/nw on the element).
+   That native value is the single source of truth. Screen pixels are
+   a pure, disposable OUTPUT of it — recomputed fresh any time the
+   container's size changes (window resize, orientation change, mobile
+   vs desktop layout switch), via the exact same scale+crop math the
+   photo itself uses (object-fit:cover). This is what keeps every box
+   pinned to its exact spot on the photo at any viewport size, and lets
+   the exported image read the SAME numbers the screen just drew —
+   no separate reverse-engineering of the transform at export time.
+========================================================== */
+function getCoverTransform() {
+    const box = document.getElementById('preview-box');
+    const rect = box.getBoundingClientRect();
+    const w = rect.width || OFF_W, h = rect.height || OFF_H;
+    const scale = Math.max(w / OFF_W, h / OFF_H);
+    const cropX = (OFF_W * scale - w) / 2;
+    const cropY = (OFF_H * scale - h) / 2;
+    return { scale, cropX, cropY, w, h };
+}
+function nativeToScreen(nx, ny, t) { return [nx * t.scale - t.cropX, ny * t.scale - t.cropY]; }
+function screenToNative(sx, sy, t) { return [(sx + t.cropX) / t.scale, (sy + t.cropY) / t.scale]; }
+function nativeLenToScreen(len, t) { return len * t.scale; }
+function screenLenToNative(len, t) { return len / t.scale; }
+
+function applyNativePosition(el) {
+    const t = getCoverTransform();
+    const nx = parseFloat(el.dataset.nx) || 0;
+    const ny = parseFloat(el.dataset.ny) || 0;
+    const [sx, sy] = nativeToScreen(nx, ny, t);
+    el.style.left = sx + 'px';
+    el.style.top = sy + 'px';
+    if (el.classList.contains('draggable-text')) {
+        const nfs = parseFloat(el.dataset.nfs);
+        if (!isNaN(nfs)) el.style.fontSize = nativeLenToScreen(nfs, t) + 'px';
+        const nls = parseFloat(el.dataset.nls);
+        if (!isNaN(nls)) el.style.letterSpacing = nativeLenToScreen(nls, t) + 'px';
+    } else if (el.classList.contains('draggable-logo')) {
+        const nw = parseFloat(el.dataset.nw);
+        if (!isNaN(nw)) el.style.width = nativeLenToScreen(nw, t) + 'px';
+    }
+}
+function applyAllNativePositions() {
+    document.querySelectorAll('.draggable-text, .draggable-logo').forEach(applyNativePosition);
+}
+
+// Seed a new element's native values FROM a convenient current-screen
+// placement (e.g. "40% across, 45% down, 40px tall right now") — used
+// only at creation time. After this, native is the only thing that matters.
+function seedTextDefaults(el, leftFrac, topFrac, screenFontSizePx) {
+    const t = getCoverTransform();
+    const [nx, ny] = screenToNative(t.w * leftFrac, t.h * topFrac, t);
+    el.dataset.nx = nx;
+    el.dataset.ny = ny;
+    el.dataset.nfs = screenLenToNative(screenFontSizePx, t);
+    el.dataset.nls = 0;
+    applyNativePosition(el);
+}
+function seedLogoDefaults(img, leftFrac, topFrac, screenWidthPx) {
+    const t = getCoverTransform();
+    const [nx, ny] = screenToNative(t.w * leftFrac, t.h * topFrac, t);
+    img.dataset.nx = nx;
+    img.dataset.ny = ny;
+    img.dataset.nw = screenLenToNative(screenWidthPx, t);
+    applyNativePosition(img);
+}
+
+/* ==========================================================
+   TINT ENGINE — SHADOW PRESERVING (multiply + shadow deepen)
+========================================================== */
+function buildTintedLayer(img, color, opts) {
+    const {
+        strength = 1,
+        shadowDepth = 0.45,
+        contrastPct = 100,
+        brightnessPct = 100,
+        featherPx = 0,
+        desaturateBase = false,
+        hueShiftDeg = 0
+    } = opts;
+
+    const out = makeOffscreen();
+    const ctx = out.getContext('2d');
+
+    // 1. the image — shading source, always sharp
+    let f = `contrast(${contrastPct}%) brightness(${brightnessPct}%)`;
+    if (desaturateBase) f += ' grayscale(100%)';
+    else if (hueShiftDeg > 0) f += ` hue-rotate(${hueShiftDeg}deg)`;
+    ctx.filter = f;
+    ctx.drawImage(img, 0, 0, OFF_W, OFF_H);
+    ctx.filter = 'none';
+
+    // 2. exact-color multiply (feather blurs ONLY this plate)
+    if (color && strength > 0) {
+        const plate = makeOffscreen();
+        const pctx = plate.getContext('2d');
+        pctx.drawImage(img, 0, 0, OFF_W, OFF_H);
+        pctx.globalCompositeOperation = 'source-in';
+        pctx.fillStyle = color;
+        pctx.fillRect(0, 0, OFF_W, OFF_H);
+
+        let plateToUse = plate;
+        if (featherPx > 0) {
+            const soft = makeOffscreen();
+            const sctx = soft.getContext('2d');
+            sctx.filter = `blur(${featherPx}px)`;
+            sctx.drawImage(plate, 0, 0);
+            plateToUse = soft;
+        }
+
+        ctx.globalAlpha = strength;
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.drawImage(plateToUse, 0, 0);
+    }
+
+    // 3. shadow-deepening: image's own luminance multiplied back
+    if (shadowDepth > 0) {
+        const lum = makeOffscreen();
+        const lctx = lum.getContext('2d');
+        lctx.filter = 'grayscale(100%)';
+        lctx.drawImage(img, 0, 0, OFF_W, OFF_H);
+        lctx.filter = 'none';
+
+        ctx.globalAlpha = shadowDepth;
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.drawImage(lum, 0, 0);
+    }
+
+    // 4. clip to original alpha
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.drawImage(img, 0, 0, OFF_W, OFF_H);
+    ctx.globalCompositeOperation = 'source-over';
+
+    return out;
+}
+
+/* ==========================================================
+   MAIN COMPOSITOR — all layers independent
+   ORDER (bottom to top):
+   BASE (always)
+   -> BASEVAGUE (if retail filled)
+   -> BACKGROUND PEOPLE (if bg people on)
+   -> BLUR LAYER (if blur on; hard-clipped to its OWN alpha)
+   -> CATEGORY BASE -> CATEGORY COLOR OVERLAY
+   -> AWNING (always top of the storefront)
+   -> FRONT PEOPLE (if front people on) — the very top layer
+========================================================== */
+async function composeScene() {
+    const scene = makeOffscreen();
+    const ctx = scene.getContext('2d');
+    ctx.fillStyle = '#e9ecef';
+    ctx.fillRect(0, 0, OFF_W, OFF_H);
+
+    // BASE — always the bottom layer
+    const base = await loadImg(FILES.BASE);
+    if (base) ctx.drawImage(base, 0, 0, OFF_W, OFF_H);
+
+    // BASEVAGUE — only when retail is filled (the 2 full + 2 sliver side-retail bays)
+    if (retailFilled) {
+        const vague = await loadImg(FILES.BASE_VAGUE);
+        if (vague) {
+            const fillOpacity = document.getElementById('fill-opacity').value / 100;
+            const fillDark    = document.getElementById('fill-dark').value / 100;
+
+            let layer = vague;
+            if (fillDark > 0) {
+                const tmp = makeOffscreen();
+                const tctx = tmp.getContext('2d');
+                tctx.drawImage(vague, 0, 0, OFF_W, OFF_H);
+                tctx.globalAlpha = fillDark;
+                tctx.globalCompositeOperation = 'multiply';
+                tctx.fillStyle = '#000000';
+                tctx.fillRect(0, 0, OFF_W, OFF_H);
+                tctx.globalAlpha = 1;
+                tctx.globalCompositeOperation = 'destination-in';
+                tctx.drawImage(vague, 0, 0, OFF_W, OFF_H);
+                tctx.globalCompositeOperation = 'source-over';
+                layer = tmp;
+            }
+
+            ctx.globalAlpha = fillOpacity;
+            ctx.drawImage(layer, 0, 0, OFF_W, OFF_H);
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    // BACKGROUND PEOPLE — sits behind the awning/category, in front of the base/fill
+    if (showBgPeople) {
+        const bgPpl = await loadImg(FILES.PEOPLE_BG);
+        if (bgPpl) ctx.drawImage(bgPpl, 0, 0, OFF_W, OFF_H);
+    }
+
+    // BLUR LAYER — independent toggle.
+    // The blurred pixels are CLIPPED TO THE BLUR FILE'S OWN ORIGINAL
+    // ALPHA before compositing. Blur physically cannot land anywhere
+    // the blur file didn't originally have pixels — no leaking onto
+    // the base, the columns, the floor, or outside the frame.
+    if (blurOn) {
+        const vblur = await loadImg(FILES.BASE_VAGUE_BLUR);
+        if (vblur) {
+            const intensity = parseInt(document.getElementById('vague-blur').value);
+            const tmp = makeOffscreen();
+            const tctx = tmp.getContext('2d');
+            tctx.filter = `blur(${intensity}px)`;
+            tctx.drawImage(vblur, 0, 0, OFF_W, OFF_H);
+            tctx.filter = 'none';
+            // HARD CLIPPING MASK: the blur file's own un-blurred alpha
+            tctx.globalCompositeOperation = 'destination-in';
+            tctx.drawImage(vblur, 0, 0, OFF_W, OFF_H);
+            tctx.globalCompositeOperation = 'source-over';
+            ctx.drawImage(tmp, 0, 0);
+        }
+    }
+
+    // CATEGORY — independent of retail filled.
+    // BASE FILE first (sharp), COLOR OVERLAY on top (edited).
+    if (currentCategory !== 'NONE' && currentAwning !== 'NONE') {
+        const set = currentAwning === '1' ? FILES.CAT_1 : FILES.CAT_2;
+        const entry = set[currentCategory];
+        if (entry) {
+            const hueShift = parseInt(document.getElementById('acc-hueshift').value);
+            const accOpts = {
+                strength:      document.getElementById('acc-strength').value / 100,
+                shadowDepth:   document.getElementById('acc-shadow').value / 100,
+                contrastPct:   document.getElementById('acc-con').value,
+                brightnessPct: document.getElementById('acc-bri').value,
+                featherPx:     parseInt(document.getElementById('acc-blur').value),
+                desaturateBase: accColor !== null,
+                hueShiftDeg:   accColor === null ? hueShift : 0
+            };
+
+            // Every category: BASE file first (sharp), COLOR overlay on top
+            // where one exists. Accent Layer Opacity fades the overlay so
+            // the base shows through. CRAFT/SALON have no color file by
+            // design (see FILES.CAT_1/CAT_2 comment) — entry.color is null
+            // for those, so we never attempt that fetch at all.
+            const baseImg = await loadImg(entry.base);
+            if (baseImg) ctx.drawImage(baseImg, 0, 0, OFF_W, OFF_H);
+
+            const colorImg = entry.color ? await loadImg(entry.color) : baseImg;
+
+            if (colorImg) {
+                const tinted = buildTintedLayer(colorImg, accColor, accOpts);
+                ctx.globalAlpha = document.getElementById('acc-opacity').value / 100;
+                ctx.drawImage(tinted, 0, 0);
+                ctx.globalAlpha = 1;
+            }
+        }
+    }
+
+    // AWNING — ALWAYS the very top layer
+    if (currentAwning !== 'NONE') {
+        const awnSrc = currentAwning === '1' ? FILES.AWNING_1 : FILES.AWNING_2;
+        const awnImg = await loadImg(awnSrc);
+        if (awnImg) {
+            const tinted = buildTintedLayer(awnImg, awnColor, {
+                strength:      document.getElementById('awn-strength').value / 100,
+                shadowDepth:   document.getElementById('awn-shadow').value / 100,
+                contrastPct:   document.getElementById('awn-con').value,
+                brightnessPct: document.getElementById('awn-bri').value,
+                featherPx:     0,
+                desaturateBase: false,
+                hueShiftDeg:   0
+            });
+            ctx.drawImage(tinted, 0, 0);
+        }
+    }
+
+    // FRONT PEOPLE — the VERY TOP layer, over everything including the awning
+    if (showFrontPeople) {
+        const ppl = await loadImg(FILES.PEOPLE_FRONT);
+        if (ppl) ctx.drawImage(ppl, 0, 0, OFF_W, OFF_H);
+    }
+
+    return scene;
+}
+
+/* ==========================================================
+   PREVIEW DRAW (debounced)
+========================================================== */
+
+/* The live preview shows text/logos as DOM overlays (fast dragging,
+   no re-render needed while typing). But the canvas image itself never
+   contained them — so Download was silently exporting a render with no
+   text or logos on it. This bakes those DOM overlays onto a copy of the
+   composited scene, so the download matches what you see on screen.
+
+   Text/logo native position, width, and font-size are read straight off
+   each element's dataset (nx/ny/nfs/nls/nw) — the same native numbers
+   that drive the live on-screen position via applyNativePosition(). No
+   transform reverse-engineering here: both the screen and the export
+   are just two different renders of one shared set of numbers, so they
+   can never drift apart from each other. */
+function bakeOverlaysOntoScene(baseScene) {
+    const out = makeOffscreen();
+    const ctx = out.getContext('2d');
+    ctx.drawImage(baseScene, 0, 0);
+
+    // logos first (z-index 9 in the live view)
+    document.querySelectorAll('.draggable-logo').forEach(img => {
+        if (!img.complete || !img.naturalWidth) return;
+        const nx = parseFloat(img.dataset.nx) || 0;
+        const ny = parseFloat(img.dataset.ny) || 0;
+        const nw = parseFloat(img.dataset.nw) || img.naturalWidth;
+        const nh = nw * (img.naturalHeight / img.naturalWidth);
+        ctx.drawImage(img, nx, ny, nw, nh);
+    });
+
+    // text on top (z-index 10 in the live view)
+    document.querySelectorAll('.draggable-text').forEach(node => {
+        const text = (node.innerText || '').toUpperCase();
+        if (!text) return;
+        const nx = parseFloat(node.dataset.nx) || 0;
+        const ny = parseFloat(node.dataset.ny) || 0;
+        const nfs = parseFloat(node.dataset.nfs) || 100;
+        const nls = parseFloat(node.dataset.nls) || 0;
+        const cs = getComputedStyle(node);
+        const weight = (cs.fontWeight === '700' || cs.fontWeight === 'bold') ? 'bold' : 'normal';
+        const style = cs.fontStyle === 'italic' ? 'italic' : 'normal';
+        const opacity = cs.opacity === '' || isNaN(parseFloat(cs.opacity)) ? 1 : parseFloat(cs.opacity);
+        const underline = (cs.textDecorationLine || cs.textDecoration || '').includes('underline');
+
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.font = `${style} ${weight} ${nfs}px Garamond, 'Times New Roman', serif`;
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = nfs * 0.1;
+        ctx.shadowOffsetX = nfs * 0.05;
+        ctx.shadowOffsetY = nfs * 0.05;
+
+        let x = nx;
+        const y = ny;
+        const lineStartX = x;
+        for (const ch of text) {
+            ctx.fillText(ch, x, y);
+            x += ctx.measureText(ch).width + nls;
+        }
+        if (underline) {
+            ctx.shadowColor = 'transparent';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = Math.max(1, nfs * 0.05);
+            const underlineY = y + nfs * 0.95;
+            ctx.beginPath();
+            ctx.moveTo(lineStartX, underlineY);
+            ctx.lineTo(x, underlineY);
+            ctx.stroke();
+        }
+        ctx.restore();
+    });
+
+    return out;
+}
+
+let drawPending = false;
+let lastScene = null;
+function requestDraw() {
+    if (drawPending) return;
+    drawPending = true;
+    requestAnimationFrame(async () => {
+        drawPending = false;
+        const scene = await composeScene();
+        lastScene = bakeOverlaysOntoScene(scene);
+        const stage = document.getElementById('stage');
+        const sctx = stage.getContext('2d');
+        sctx.clearRect(0, 0, stage.width, stage.height);
+        sctx.drawImage(scene, 0, 0, stage.width, stage.height);
+    });
+}
+
+/* ==========================================================
+   UI HANDLERS
+========================================================== */
+function emptyRetail() {
+    retailFilled = false;
+    document.getElementById('btn-empty').classList.add('toggled');
+    document.getElementById('btn-fill').classList.remove('toggled');
+    requestDraw();
+}
+function fillRetail() {
+    retailFilled = true;
+    document.getElementById('btn-fill').classList.add('toggled');
+    document.getElementById('btn-empty').classList.remove('toggled');
+    requestDraw();
+}
+
+/* ---------- RESET ALL ---------- */
+const SLIDER_DEFAULTS = {
+    'vague-blur': 5, 'fill-opacity': 100, 'fill-dark': 0,
+    'awn-strength': 100, 'awn-shadow': 45, 'awn-con': 100, 'awn-bri': 100,
+    'acc-hueshift': 0, 'acc-opacity': 100, 'acc-strength': 100, 'acc-shadow': 45,
+    'acc-con': 100, 'acc-bri': 100, 'acc-blur': 0,
+    'txt-size': 40, 'txt-space': 0, 'txt-opacity': 100,
+    'logo-size': 120
+};
+
+function resetAll() {
+    // state
+    retailFilled = false;
+    blurOn = false;
+    showFrontPeople = false;
+    showBgPeople = false;
+    currentAwning = 'NONE';
+    currentCategory = 'NONE';
+    awnColor = null;
+    accColor = null;
+    isBold = false; isItalic = false; isUnderline = false;
+
+    // sliders
+    for (const [id, val] of Object.entries(SLIDER_DEFAULTS)) {
+        const el = document.getElementById(id);
+        if (el) el.value = val;
+    }
+
+    // toggle buttons
+    document.getElementById('btn-empty').classList.add('toggled');
+    document.getElementById('btn-fill').classList.remove('toggled');
+    const blurBtn = document.getElementById('btn-blur');
+    blurBtn.textContent = 'BLUR OFF'; blurBtn.classList.remove('toggled');
+    const pplFrontBtn = document.getElementById('btn-people-front');
+    pplFrontBtn.textContent = '1ST FLOOR PEOPLE : OFF'; pplFrontBtn.classList.remove('toggled');
+    const pplBgBtn = document.getElementById('btn-people-bg');
+    pplBgBtn.textContent = '2ND FLOOR PEOPLE : OFF'; pplBgBtn.classList.remove('toggled');
+    document.getElementById('btn-bold').classList.remove('toggled');
+    document.getElementById('btn-italic').classList.remove('toggled');
+    document.getElementById('btn-underline').classList.remove('toggled');
+
+    // bubbles + swatches
+    updateBubbles('awning-bubbles', 'NONE');
+    updateBubbles('category-bubbles', 'NONE');
+    document.querySelectorAll('.color-preset').forEach(p => p.classList.remove('active'));
+    updateCatHint();
+
+    // text: keep only the first node, clear its content + position
+    const txtContainer = document.getElementById('text-layer-container');
+    txtContainer.innerHTML = '<div class="draggable-text" id="text-1"></div>';
+    document.getElementById('store-name').value = '';
+    const firstBox = document.getElementById('text-1');
+    seedTextDefaults(firstBox, 0.40, 0.45, 40);
+    attachTextEvents(firstBox);
+    selectText(firstBox);
+
+    // logos
+    clearLogos();
+
+    updateAllTextStyles();
+    requestDraw();
+}
+
+function toggleBlur() {
+    blurOn = !blurOn;
+    const b = document.getElementById('btn-blur');
+    b.textContent = blurOn ? 'BLUR ON' : 'BLUR OFF';
+    b.classList.toggle('toggled', blurOn);
+    requestDraw();
+}
+function toggleFrontPeople() {
+    showFrontPeople = !showFrontPeople;
+    const b = document.getElementById('btn-people-front');
+    b.textContent = '1ST FLOOR PEOPLE : ' + (showFrontPeople ? 'ON' : 'OFF');
+    b.classList.toggle('toggled', showFrontPeople);
+    requestDraw();
+}
+function toggleBgPeople() {
+    showBgPeople = !showBgPeople;
+    const b = document.getElementById('btn-people-bg');
+    b.textContent = '2ND FLOOR PEOPLE : ' + (showBgPeople ? 'ON' : 'OFF');
+    b.classList.toggle('toggled', showBgPeople);
+    requestDraw();
+}
+function setAwning(val) {
+    currentAwning = val;
+    updateBubbles('awning-bubbles', val);
+    updateCatHint();
+    requestDraw();
+}
+function setCategory(val) {
+    currentCategory = val;
+    updateBubbles('category-bubbles', val);
+    updateCatHint();
+    requestDraw();
+}
+function updateCatHint() {
+    const hint = document.getElementById('cat-hint');
+    hint.style.display = (currentCategory !== 'NONE' && currentAwning === 'NONE') ? 'block' : 'none';
+}
+function updateBubbles(containerId, activeVal) {
+    document.querySelectorAll('#' + containerId + ' .bubble').forEach(b => {
+        b.classList.toggle('active', b.dataset.val === activeVal);
+    });
+    if (containerId === 'awning-bubbles') {
+        document.querySelectorAll('#awning-dots .dot').forEach(d => {
+            d.classList.toggle('active', d.dataset.val === activeVal);
+        });
+    }
+    if (containerId === 'category-bubbles') {
+        document.querySelectorAll('#category-dots .dot').forEach(d => {
+            d.classList.toggle('active', d.dataset.val === activeVal);
+        });
+        document.querySelectorAll('#cat-carousel .cat-card').forEach(c => {
+            const isActive = c.dataset.val === activeVal;
+            c.classList.toggle('active', isActive);
+            if (isActive) c.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        });
+    }
+}
+
+/* ---------- swipe the preview to cycle NO AWNING -> 1 -> 2 ---------- */
+(function () {
+    const order = ['NONE', '1', '2'];
+    let startX = null;
+    const box = document.getElementById('preview-box');
+    box.addEventListener('touchstart', e => {
+        if (e.touches.length === 1) startX = e.touches[0].clientX;
+    }, { passive: true });
+    box.addEventListener('touchend', e => {
+        if (startX === null) return;
+        const dx = e.changedTouches[0].clientX - startX;
+        startX = null;
+        if (Math.abs(dx) < 45) return;
+        let idx = order.indexOf(currentAwning);
+        idx = dx < 0 ? (idx + 1) % order.length : (idx - 1 + order.length) % order.length;
+        setAwning(order[idx]);
+    }, { passive: true });
+})();
+
+/* ---------- swipe/scroll the category carousel to actually select ---------- */
+(function () {
+    const carousel = document.getElementById('cat-carousel');
+    let settleTimer = null;
+    carousel.addEventListener('scroll', () => {
+        if (settleTimer) clearTimeout(settleTimer);
+        settleTimer = setTimeout(() => {
+            const rect = carousel.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            let closest = null, closestDist = Infinity;
+            carousel.querySelectorAll('.cat-card').forEach(card => {
+                const r = card.getBoundingClientRect();
+                const d = Math.abs((r.left + r.width / 2) - centerX);
+                if (d < closestDist) { closestDist = d; closest = card; }
+            });
+            if (closest && closest.dataset.val !== currentCategory) {
+                setCategory(closest.dataset.val);
+            }
+        }, 120);
+    }, { passive: true });
+})();
+
+/* ---------- mobile step deck: arrows + dots + swipe navigation ----------
+   The .controls panel becomes a horizontal swipe deck on mobile (each
+   numbered section = one full-screen slide). This drives the arrow
+   buttons and dot indicator that sit in the sticky header. On desktop
+   .controls doesn't scroll horizontally, so this code is simply inert
+   there — harmless either way. */
+(function () {
+    const deck = document.getElementById('controls-deck');
+    const dotsContainer = document.getElementById('step-dots');
+    let settleTimer = null;
+
+    function getSlides() {
+        return [...deck.querySelectorAll(':scope > details.control-group')];
+    }
+
+    function buildDots() {
+        const slides = getSlides();
+        dotsContainer.innerHTML = '';
+        slides.forEach((s, i) => {
+            const d = document.createElement('span');
+            d.className = 'dot' + (i === 0 ? ' active' : '');
+            d.addEventListener('click', () => goToStep(i));
+            dotsContainer.appendChild(d);
+        });
+    }
+
+    function currentIndex() {
+        const slides = getSlides();
+        const center = deck.scrollLeft + deck.clientWidth / 2;
+        let closest = 0, closestDist = Infinity;
+        slides.forEach((s, i) => {
+            const d = Math.abs((s.offsetLeft + s.offsetWidth / 2) - center);
+            if (d < closestDist) { closestDist = d; closest = i; }
+        });
+        return closest;
+    }
+
+    function goToStep(i) {
+        const slides = getSlides();
+        if (!slides[i]) return;
+        deck.scrollTo({ left: slides[i].offsetLeft, behavior: 'smooth' });
+    }
+
+    function updateDots() {
+        const idx = currentIndex();
+        [...dotsContainer.children].forEach((d, i) => d.classList.toggle('active', i === idx));
+    }
+
+    window.stepPrev = function () { goToStep(Math.max(0, currentIndex() - 1)); };
+    window.stepNext = function () {
+        const slides = getSlides();
+        goToStep(Math.min(slides.length - 1, currentIndex() + 1));
+    };
+
+    deck.addEventListener('scroll', () => {
+        if (settleTimer) clearTimeout(settleTimer);
+        settleTimer = setTimeout(updateDots, 100);
+    }, { passive: true });
+
+    buildDots();
+    window.addEventListener('resize', buildDots);
+})();
+
+function setAwnColor(color, el) {
+    awnColor = color;
+    document.querySelectorAll('#awn-presets .color-preset').forEach(p => p.classList.remove('active'));
+    if (el) el.classList.add('active');
+    requestDraw();
+}
+function setAccColor(color, el) {
+    accColor = color;
+    if (color !== null) document.getElementById('acc-hueshift').value = 0;
+    document.querySelectorAll('#acc-presets .color-preset').forEach(p => p.classList.remove('active'));
+    if (el) el.classList.add('active');
+    requestDraw();
+}
+function clearAccSwatch() {
+    accColor = null;
+    document.querySelectorAll('#acc-presets .color-preset').forEach(p => p.classList.remove('active'));
+}
+
+/* ---------- CUSTOM AWNING LOGO ---------- */
+function addLogo(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const img = document.createElement('img');
+        img.className = 'draggable-logo';
+        img.src = e.target.result;
+        document.getElementById('logo-layer-container').appendChild(img);
+        const sizeScreenPx = parseFloat(document.getElementById('logo-size').value);
+        seedLogoDefaults(img, 0.30, 0.30, sizeScreenPx);
+    };
+    reader.readAsDataURL(file);
+    event.target.value = ''; // allow re-uploading the same file
+}
+function updateLogoSizes() {
+    const sizeScreenPx = parseFloat(document.getElementById('logo-size').value);
+    const t = getCoverTransform();
+    const logos = document.querySelectorAll('.draggable-logo');
+    // only resize the most recently selected/added logo? Simple: resize the last one
+    if (logos.length) {
+        const last = logos[logos.length - 1];
+        last.dataset.nw = screenLenToNative(sizeScreenPx, t);
+        applyNativePosition(last);
+    }
+}
+function duplicateLogo() {
+    const logos = document.querySelectorAll('.draggable-logo');
+    if (!logos.length) return;
+    const original = logos[logos.length - 1];
+    const clone = original.cloneNode(true);
+    const t = getCoverTransform();
+    clone.dataset.nx = (parseFloat(original.dataset.nx) || 0) + screenLenToNative(60, t);
+    clone.dataset.ny = (parseFloat(original.dataset.ny) || 0) + screenLenToNative(30, t);
+    document.getElementById('logo-layer-container').appendChild(clone);
+    applyNativePosition(clone);
+}
+function clearLogos() {
+    document.getElementById('logo-layer-container').innerHTML = '';
+}
+
+/* ---------- TEXT ---------- */
+function toggleBold() {
+    isBold = !isBold;
+    document.getElementById('btn-bold').classList.toggle('toggled', isBold);
+    updateAllTextStyles();
+}
+function toggleItalic() {
+    isItalic = !isItalic;
+    document.getElementById('btn-italic').classList.toggle('toggled', isItalic);
+    updateAllTextStyles();
+}
+function toggleUnderline() {
+    isUnderline = !isUnderline;
+    document.getElementById('btn-underline').classList.toggle('toggled', isUnderline);
+    updateAllTextStyles();
+}
+/* ---------- TEXT: multiple independent, selectable boxes ---------- */
+let selectedText = null;
+
+function selectText(el) {
+    if (!el) return;
+    document.querySelectorAll('.draggable-text').forEach(n => n.classList.remove('selected'));
+    selectedText = el;
+    el.classList.add('selected');
+
+    // sync the shared controls to reflect THIS box's current on-screen size
+    const t = getCoverTransform();
+    document.getElementById('store-name').value = el.innerText || '';
+    const nfs = parseFloat(el.dataset.nfs);
+    document.getElementById('txt-size').value = !isNaN(nfs) ? Math.round(nativeLenToScreen(nfs, t)) : 40;
+    const nls = parseFloat(el.dataset.nls);
+    document.getElementById('txt-space').value = !isNaN(nls) ? Math.round(nativeLenToScreen(nls, t)) : 0;
+    const op = el.style.opacity === '' ? 1 : parseFloat(el.style.opacity);
+    document.getElementById('txt-opacity').value = Math.round(op * 100);
+
+    isBold = el.style.fontWeight === 'bold';
+    isItalic = el.style.fontStyle === 'italic';
+    isUnderline = el.style.textDecoration === 'underline';
+    document.getElementById('btn-bold').classList.toggle('toggled', isBold);
+    document.getElementById('btn-italic').classList.toggle('toggled', isItalic);
+    document.getElementById('btn-underline').classList.toggle('toggled', isUnderline);
+}
+
+function attachTextEvents(el) {
+    el.addEventListener('click', e => { e.stopPropagation(); selectText(el); });
+}
+
+/* "✓ DONE" — clears the dashed selection outline so you can see the
+   clean render. Keeps the box's content/styles exactly as edited;
+   it does NOT delete anything. Tap a box again to keep editing it. */
+function confirmTextEdit() {
+    document.querySelectorAll('.draggable-text').forEach(n => n.classList.remove('selected'));
+    document.getElementById('store-name').blur();
+}
+
+function addTextBox() {
+    const container = document.getElementById('text-layer-container');
+    const n = document.createElement('div');
+    n.className = 'draggable-text';
+    n.innerText = 'TEXT';
+    n.style.opacity = 1;
+    n.style.fontWeight = 'normal';
+    n.style.fontStyle = 'normal';
+    n.style.textDecoration = 'none';
+    container.appendChild(n);
+    seedTextDefaults(n, 0.40, 0.45, 40);
+    attachTextEvents(n);
+    selectText(n);
+}
+
+function deleteSelectedText() {
+    const nodes = document.querySelectorAll('.draggable-text');
+    if (nodes.length <= 1 || !selectedText) return; // always keep at least one box
+    const toRemove = selectedText;
+    toRemove.remove();
+    selectText(document.querySelector('.draggable-text'));
+}
+
+/* Clones EVERY current text box at once, offset as a single block —
+   every box keeps its own font-size/spacing/style exactly as-is, so
+   the ratio between boxes in the set never changes. */
+function duplicateAllText() {
+    const nodes = [...document.querySelectorAll('.draggable-text')];
+    if (!nodes.length) return;
+    const container = document.getElementById('text-layer-container');
+    const t = getCoverTransform();
+    const offsetNative = screenLenToNative(40, t);
+    let lastClone = null;
+    nodes.forEach(n => {
+        const clone = n.cloneNode(true);
+        clone.removeAttribute('id');
+        clone.classList.remove('selected');
+        clone.dataset.nx = (parseFloat(n.dataset.nx) || 0) + offsetNative;
+        clone.dataset.ny = (parseFloat(n.dataset.ny) || 0) + offsetNative;
+        container.appendChild(clone);
+        applyNativePosition(clone);
+        attachTextEvents(clone);
+        lastClone = clone;
+    });
+    selectText(lastClone);
+}
+
+function updateAllText() {
+    if (!selectedText) return;
+    selectedText.innerText = document.getElementById('store-name').value;
+}
+function updateAllTextStyles() {
+    if (!selectedText) return;
+    const t = getCoverTransform();
+    const sizeScreenPx = parseFloat(document.getElementById('txt-size').value);
+    const spacingScreenPx = parseFloat(document.getElementById('txt-space').value);
+    const opacity = document.getElementById('txt-opacity').value / 100;
+
+    selectedText.dataset.nfs = screenLenToNative(sizeScreenPx, t);
+    selectedText.dataset.nls = screenLenToNative(spacingScreenPx, t);
+    selectedText.style.fontWeight = isBold ? 'bold' : 'normal';
+    selectedText.style.fontStyle = isItalic ? 'italic' : 'normal';
+    selectedText.style.textDecoration = isUnderline ? 'underline' : 'none';
+    selectedText.style.opacity = opacity;
+
+    applyNativePosition(selectedText);
+}
+
+/* drag — shared by text AND logos. Delta is measured in screen px
+   (however the user's finger/mouse actually moves) then converted to
+   native units before being added to the stored native position, so a
+   drag always moves the box the same REAL distance across the photo
+   regardless of how zoomed/cropped the current viewport is. */
+let draggedElement = null, dragStartClientX = 0, dragStartClientY = 0, dragStartNX = 0, dragStartNY = 0;
+
+function beginDrag(el, clientX, clientY) {
+    draggedElement = el;
+    dragStartClientX = clientX;
+    dragStartClientY = clientY;
+    dragStartNX = parseFloat(el.dataset.nx) || 0;
+    dragStartNY = parseFloat(el.dataset.ny) || 0;
+}
+function continueDrag(clientX, clientY) {
+    if (!draggedElement) return;
+    const t = getCoverTransform();
+    draggedElement.dataset.nx = dragStartNX + screenLenToNative(clientX - dragStartClientX, t);
+    draggedElement.dataset.ny = dragStartNY + screenLenToNative(clientY - dragStartClientY, t);
+    applyNativePosition(draggedElement);
+}
+function endDrag() { draggedElement = null; }
+
+document.addEventListener('mousedown', e => {
+    if (e.target.classList.contains('draggable-text') || e.target.classList.contains('draggable-logo')) {
+        beginDrag(e.target, e.clientX, e.clientY);
+        e.preventDefault();
+    }
+});
+document.addEventListener('mousemove', e => continueDrag(e.clientX, e.clientY));
+document.addEventListener('mouseup', endDrag);
+
+// touch drag — capture phase so this fires BEFORE the preview's swipe-to-
+// change-awning listener sees the same touch, and stopPropagation keeps
+// that swipe gesture from also triggering while repositioning a box.
+document.addEventListener('touchstart', e => {
+    const target = e.target;
+    if (target.classList.contains('draggable-text') || target.classList.contains('draggable-logo')) {
+        const touch = e.touches[0];
+        beginDrag(target, touch.clientX, touch.clientY);
+        e.stopPropagation();
+    }
+}, { capture: true, passive: true });
+document.addEventListener('touchmove', e => {
+    if (draggedElement && e.touches.length === 1) {
+        continueDrag(e.touches[0].clientX, e.touches[0].clientY);
+    }
+}, { passive: true });
+document.addEventListener('touchend', endDrag);
+
+// keep every box pinned to its exact spot on the photo through any
+// resize, orientation change, or layout switch (mobile <-> desktop)
+new ResizeObserver(() => applyAllNativePositions()).observe(document.getElementById('preview-box'));
+window.addEventListener('resize', applyAllNativePositions);
+window.addEventListener('orientationchange', applyAllNativePositions);
+
+/* ==========================================================
+   DOWNLOAD — flat JPEG, text and logos baked in, no popup.
+   Always re-composes + re-bakes fresh right before exporting, so it's
+   never stale relative to whatever was last typed or dragged.
+========================================================== */
+async function downloadImage() {
+    try {
+        const scene = await composeScene();
+        lastScene = bakeOverlaysOntoScene(scene);
+        const a = document.createElement('a');
+        a.download = 'esplanade-render.jpg';
+        a.href = lastScene.toDataURL('image/jpeg', 0.92);
+        a.click();
+    } catch (err) {
+        alert('Could not export the image. Try again.');
+    }
+}
+
+/* ==========================================================
+   INIT
+========================================================== */
+window.onload = () => {
+    const firstBox = document.getElementById('text-1');
+    seedTextDefaults(firstBox, 0.40, 0.45, 40);
+    attachTextEvents(firstBox);
+    selectText(firstBox);
+    requestDraw();
+};
+</script>
+</body>
+</html>

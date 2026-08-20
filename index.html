@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Keeps this page out of Google search results. Leave it in. -->
+<meta name="robots" content="noindex, nofollow">
+
+<title>150 Worth Avenue — Fairfax &amp; Sammons</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- =====================================================================
+     150 WORTH AVENUE — PROJECT HUB
+     Fairfax & Sammons Architecture
+     =====================================================================
+
+     WHAT THIS IS
+     One page that links to every Worth Avenue tool and file, so the team
+     has a single address to remember instead of five.
+
+     THE ONLY THING YOU EDIT
+     Scroll down to the section marked "THE LINKS". Each tile has one line
+     that starts with  href="..."  — that is the address it points to.
+     Paste your link between the quotation marks. Nothing else needs
+     touching, ever.
+
+     A tile with  href="#"  is not linked yet, and shows as "Coming soon".
+     Replace the  #  with a real address and it turns into a live link.
+
+     ===================================================================== -->
+
+<style>
+  :root {
+    --ink:      #23201c;
+    --ink-soft: #5d564d;
+    --paper:    #f7f4ee;
+    --card:     #ffffff;
+    --line:     #ddd6c9;
+    --accent:   #7a6a52;
+    --live:     #4a6b4f;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 64px 28px 96px;
+  }
+
+  /* ---------- Masthead ---------- */
+
+  header {
+    text-align: center;
+    padding-bottom: 48px;
+    margin-bottom: 56px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .firm {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 22px;
+  }
+
+  h1 {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    margin: 0 0 14px;
+    line-height: 1.1;
+  }
+
+  .place {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-style: italic;
+    font-size: 1.15rem;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  /* ---------- Section headings ---------- */
+
+  h2 {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin: 56px 0 8px;
+  }
+
+  h2:first-of-type { margin-top: 0; }
+
+  .section-note {
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    margin: 0 0 26px;
+  }
+
+  /* ---------- Tiles ---------- */
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+  }
+
+  .tile {
+    display: block;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 26px 26px 24px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .tile:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(35, 32, 28, 0.07);
+  }
+
+  /* Tiles that aren't linked yet: greyed out, not clickable */
+  .tile[href="#"] {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .tile h3 {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1.32rem;
+    font-weight: 600;
+    margin: 0 0 8px;
+  }
+
+  .tile p {
+    margin: 0 0 18px;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+  }
+
+  .status {
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .status.live   { color: var(--live); }
+  .status.soon   { color: var(--ink-soft); }
+
+  .tile[href="#"] .status.live { display: none; }
+  .tile:not([href="#"]) .status.soon { display: none; }
+
+  /* ---------- Footer ---------- */
+
+  footer {
+    margin-top: 72px;
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 600px) {
+    .wrap { padding: 44px 20px 64px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <p class="firm">Fairfax &amp; Sammons Architecture</p>
+    <h1>150 Worth Avenue</h1>
+    <p class="place">Palm Beach, Florida</p>
+  </header>
+
+
+  <!-- =================================================================
+       THE LINKS — this is the only part you edit.
+       Paste each address between the quotation marks after href=
+       ================================================================= -->
+
+
+  <h2>Editors</h2>
+  <p class="section-note">Live tools for building and adjusting renderings.</p>
+
+  <div class="grid">
+
+    <a class="tile" href="esplanade/">
+      <h3>Esplanade Facade Editor</h3>
+      <p>Awnings, colour, logos, retail category, signage and text. Export a finished storefront rendering.</p>
+      <span class="status live">Live</span>
+      <span class="status soon">Coming soon</span>
+    </a>
+
+    <a class="tile" href="interior/">
+      <h3>Interior Facade Editor</h3>
+      <p>Interior views of the arcade on a clickable plan.</p>
+      <span class="status live">Live</span>
+      <span class="status soon">Coming soon</span>
+    </a>
+
+    <a class="tile" href="#">
+      <!--                  ^ paste the EXTERIOR editor link here -->
+      <h3>Exterior Editor</h3>
+      <p>Exterior view configurator.</p>
+      <span class="status live">Live</span>
+      <span class="status soon">Coming soon</span>
+    </a>
+
+  </div>
+
+
+  <h2>Views</h2>
+  <p class="section-note">Walk the arcade and open any view.</p>
+
+  <div class="grid">
+
+    <a class="tile" href="floorplan/">
+      <h3>Floorplan &amp; Views</h3>
+      <p>Seventeen numbered views on a clickable plan. Hover a marker to preview, click to open.</p>
+      <span class="status live">Live</span>
+      <span class="status soon">Coming soon</span>
+    </a>
+
+  </div>
+
+
+  <h2>Files</h2>
+  <p class="section-note">Decks, drawings and image libraries. These open in Dropbox or Google Drive.</p>
+
+  <div class="grid">
+
+    <a class="tile" href="#">
+      <!--                  ^ paste a Dropbox or Drive SHARE LINK here -->
+      <h3>Leasing Deck</h3>
+      <p>The current Burlington Arcade leasing presentation.</p>
+      <span class="status live">Live</span>
+      <span class="status soon">Coming soon</span>
+    </a>
+
+    <a class="tile" href="#">
+      <!--                  ^ paste a Dropbox or Drive SHARE LINK here -->
+      <h3>Image Library</h3>
+      <p>High-resolution renderings and photography for 150 Worth.</p>
+      <span class="status live">Live</span>
+      <span class="status soon">Coming soon</span>
+    </a>
+
+  </div>
+
+
+  <footer>
+    Internal reference — Fairfax &amp; Sammons Architecture. Not for public distribution.
+  </footer>
+
+</div>
+
+</body>
+</html>

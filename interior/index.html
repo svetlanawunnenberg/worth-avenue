@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>The Burlington Arcade Viewer — 150 Worth Ave — Palm Beach FL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,500,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   THE BURLINGTON ARCADE VIEWER — 150 Worth Ave, Palm Beach FL
+   Built for Moz Vicentes Media / Fairfax & Sammons Architects
+   ============================================================
+   HOW TO USE THIS FILE
+
+   Save this HTML file in the SAME FOLDER as your exported PNGs
+   (the "VIEWS-OF-BURLINGTON_..." files) and just double-click it
+   to open — no upload step, no picker, nothing to select. It loads
+   your files straight off disk by their exact filenames, the same
+   way an <img> tag in any webpage does.
+
+   The filenames are hardcoded below to match your actual export
+   exactly (search "const FILES"). If you ever re-export and the
+   filenames change, update the strings in that list to match —
+   everything else (positions, interactions) stays the same.
+
+   ------------------------------------------------------------
+   THINGS TO FILL IN (near the top of the <script> below):
+   1) INTERIOR_EDITOR_LINK / EXTERIOR_EDITOR_LINK — top-bar links
+   2) VIEW_EDITOR_LINKS — one line per view, its "Go to Editor" link
+   3) PAGE_TEXT — paste the contents of "TEXT for BURLINGTON MAP"
+      directly in (a double-clicked local file can't read a .txt
+      file off disk the way it can an image, so this one has to be
+      pasted in rather than referenced by filename)
+   4) POSITIONS — nudge any view's x_pct / y_pct if its click target
+      feels off from where its dot actually sits
+   ============================================================ */
+
+  :root{
+    --ivory:#F4EFE4; --ivory-deep:#ECE4D2; --ink:#161310; --ink-soft:#3A342C;
+    --line:#C9BFA6; --line-soft:#DAD2BB; --brass:#8A6D3B; --brass-light:#B79A5E;
+    --white:#FFFFFF; --warn:#9C4A34;
+    --shadow: 0 18px 50px rgba(20,16,10,0.28);
+  }
+  *{box-sizing:border-box;}
+  html,body{ margin:0; padding:0; height:100%; background:var(--ink); color:var(--ink);
+    font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+  ::selection{ background:var(--brass-light); color:var(--ink); }
+  .serif{ font-family:'EB Garamond', serif; }
+  button{ font-family:inherit; cursor:pointer; }
+  a{ color:inherit; }
+
+  /* ============== SPLASH ============== */
+  #splash{
+    position:fixed; inset:0; z-index:100;
+    background: radial-gradient(ellipse at 50% 30%, #1c1811 0%, var(--ink) 70%);
+    display:flex; align-items:center; justify-content:center; flex-direction:column;
+    cursor:pointer; text-align:center;
+    transition:opacity 0.9s ease, visibility 0.9s ease;
+  }
+  #splash.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+  .splash-inner{ text-align:center; color:var(--ivory); padding:0 24px; animation: splashIn 1.4s ease both; }
+  @keyframes splashIn{ from{ opacity:0; transform:translateY(14px); letter-spacing:0.5em; } to{ opacity:1; transform:translateY(0); } }
+  .splash-eyebrow{ font-size:11px; letter-spacing:0.42em; text-transform:uppercase; color:var(--brass-light); margin-bottom:22px; }
+  .splash-rule{ width:56px; height:1px; background:var(--line-soft); margin:22px auto; opacity:0.55; }
+  .splash-title{ font-family:'EB Garamond', serif; font-weight:500; font-size:clamp(52px, 11vw, 128px); letter-spacing:0.12em; line-height:1; margin:0; color:var(--ivory); }
+  .splash-sub{ font-family:'EB Garamond', serif; font-style:italic; font-size:clamp(14px, 2vw, 19px); letter-spacing:0.06em; color:#C9BFA6; margin-top:6px; }
+  .splash-cta{ margin-top:40px; font-size:11px; letter-spacing:0.32em; text-transform:uppercase; color:var(--ivory); opacity:0.75; display:inline-flex; align-items:center; gap:10px; }
+  .splash-cta .ring{ width:9px;height:9px;border-radius:50%; border:1px solid var(--brass-light); animation: pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ transform:scale(1); opacity:0.5; } 50%{ transform:scale(1.7); opacity:1; } }
+
+  /* ============== APP SHELL ============== */
+  #app{ position:fixed; inset:0; background:var(--ivory); display:flex; flex-direction:column; opacity:0; transition:opacity 0.8s ease; overflow:hidden; }
+  #app.visible{ opacity:1; }
+
+  header.topbar{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+    padding:16px 20px; background:var(--ivory); border-bottom:1px solid var(--line);
+    z-index:20; text-align:center;
+  }
+  .brandblock{ display:flex; flex-direction:column; gap:3px; align-items:center; }
+  .brandblock .title{ font-family:'EB Garamond', serif; font-size:23px; letter-spacing:0.04em; color:var(--ink); }
+  .brandblock .addr{ font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--ink-soft); opacity:0.75; }
+
+  .editor-links{ display:flex; gap:8px; justify-content:center; }
+  .editor-links a{
+    display:inline-block; text-decoration:none;
+    border:1px solid var(--ink); padding:8px 16px;
+    font-size:10.5px; letter-spacing:0.16em; text-transform:uppercase;
+    color:var(--ink); background:transparent; transition:all 0.2s ease;
+  }
+  .editor-links a:hover{ background:var(--ink); color:var(--ivory); }
+  .editor-links a.disabled{ opacity:0.35; pointer-events:none; }
+
+  .page-text{ max-width:640px; margin:2px auto 0; text-align:center; font-family:'EB Garamond', serif; font-size:13.5px; line-height:1.6; color:var(--ink-soft); }
+  .page-text:empty{ display:none; }
+
+  .missing-note{
+    display:none; max-width:900px; margin:0 auto; padding:10px 20px 0;
+    font-size:11.5px; color:var(--warn); text-align:center; line-height:1.6;
+  }
+  .missing-note.visible{ display:block; }
+
+  /* ============== PLAN STAGE ============== */
+  main.stage{
+    flex:1; position:relative; overflow-y:auto; overflow-x:hidden;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(20,16,10,0.028) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(20,16,10,0.028) 40px),
+      var(--ivory);
+  }
+  .plan-wrap{ position:relative; width:100%; max-width:1900px; margin:0 auto; padding:22px 22px 6px; text-align:center; }
+  .plan-frame{ position:relative; display:inline-block; width:100%; min-height:200px; background:var(--white); box-shadow: var(--shadow); border:1px solid var(--line); line-height:0; }
+  .plan-frame img.base{ display:block; width:100%; height:auto; user-select:none; -webkit-user-drag:none; }
+  .plan-placeholder{ padding:80px 20px; color:var(--warn); font-size:13px; letter-spacing:0.02em; line-height:1.7; }
+  .layer-img{ position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; user-select:none; -webkit-user-drag:none; }
+  .layer-dot{ opacity:0.7; transition:opacity 0.22s ease; }
+  .layer-tri{ opacity:0; transition:opacity 0.28s ease; }
+  .view-group.is-hot .layer-dot, .view-group.is-pinned .layer-dot{ opacity:1; }
+  .view-group.is-hot .layer-tri, .view-group.is-pinned .layer-tri{ opacity:1; }
+  .hit{ position:absolute; width:26px; height:26px; margin:-13px 0 0 -13px; border-radius:50%; background:transparent; border:none; cursor:pointer; z-index:5; }
+
+  .hint{ text-align:center; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-soft); opacity:0.55; padding:10px 20px 4px; }
+
+  /* ============== TOP-RIGHT CORNER PREVIEW (desktop hover only) ============== */
+  .corner-preview{
+    position:fixed; top:88px; right:22px; width:220px;
+    background:var(--white); border:1px solid var(--line); box-shadow:var(--shadow); z-index:60;
+    opacity:0; transform:translateY(-6px); pointer-events:none; transition:opacity 0.18s ease, transform 0.18s ease;
+  }
+  .corner-preview.visible{ opacity:1; transform:translateY(0); }
+  .corner-preview .frame{ width:100%; aspect-ratio:4/3; overflow:hidden; background:var(--ivory-deep); }
+  .corner-preview .frame img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .corner-preview .frame .fallback{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; text-align:center; color:var(--ink-soft); }
+  .corner-preview .frame .fallback .num{ font-family:'EB Garamond',serif; font-size:22px; color:var(--ink); }
+  .corner-preview .label{ padding:8px 10px; font-size:12px; text-align:center; font-family:'EB Garamond', serif; border-top:1px solid var(--line-soft); }
+
+  /* ============== BELOW-PLAN PINNED GALLERY ============== */
+  section.gallery{ border-top:1px solid var(--line); background:var(--white); padding:26px 20px 40px; }
+  .gallery-inner{ max-width:900px; margin:0 auto; }
+  .gallery-empty{ text-align:center; color:var(--ink-soft); opacity:0.6; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; padding:10px 0 4px; }
+  .gallery-title{ text-align:center; font-family:'EB Garamond', serif; font-size:18px; color:var(--ink); margin-bottom:18px; }
+  .gallery-cards{ display:flex; flex-direction:column; gap:22px; }
+  .gcard{ border:1px solid var(--line); background:var(--ivory); animation: cardIn 0.35s ease both; text-align:center; padding:20px 20px 24px; }
+  @keyframes cardIn{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+  .gcard-title{ font-family:'EB Garamond', serif; font-size:22px; color:var(--ink); margin-bottom:12px; }
+  .gcard-frame{ width:100%; max-width:520px; margin:0 auto; aspect-ratio:4/3; overflow:hidden; background:var(--ivory-deep); border:1px solid var(--line); }
+  .gcard-frame img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .gcard-frame .fallback{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; text-align:center; color:var(--ink-soft); }
+  .gcard-frame .fallback .num{ font-family:'EB Garamond',serif; font-size:32px; color:var(--ink); }
+  .gcard-actions{ margin-top:16px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .gcard-actions a, .gcard-actions button{
+    border:1px solid var(--ink); background:var(--ink); color:var(--ivory);
+    padding:11px 26px; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; text-decoration:none; transition:all 0.2s ease;
+  }
+  .gcard-actions a:hover{ background:var(--brass); border-color:var(--brass); }
+  .gcard-actions a.disabled{ background:transparent; color:var(--ink-soft); opacity:0.45; pointer-events:none; }
+  .gcard-actions button.remove{ background:transparent; color:var(--ink-soft); }
+  .gcard-actions button.remove:hover{ background:var(--ivory-deep); color:var(--ink); }
+</style>
+</head>
+<body>
+
+  <!-- ============== SPLASH ============== -->
+  <div id="splash">
+    <div class="splash-inner">
+      <div class="splash-eyebrow">150 Worth Avenue · Palm Beach, Florida</div>
+      <h1 class="splash-title serif">BURLINGTON</h1>
+      <div class="splash-sub serif">The Arcade Viewer</div>
+      <div class="splash-rule"></div>
+      <div class="splash-cta"><span class="ring"></span> Click to Enter</div>
+    </div>
+  </div>
+
+  <!-- ============== APP ============== -->
+  <div id="app">
+    <header class="topbar">
+      <div class="brandblock">
+        <div class="title serif">The Burlington Arcade Viewer</div>
+        <div class="addr">150 Worth Ave · Palm Beach, FL</div>
+      </div>
+      <div class="editor-links">
+        <a href="#" id="interiorEditorLink" target="_blank" rel="noopener">Interior Editor</a>
+        <a href="#" id="exteriorEditorLink" target="_blank" rel="noopener">Exterior Editor</a>
+      </div>
+      <div class="page-text serif" id="pageText"></div>
+    </header>
+
+    <div class="missing-note" id="missingNote"></div>
+
+    <main class="stage" id="stage">
+      <div class="plan-wrap">
+        <div class="plan-frame" id="planFrame">
+          <img class="base" id="baseLayer" alt="150 Worth Avenue floor plan — base layer" draggable="false">
+        </div>
+      </div>
+
+      <div class="hint">Hover a view marker to preview · click to pin it below</div>
+
+      <section class="gallery">
+        <div class="gallery-inner">
+          <div class="gallery-title serif">Pinned Views</div>
+          <div class="gallery-empty" id="galleryEmpty">Click any view marker above to add it here</div>
+          <div class="gallery-cards" id="galleryCards"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ============== CORNER PREVIEW (desktop hover only) ============== -->
+  <div class="corner-preview" id="cornerPreview">
+    <div class="frame" id="cornerFrame"></div>
+    <div class="label serif" id="cornerLabel">View</div>
+  </div>
+
+<script>
+/* ============================================================
+   CONFIG — edit these
+   ============================================================ */
+const INTERIOR_EDITOR_LINK = ""; // <-- paste the Basic Interior Editor link here
+const EXTERIOR_EDITOR_LINK = ""; // <-- paste the Basic Exterior Editor link here
+const PAGE_TEXT = ""; // <-- paste the contents of "TEXT for BURLINGTON MAP" here
+
+// Each view's own editor link. Paste a URL between the quotes to enable
+// that view's "Go to Editor" button.
+const VIEW_EDITOR_LINKS = {
+  "V1": "", // VIEW 1 EDITOR LINK
+  "V2": "", // VIEW 2 EDITOR LINK
+  "V3": "", // VIEW 3 EDITOR LINK
+  "V4": "", // VIEW 4 EDITOR LINK
+  "V5": "", // VIEW 5 EDITOR LINK
+  "V6": "", // VIEW 6 EDITOR LINK
+  "V7": "", // VIEW 7 EDITOR LINK
+  "V8": "", // VIEW 8 EDITOR LINK
+  "V9": "", // VIEW 9 EDITOR LINK
+  "V10": "", // VIEW 10 EDITOR LINK
+  "V11": "", // VIEW 11 EDITOR LINK
+  "V12": "", // VIEW 12 EDITOR LINK
+  "V13": "", // VIEW 13 EDITOR LINK
+  "V14": "", // VIEW 14 EDITOR LINK
+  "V15": "", // VIEW 15 EDITOR LINK
+  "V16": "", // VIEW 16 EDITOR LINK
+};
+
+// Exact filenames from your export, matched to each view.
+const BASE_LAYER_FILE = "VIEWS-OF-BURLINGTON_0051_BASE-LAYER.png";
+
+const FILES = {
+  "V1": { dot: "VIEWS-OF-BURLINGTON_0048_VIEW-1-(1).png", tri: "VIEWS-OF-BURLINGTON_0050_VIEW-1-(2).png", image: "VIEWS-OF-BURLINGTON_0049_VIEW-1-IMAGE.jpg" },
+  "V2": { dot: "VIEWS-OF-BURLINGTON_0046_VIEW-2-(1).png", tri: "VIEWS-OF-BURLINGTON_0047_VIEW-2-(2).png", image: "VIEWS-OF-BURLINGTON_0045_VIEW-2-IMAGE.jpg" },
+  "V3": { dot: "VIEWS-OF-BURLINGTON_0043_VIEW-3-(1).png", tri: "VIEWS-OF-BURLINGTON_0044_VIEW-3-(2).png", image: "VIEWS-OF-BURLINGTON_0042_VIEW-3-IMAGE.jpg" },
+  "V4": { dot: "VIEWS-OF-BURLINGTON_0040_VIEW-4-(1).png", tri: "VIEWS-OF-BURLINGTON_0041_VIEW-4-(2).png", image: "VIEWS-OF-BURLINGTON_0039_VIEW-4-IMAGE.jpg" },
+  "V5": { dot: "VIEWS-OF-BURLINGTON_0037_VIEW-5-(1).png", tri: "VIEWS-OF-BURLINGTON_0038_VIEW-5-(2).png", image: "VIEWS-OF-BURLINGTON_0035_VIEW-5-IMAGE.jpg" },
+  "V6": { dot: "VIEWS-OF-BURLINGTON_0022_VIEW-6-(1).png", tri: "VIEWS-OF-BURLINGTON_0023_VIEW-6-(2).png", image: "VIEWS-OF-BURLINGTON_0034_VIEW-6-IMAGE.jpg" },
+  "V7": { dot: "VIEWS-OF-BURLINGTON_0020_VIEW-7-(1).png", tri: "VIEWS-OF-BURLINGTON_0021_VIEW-7-(2).png", image: "VIEWS-OF-BURLINGTON_0033_VIEW-7-IMAGE.jpg" },
+  "V8": { dot: "VIEWS-OF-BURLINGTON_0018_VIEW-8-(1).png", tri: "VIEWS-OF-BURLINGTON_0019_VIEW-8-(2).png", image: "VIEWS-OF-BURLINGTON_0032_VIEW-8-IMAGE.jpg" },
+  "V9": { dot: "VIEWS-OF-BURLINGTON_0016_VIEW-9-(1).png", tri: "VIEWS-OF-BURLINGTON_0017_VIEW-9-(2).png", image: "VIEWS-OF-BURLINGTON_0031_VIEW-9-IMAGE.jpg" },
+  "V10": { dot: "VIEWS-OF-BURLINGTON_0014_VIEW-10-(1).png", tri: "VIEWS-OF-BURLINGTON_0015_VIEW-10-(2).png", image: "VIEWS-OF-BURLINGTON_0030_VIEW-10-IMAGE.jpg" },
+  "V11": { dot: "VIEWS-OF-BURLINGTON_0012_VIEW-11-(1).png", tri: "VIEWS-OF-BURLINGTON_0013_VIEW-11-(2).png", image: "VIEWS-OF-BURLINGTON_0029_VIEW-11-IMAGE.jpg" },
+  "V12": { dot: "VIEWS-OF-BURLINGTON_0010_VIEW-12-(1).png", tri: "VIEWS-OF-BURLINGTON_0011_VIEW-12-(2).png", image: "VIEWS-OF-BURLINGTON_0028_VIEW-12-IMAGE.jpg" },
+  "V13": { dot: "VIEWS-OF-BURLINGTON_0008_VIEW-13-(1).png", tri: "VIEWS-OF-BURLINGTON_0009_VIEW-13-(2).png", image: "VIEWS-OF-BURLINGTON_0027_VIEW-13-IMAGE.jpg" },
+  "V14": { dot: "VIEWS-OF-BURLINGTON_0006_VIEW-14-(1).png", tri: "VIEWS-OF-BURLINGTON_0007_VIEW-14-(2).png", image: "VIEWS-OF-BURLINGTON_0026_VIEW-14-IMAGE.jpg" },
+  "V15": { dot: "VIEWS-OF-BURLINGTON_0002_VIEW-15-(1).png", tri: "VIEWS-OF-BURLINGTON_0003_VIEW-15-(2).png", image: "VIEWS-OF-BURLINGTON_0025_VIEW-15-IMAGE.jpg" },
+  "V16": { dot: "VIEWS-OF-BURLINGTON_0000_VIEW-16-(1).png", tri: "VIEWS-OF-BURLINGTON_0001_VIEW-16-(2).png", image: "VIEWS-OF-BURLINGTON_0024_VIEW-16-IMAGE.jpg" },
+};
+
+const VIEWS = [{"n": 1, "x_pct": 8.626, "y_pct": 47.191, "id": "V1", "label": "VIEW 1"}, {"n": 2, "x_pct": 15.701, "y_pct": 45.867, "id": "V2", "label": "VIEW 2"}, {"n": 3, "x_pct": 18.041, "y_pct": 25.803, "id": "V3", "label": "VIEW 3"}, {"n": 4, "x_pct": 18.041, "y_pct": 50.682, "id": "V4", "label": "VIEW 4"}, {"n": 5, "x_pct": 25.652, "y_pct": 22.512, "id": "V5", "label": "VIEW 5"}, {"n": 6, "x_pct": 29.739, "y_pct": 20.626, "id": "V6", "label": "VIEW 6"}, {"n": 7, "x_pct": 33.545, "y_pct": 25.08, "id": "V7", "label": "VIEW 7"}, {"n": 8, "x_pct": 39.718, "y_pct": 25.361, "id": "V8", "label": "VIEW 8"}, {"n": 9, "x_pct": 59.168, "y_pct": 31.14, "id": "V9", "label": "VIEW 9"}, {"n": 10, "x_pct": 61.142, "y_pct": 35.393, "id": "V10", "label": "VIEW 10"}, {"n": 11, "x_pct": 61.226, "y_pct": 50.722, "id": "V11", "label": "VIEW 11"}, {"n": 12, "x_pct": 84.087, "y_pct": 8.868, "id": "V12", "label": "VIEW 12"}, {"n": 13, "x_pct": 90.881, "y_pct": 9.189, "id": "V13", "label": "VIEW 13"}, {"n": 14, "x_pct": 91.473, "y_pct": 44.021, "id": "V14", "label": "VIEW 14"}, {"n": 15, "x_pct": 33.178, "y_pct": 73.997, "id": "V15", "label": "VIEW 15"}, {"n": 16, "x_pct": 34.447, "y_pct": 77.287, "id": "V16", "label": "VIEW 16"}];
+
+/* ============================================================
+   APP LOGIC
+   ============================================================ */
+const state = { isTouch: matchMedia("(hover: none), (pointer: coarse)").matches, pinned: new Set() };
+
+const els = {
+  splash: document.getElementById('splash'),
+  app: document.getElementById('app'),
+  baseLayer: document.getElementById('baseLayer'),
+  planFrame: document.getElementById('planFrame'),
+  cornerPreview: document.getElementById('cornerPreview'),
+  cornerFrame: document.getElementById('cornerFrame'),
+  cornerLabel: document.getElementById('cornerLabel'),
+  galleryCards: document.getElementById('galleryCards'),
+  galleryEmpty: document.getElementById('galleryEmpty'),
+  interiorEditorLink: document.getElementById('interiorEditorLink'),
+  exteriorEditorLink: document.getElementById('exteriorEditorLink'),
+  pageText: document.getElementById('pageText'),
+  missingNote: document.getElementById('missingNote'),
+};
+
+els.pageText.textContent = PAGE_TEXT;
+
+function wireTopEditorLink(el, url){
+  if(url){ el.href = url; el.classList.remove('disabled'); }
+  else{ el.href = '#'; el.classList.add('disabled'); el.addEventListener('click', e=>e.preventDefault()); }
+}
+wireTopEditorLink(els.interiorEditorLink, INTERIOR_EDITOR_LINK);
+wireTopEditorLink(els.exteriorEditorLink, EXTERIOR_EDITOR_LINK);
+
+/* ---- Splash ---- */
+els.splash.addEventListener('click', enterApp);
+function enterApp(){
+  els.splash.classList.add('hidden');
+  els.app.classList.add('visible');
+  setTimeout(buildPlan, 150);
+}
+
+const missing = [];
+
+/* ---- Build the plan: base layer + per-view dot/triangle layers + hit targets ---- */
+function buildPlan(){
+  els.baseLayer.src = BASE_LAYER_FILE;
+  els.baseLayer.addEventListener('error', ()=>{
+    missing.push(BASE_LAYER_FILE);
+    updateMissingNote();
+  }, { once:true });
+
+  VIEWS.forEach(v=>{
+    const f = FILES[v.id];
+    const group = document.createElement('div');
+    group.className = 'view-group';
+    group.dataset.id = v.id;
+
+    const dotImg = document.createElement('img');
+    dotImg.className = 'layer-img layer-dot';
+    dotImg.alt = v.label + ' marker';
+    dotImg.src = f.dot;
+    dotImg.addEventListener('error', ()=>{ missing.push(f.dot); updateMissingNote(); }, { once:true });
+    group.appendChild(dotImg);
+
+    const triImg = document.createElement('img');
+    triImg.className = 'layer-img layer-tri';
+    triImg.alt = v.label + ' sightline';
+    triImg.src = f.tri;
+    triImg.addEventListener('error', ()=>{ missing.push(f.tri); updateMissingNote(); }, { once:true });
+    group.appendChild(triImg);
+
+    const hit = document.createElement('button');
+    hit.className = 'hit';
+    hit.style.left = v.x_pct + '%';
+    hit.style.top = v.y_pct + '%';
+    hit.setAttribute('aria-label', v.label);
+    hit.type = 'button';
+    group.appendChild(hit);
+
+    els.planFrame.appendChild(group);
+
+    if(!state.isTouch){
+      hit.addEventListener('mouseenter', ()=>{ group.classList.add('is-hot'); showCornerPreview(v); });
+      hit.addEventListener('mouseleave', ()=>{ group.classList.remove('is-hot'); hideCornerPreview(); });
+    }
+    hit.addEventListener('click', (e)=>{ e.stopPropagation(); togglePin(v, group); });
+  });
+}
+
+function updateMissingNote(){
+  if(!missing.length){ els.missingNote.classList.remove('visible'); return; }
+  els.missingNote.classList.add('visible');
+  const shown = missing.slice(0,3).join(', ');
+  const more = missing.length > 3 ? ` (+${missing.length-3} more)` : '';
+  els.missingNote.textContent = `Some files weren't found next to this HTML file: ${shown}${more}. Make sure this file sits in the same folder as your exports and the filenames match exactly.`;
+}
+
+/* ---- corner preview (desktop hover only) ---- */
+function showCornerPreview(v){
+  const f = FILES[v.id];
+  els.cornerFrame.innerHTML = "";
+  const img = new Image();
+  img.alt = v.label;
+  img.onerror = ()=>{
+    els.cornerFrame.innerHTML = `<div class="fallback"><div class="num serif">${v.n}</div></div>`;
+  };
+  img.src = f.image;
+  els.cornerFrame.appendChild(img);
+  els.cornerLabel.textContent = v.label;
+  els.cornerPreview.classList.add('visible');
+}
+function hideCornerPreview(){ els.cornerPreview.classList.remove('visible'); }
+
+/* ---- click to pin / unpin ---- */
+function togglePin(v, group){
+  if(state.pinned.has(v.id)){
+    state.pinned.delete(v.id);
+    group.classList.remove('is-pinned');
+    removeCard(v.id);
+  } else {
+    state.pinned.add(v.id);
+    group.classList.add('is-pinned');
+    addCard(v);
+    hideCornerPreview();
+    document.querySelector('.gallery').scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+  els.galleryEmpty.style.display = state.pinned.size ? 'none' : 'block';
+}
+
+function addCard(v){
+  const f = FILES[v.id];
+  const card = document.createElement('div');
+  card.className = 'gcard';
+  card.dataset.id = v.id;
+
+  const title = document.createElement('div');
+  title.className = 'gcard-title serif';
+  title.textContent = `${v.label} IMAGE`;
+  card.appendChild(title);
+
+  const frame = document.createElement('div');
+  frame.className = 'gcard-frame';
+  const img = new Image();
+  img.alt = v.label;
+  img.onerror = ()=>{ frame.innerHTML = `<div class="fallback"><div class="num serif">${v.n}</div></div>`; };
+  img.src = f.image;
+  frame.appendChild(img);
+  card.appendChild(frame);
+
+  const actions = document.createElement('div');
+  actions.className = 'gcard-actions';
+
+  const editorUrl = VIEW_EDITOR_LINKS[v.id];
+  const go = document.createElement('a');
+  go.target = '_blank'; go.rel = 'noopener';
+  if(editorUrl){ go.href = editorUrl; go.textContent = 'Go to Editor'; }
+  else{ go.href = '#'; go.classList.add('disabled'); go.textContent = `Editor link pending`; }
+  actions.appendChild(go);
+
+  const remove = document.createElement('button');
+  remove.className = 'remove';
+  remove.type = 'button';
+  remove.textContent = 'Unpin';
+  remove.addEventListener('click', ()=>{
+    const group = els.planFrame.querySelector(`.view-group[data-id="${v.id}"]`);
+    togglePin(v, group);
+  });
+  actions.appendChild(remove);
+
+  card.appendChild(actions);
+  els.galleryCards.appendChild(card);
+}
+
+function removeCard(id){
+  const card = els.galleryCards.querySelector(`.gcard[data-id="${id}"]`);
+  if(card) card.remove();
+}
+</script>
+</body>
+</html>
