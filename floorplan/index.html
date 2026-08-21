@@ -13,24 +13,27 @@
      Fairfax & Sammons Architecture
      ============================================================
 
-     WHY IT CRASHED ON A PHONE (fixed 2026-08-20)
+     HOW IT BEHAVES
 
-     The marker and sightline PNGs are tiny on disk (24KB) but each one
-     is a full 4500 x 3161 canvas holding one small graphic. A browser
-     does not store the compressed file, it stores the decoded bitmap:
+     Desktop — the plan is fixed. It does not zoom and it does not pan,
+     so it never traps the scroll. All navigation happens in the MAP
+     panel, which zooms and pans on its own. Two panels float over the
+     plan and can be pulled apart, moved, resized, collapsed or closed:
+        RENDERING   the view photograph
+        MAP         the plan, zoomable, centred on the current marker
+     "Dock" snaps the map panel back under the rendering panel.
 
-         4500 x 3161 x 4 bytes  =  54.3 MB  EACH
-         35 of them             =  1.85 GB
+     Phone — no panels at all. Tap a quarter of the plan to zoom, or
+     just pinch. Pinned views stack underneath.
 
-     A desktop absorbs that. A phone is killed by it.
+     Every marker you click stays lit and keeps its sightline on the
+     plan, so a session builds up into the set you have chosen.
 
-     The fix is in the m/ folder:
-       m/base.jpg     the plan at 2400px  (16 MB decoded, not 54)
-       m/dot-V*.png   each marker cropped to a 340px tile (0.4 MB each)
-       m/tri-V*.png   sightlines at 1100px, loaded one at a time
-
-     Same picture on screen, about 27 MB of memory instead of 1.85 GB.
-     The original full-size files are still in this folder untouched.
+     WHY THE ASSETS LIVE IN m/
+     The original marker and sightline PNGs are full 4500 x 3161
+     canvases holding one small graphic — 54 MB each once decoded,
+     1.85 GB for the set, which is what killed the page on a phone.
+     m/ holds the same artwork at sane sizes. Originals untouched.
 
      WHAT YOU EDIT — the CONFIG block at the top of the script.
      ============================================================ -->
@@ -42,7 +45,7 @@
     --white:#FFFFFF; --warn:#9C4A34; --red:#C0392B;
     --tri-opacity:0.44;
     --map-aspect: 4500 / 3161;
-    --tile: 7.5556%;               /* each marker tile = 340 / 4500 of the plan */
+    --tile: 7.5556%;
     --shadow:0 18px 50px rgba(20,16,10,0.28);
   }
   *{ box-sizing:border-box; }
@@ -84,10 +87,9 @@
   .missing-note{ display:none; padding:8px 16px 0; font-size:11px; color:var(--warn); text-align:center; }
   .missing-note.visible{ display:block; }
 
-  /* ---------- audio buttons ---------- */
   .speak{ border:1px solid var(--line); background:var(--white); color:var(--ink-soft);
-    width:26px; height:26px; padding:0; font-size:12px; line-height:1; vertical-align:middle;
-    display:inline-flex; align-items:center; justify-content:center; flex:none; }
+    width:26px; height:26px; padding:0; font-size:12px; line-height:1; flex:none;
+    display:inline-flex; align-items:center; justify-content:center; }
   .speak:hover{ background:var(--ink); color:var(--ivory); }
   .speak.on{ background:var(--brass); border-color:var(--brass); color:var(--ivory); }
 
@@ -98,49 +100,46 @@
       repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(20,16,10,.028) 40px),
       var(--ivory); }
   .plan-wrap{ position:relative; width:100%; max-width:1900px; margin:0 auto; padding:14px 14px 4px; }
+
+  /* Desktop: the plan is fixed — no zoom, no pan, no scroll trap. */
   .plan-viewport{ position:relative; width:100%; aspect-ratio:var(--map-aspect); overflow:hidden;
-    background:var(--white); border:1px solid var(--line); box-shadow:var(--shadow);
-    touch-action:none; cursor:grab; }
-  .plan-viewport.grabbing{ cursor:grabbing; }
+    background:var(--white); border:1px solid var(--line); box-shadow:var(--shadow); }
   .plan-frame{ position:absolute; top:0; left:0; width:100%; aspect-ratio:var(--map-aspect);
-    transform-origin:0 0; line-height:0; will-change:transform; }
+    transform-origin:0 0; line-height:0; }
   .plan-frame img.base{ display:block; width:100%; height:100%; }
 
-  /* a marker is now a small tile, not a full-canvas layer */
   .mk{ position:absolute; width:var(--tile); aspect-ratio:1; transform:translate(-50%,-50%);
        z-index:3; pointer-events:none; }
-  .mk img{ width:100%; height:100%; display:block; opacity:.45; transition:opacity .14s ease; }
-  /* the clickable target is the DOT, not the whole tile — the tile is 2.5x wider
-     than the graphic, which is why markers used to light up without being touched */
-  .hit{ position:absolute; width:3%; aspect-ratio:1; transform:translate(-50%,-50%);
-    z-index:6; padding:0; border:none; background:transparent; cursor:pointer; }
+  .mk img{ width:100%; height:100%; display:block; opacity:.42; transition:opacity .14s ease; }
   .mk.is-hot img, .mk.is-pinned img{ opacity:1; }
+
+  /* the target is the DOT, not the tile around it */
+  .hit{ position:absolute; width:3%; aspect-ratio:1; transform:translate(-50%,-50%);
+    z-index:6; padding:0; border:none; background:transparent; }
+
+  /* one sightline per view — pinned ones stay up, so the plan accumulates */
   .tri{ position:absolute; inset:0; width:100%; height:100%; opacity:0;
-        transition:opacity .18s ease; z-index:1; pointer-events:none; }
+        transition:opacity .2s ease; z-index:1; pointer-events:none; }
   .tri.show{ opacity:var(--tri-opacity); }
 
-  /* ---------- quarter-tap hints ---------- */
+  /* ---------- quarter-tap (phone only) ---------- */
   .quads{ position:absolute; inset:0; z-index:8; display:none; }
   .quads.on{ display:block; }
   .quad{ position:absolute; width:50%; height:50%; border:none; background:transparent; padding:0;
     display:flex; align-items:center; justify-content:center; }
-  .quad .bub{
-    width:clamp(46px,11vw,76px); aspect-ratio:1; border-radius:50%;
+  .quad .bub{ width:clamp(46px,11vw,76px); aspect-ratio:1; border-radius:50%;
     background:rgba(255,255,255,.30); border:1px solid rgba(255,255,255,.55);
-    backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px);
     display:flex; align-items:center; justify-content:center;
     font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:#fff;
-    text-shadow:0 1px 3px rgba(0,0,0,.5); animation:bub 2.2s ease-in-out infinite;
-  }
+    text-shadow:0 1px 3px rgba(0,0,0,.5); animation:bub 2.2s ease-in-out infinite; }
   @keyframes bub{ 0%,100%{ transform:scale(1); opacity:.85; } 50%{ transform:scale(1.09); opacity:1; } }
   .quad.tl{ top:0; left:0; } .quad.tr{ top:0; right:0; }
   .quad.bl{ bottom:0; left:0; } .quad.br{ bottom:0; right:0; }
 
-  /* ---------- map controls ---------- */
-  .mapctl{ position:absolute; left:10px; bottom:10px; display:flex; gap:5px; z-index:12; flex-wrap:wrap; max-width:calc(100% - 20px); }
+  .mapctl{ position:absolute; left:10px; bottom:10px; display:none; gap:5px; z-index:12; flex-wrap:wrap; }
+  .mapctl.on{ display:flex; }
   .mapctl button{ width:34px; height:34px; border:1px solid var(--line); background:rgba(255,255,255,.94);
-    color:var(--ink); font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center; padding:0; }
-  .mapctl button:hover{ background:var(--ink); color:var(--ivory); }
+    color:var(--ink); font-size:14px; display:flex; align-items:center; justify-content:center; padding:0; }
   .mapctl button.wide{ width:auto; padding:0 11px; font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; }
 
   .flash{ position:absolute; left:50%; bottom:14px; transform:translateX(-50%) translateY(8px);
@@ -151,34 +150,36 @@
   .hint{ text-align:center; font-size:10px; letter-spacing:.09em; text-transform:uppercase;
     color:var(--ink-soft); opacity:.55; padding:9px 16px 2px; }
 
-  /* ---------- widget (desktop only) ---------- */
-  .widget{ position:absolute; top:24px; right:24px; width:min(28%,330px); min-width:190px;
-    background:var(--white); border:1px solid var(--line); box-shadow:0 14px 40px rgba(20,16,10,.24);
-    z-index:40; opacity:0; visibility:hidden; transition:opacity .16s ease, visibility .16s ease;
-    display:flex; flex-direction:column; }
-  .widget.visible{ opacity:1; visibility:visible; }
-  .widget-head{ display:flex; align-items:center; gap:6px; padding:7px 9px; background:var(--ink);
+  /* ---------- floating panels ---------- */
+  .panel{ position:absolute; background:var(--white); border:1px solid var(--line);
+    box-shadow:0 14px 40px rgba(20,16,10,.24); z-index:40; display:none; flex-direction:column; }
+  .panel.open{ display:flex; }
+  .panel-head{ display:flex; align-items:center; gap:6px; padding:7px 9px; background:var(--ink);
     color:var(--ivory); cursor:grab; flex:none; touch-action:none; }
-  .widget-head.grabbing{ cursor:grabbing; }
-  .widget-head .wtitle{ font-size:9.5px; letter-spacing:.15em; text-transform:uppercase; flex:1; }
-  .widget-head button{ background:none; border:none; color:var(--ivory); font-size:13px; padding:2px 5px; opacity:.75; }
-  .widget-head button:hover{ opacity:1; }
-  .widget-scroll{ overflow:auto; flex:1; min-height:0; }
-  .widget.min .widget-scroll, .widget.min .resize{ display:none; }
-  .sect-head{ display:flex; align-items:center; justify-content:space-between; padding:7px 9px;
-    font-size:9px; letter-spacing:.15em; text-transform:uppercase; color:var(--brass);
-    border-bottom:1px solid var(--line-soft); background:var(--ivory); cursor:pointer; user-select:none; }
-  .sect.closed .sect-body{ display:none; }
-  .sect.closed .chev{ transform:rotate(-90deg); }
-  .chev{ transition:transform .18s ease; font-size:9px; color:var(--ink-soft); }
-  .w-photo{ position:relative; width:100%; aspect-ratio:4/3; overflow:hidden; background:var(--ivory-deep); }
-  .w-photo img{ width:100%; height:100%; object-fit:cover; object-position:center bottom; display:block; }
-  .w-photo .ph{ width:100%; height:100%; display:flex; align-items:center; justify-content:center;
+  .panel-head.grabbing{ cursor:grabbing; }
+  .panel-head .ptitle{ font-size:9.5px; letter-spacing:.15em; text-transform:uppercase; flex:1; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis; }
+  .panel-head button{ background:none; border:none; color:var(--ivory); font-size:12px; padding:2px 5px; opacity:.75; }
+  .panel-head button:hover{ opacity:1; }
+  .panel-head button.txt{ font-size:8.5px; letter-spacing:.12em; text-transform:uppercase; }
+  .panel-body{ overflow:auto; flex:1; min-height:0; }
+  .panel.min .panel-body, .panel.min .presize{ display:none; }
+  .presize{ position:absolute; right:0; bottom:0; width:17px; height:17px; cursor:nwse-resize; touch-action:none; z-index:2;
+    background:linear-gradient(135deg,transparent 0 48%,var(--line) 48% 56%,transparent 56% 72%,var(--line) 72% 80%,transparent 80%); }
+
+  .p-photo{ position:relative; width:100%; aspect-ratio:4/3; overflow:hidden; background:var(--ivory-deep); }
+  .p-photo img{ width:100%; height:100%; object-fit:cover; object-position:center bottom; display:block; }
+  .p-photo .ph{ width:100%; height:100%; display:flex; align-items:center; justify-content:center;
     font-family:'EB Garamond',serif; font-size:26px; color:var(--ink-soft); opacity:.4; }
-  .w-floor{ display:flex; align-items:center; gap:7px; padding:7px 9px; font-size:9px;
+  .p-floor{ display:flex; align-items:center; gap:7px; padding:7px 9px; font-size:9px;
     letter-spacing:.15em; text-transform:uppercase; color:var(--ink-soft); }
-  .crop{ position:relative; width:100%; aspect-ratio:1; overflow:hidden; background:var(--ivory-deep);
-    touch-action:none; cursor:grab; }
+  .p-note{ padding:0 9px 9px; font-size:9.5px; color:var(--ink-soft); opacity:.75;
+    font-family:'EB Garamond',serif; font-style:italic; }
+
+  /* the map panel — this is where navigation happens */
+  .crop{ position:relative; width:100%; aspect-ratio:var(--map-aspect); overflow:hidden;
+    background:var(--ivory-deep); touch-action:none; cursor:grab; }
+  .crop.grabbing{ cursor:grabbing; }
   .crop-inner{ position:absolute; top:0; left:0; width:100%; aspect-ratio:var(--map-aspect);
     transform-origin:0 0; line-height:0; }
   .crop-inner img.cbase{ position:absolute; inset:0; width:100%; height:100%; }
@@ -188,23 +189,18 @@
   .cropbar button{ flex:1; border:1px solid var(--line); background:var(--white); color:var(--ink-soft);
     font-size:9.5px; padding:5px 0; }
   .cropbar button:hover{ background:var(--ink); color:var(--ivory); }
-  .w-hint{ padding:7px 9px 9px; font-size:9.5px; color:var(--ink-soft); opacity:.75;
-    font-family:'EB Garamond',serif; font-style:italic; }
-  .resize{ position:absolute; right:0; bottom:0; width:17px; height:17px; cursor:nwse-resize; touch-action:none; z-index:2;
-    background:linear-gradient(135deg,transparent 0 48%,var(--line) 48% 56%,transparent 56% 72%,var(--line) 72% 80%,transparent 80%); }
 
   /* ---------- pinned ---------- */
   section.gallery{ border-top:1px solid var(--line); background:var(--white); padding:16px 0 28px; }
   .gallery-inner{ max-width:none; margin:0; }
-  .gallery-title{ text-align:center; font-family:"EB Garamond",serif; font-size:17px; margin-bottom:4px; }
+  .gallery-title{ text-align:center; font-family:'EB Garamond',serif; font-size:17px; margin-bottom:4px; }
   .gallery-empty{ text-align:center; color:var(--ink-soft); opacity:.6; font-size:11px;
     letter-spacing:.07em; text-transform:uppercase; padding:8px 0; }
   .gallery-cards{ display:flex; flex-direction:column; gap:14px; margin-top:12px; }
   .gcard{ animation:cardIn .3s ease both; }
   @keyframes cardIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
   .card-logo{ display:block; width:100px; max-width:30%; height:auto; margin:0 auto 8px; }
-  .gcard-image{ position:relative; width:100%; background:var(--ivory-deep); border:none;
-    overflow:hidden; cursor:zoom-in; }
+  .gcard-image{ position:relative; width:100%; background:var(--ivory-deep); border:none; overflow:hidden; cursor:zoom-in; }
   .gcard-image img.shot{ width:100%; height:auto; display:block; }
   .gcard-image .ph{ padding:70px 0; text-align:center; font-family:'EB Garamond',serif; font-size:34px;
     color:var(--ink-soft); opacity:.35; }
@@ -227,25 +223,25 @@
   /* ---------- lightbox / presentation ---------- */
   .present{ position:fixed; inset:0; z-index:170; background:#0d0b09; display:none; flex-direction:column; color:var(--ivory); }
   .present.visible{ display:flex; }
-  .p-top{ display:flex; align-items:center; gap:6px; padding:8px 10px calc(8px + env(safe-area-inset-top,0px));
+  .pr-top{ display:flex; align-items:center; gap:6px; padding:8px 10px calc(8px + env(safe-area-inset-top,0px));
     flex:none; flex-wrap:wrap; border-bottom:1px solid rgba(244,239,228,.16); }
-  .p-top .p-label{ font-family:'EB Garamond',serif; font-size:15px; flex:1; min-width:100px; }
-  .p-top button{ border:1px solid rgba(244,239,228,.4); background:transparent; color:var(--ivory);
+  .pr-top .pr-label{ font-family:'EB Garamond',serif; font-size:15px; flex:1; min-width:100px; }
+  .pr-top button{ border:1px solid rgba(244,239,228,.4); background:transparent; color:var(--ivory);
     padding:6px 10px; font-size:9px; letter-spacing:.12em; text-transform:uppercase; }
-  .p-top button:hover{ background:var(--ivory); color:var(--ink); }
-  .p-top button.on{ background:var(--red); border-color:var(--red); color:#fff; }
-  .p-stage{ flex:1; position:relative; display:flex; align-items:center; justify-content:center;
+  .pr-top button:hover{ background:var(--ivory); color:var(--ink); }
+  .pr-top button.on{ background:var(--red); border-color:var(--red); color:#fff; }
+  .pr-stage{ flex:1; position:relative; display:flex; align-items:center; justify-content:center;
     min-height:0; padding:10px; touch-action:pan-y; }
-  .p-holder{ position:relative; max-width:100%; max-height:100%; line-height:0; }
-  .p-holder img{ display:block; max-width:100%; max-height:100%; width:auto; height:auto; }
-  .p-holder canvas{ position:absolute; inset:0; width:100%; height:100%; touch-action:none; cursor:crosshair; }
-  .p-holder.nodraw canvas{ pointer-events:none; }
-  .p-arrow{ position:absolute; top:50%; transform:translateY(-50%); width:48px; height:48px;
+  .pr-holder{ position:relative; max-width:100%; max-height:100%; line-height:0; }
+  .pr-holder img{ display:block; max-width:100%; max-height:100%; width:auto; height:auto; }
+  .pr-holder canvas{ position:absolute; inset:0; width:100%; height:100%; touch-action:none; cursor:crosshair; }
+  .pr-holder.nodraw canvas{ pointer-events:none; }
+  .pr-arrow{ position:absolute; top:50%; transform:translateY(-50%); width:48px; height:48px;
     border:1px solid rgba(244,239,228,.4); background:rgba(13,11,9,.55); color:var(--ivory);
     font-size:19px; display:flex; align-items:center; justify-content:center; z-index:5; padding:0; }
-  .p-arrow:hover{ background:var(--ivory); color:var(--ink); }
-  .p-arrow.prev{ left:10px; } .p-arrow.next{ right:10px; }
-  .p-count{ flex:none; text-align:center; padding:7px calc(7px + env(safe-area-inset-bottom,0px));
+  .pr-arrow:hover{ background:var(--ivory); color:var(--ink); }
+  .pr-arrow.prev{ left:10px; } .pr-arrow.next{ right:10px; }
+  .pr-count{ flex:none; text-align:center; padding:7px calc(7px + env(safe-area-inset-bottom,0px));
     font-size:9.5px; letter-spacing:.18em; opacity:.7; }
 
   /* ---------- print ---------- */
@@ -254,7 +250,7 @@
   @media print{
     html,body{ height:auto; background:#fff; }
     #splash,header.topbar,.hint,.plan-wrap,.flash,.gallery-title,.gallery-empty,
-    .gcard-tools,.missing-note,.present,.speak{ display:none !important; }
+    .gcard-tools,.missing-note,.present,.speak,.panel{ display:none !important; }
     #app{ position:static; opacity:1; overflow:visible; display:block; }
     main.stage{ overflow:visible; background:none; }
     section.gallery{ border:none; padding:0; background:none; }
@@ -289,13 +285,13 @@
   /* ---------- phone ---------- */
   @media (max-width:700px){
     .plan-wrap{ padding:6px 6px 2px; }
-    .hit{ width:7%; }                 /* a fingertip, not a mouse point */
-    .widget{ display:none !important; }         /* no widget on a phone, by request */
+    .panel{ display:none !important; }        /* no panels on a phone, by request */
+    .plan-viewport{ touch-action:none; cursor:grab; }
+    .hit{ width:7%; }
     section.gallery{ padding:12px 0 28px; }
     .card-logo{ width:88px; }
-    .gcard-tools{ gap:11px; }
-    .p-arrow{ width:40px; height:40px; font-size:16px; }
-    .p-arrow.prev{ left:4px; } .p-arrow.next{ right:4px; }
+    .pr-arrow{ width:40px; height:40px; font-size:16px; }
+    .pr-arrow.prev{ left:4px; } .pr-arrow.next{ right:4px; }
     .refmap{ max-width:100%; }
   }
 </style>
@@ -322,6 +318,8 @@
         <a href="../">&larr; Dashboard</a>
         <a href="#" id="interiorEditorLink" target="_blank" rel="noopener">Interior Editor</a>
         <a href="#" id="exteriorEditorLink" target="_blank" rel="noopener">Exterior Editor</a>
+        <button type="button" id="btnPanels">Panels</button>
+        <button type="button" id="btnClearPins">Clear Pins</button>
         <button type="button" id="btnPresent">Presentation</button>
         <button type="button" id="btnPdf">Download PDF</button>
         <button type="button" class="speak" id="speakIntro" title="Read aloud">&#9835;</button>
@@ -335,10 +333,8 @@
         <div class="plan-viewport" id="planViewport">
           <div class="plan-frame" id="planFrame">
             <img class="base" id="baseLayer" src="m/base.jpg" alt="150 Worth Avenue floor plan" draggable="false">
-            <img class="tri" id="triLayer" alt="">
           </div>
 
-          <!-- quarter tap: four zones, hinted for the first ten seconds -->
           <div class="quads" id="quads">
             <button class="quad tl" type="button" data-q="tl"><span class="bub">Tap</span></button>
             <button class="quad tr" type="button" data-q="tr"><span class="bub">Tap</span></button>
@@ -346,52 +342,53 @@
             <button class="quad br" type="button" data-q="br"><span class="bub">Tap</span></button>
           </div>
 
-          <div class="mapctl">
-            <button type="button" id="zOut" title="Zoom out">&minus;</button>
-            <button type="button" id="zIn" title="Zoom in">+</button>
+          <div class="mapctl" id="mapctl">
+            <button type="button" id="zOut">&minus;</button>
+            <button type="button" id="zIn">+</button>
             <button type="button" class="wide" id="zReset">Fit</button>
-            <button type="button" id="pLeft" title="Left">&#8249;</button>
-            <button type="button" id="pRight" title="Right">&#8250;</button>
-            <button type="button" id="pUp" title="Up">&#8963;</button>
-            <button type="button" id="pDown" title="Down">&#8964;</button>
           </div>
 
-          <div class="flash" id="flash">Image added below</div>
+          <div class="flash" id="flash">Pinned below</div>
         </div>
 
-        <aside class="widget" id="widget">
-          <div class="widget-head" id="wHead">
-            <span class="wtitle" id="wTitle">View</span>
-            <button type="button" id="wMin" title="Minimise">&ndash;</button>
-            <button type="button" id="wClose" title="Close">&times;</button>
+        <!-- ---------- RENDERING panel ---------- -->
+        <aside class="panel" id="panelView">
+          <div class="panel-head" id="headView">
+            <span class="ptitle" id="vTitle">Rendering</span>
+            <button type="button" class="min" data-panel="panelView" title="Collapse">&ndash;</button>
+            <button type="button" class="cls" data-panel="panelView" title="Close">&times;</button>
           </div>
-          <div class="widget-scroll">
-            <div class="sect" id="sectPhoto">
-              <div class="sect-head" data-toggle="sectPhoto"><span>Rendering</span><span class="chev">&#9660;</span></div>
-              <div class="sect-body">
-                <div class="w-photo" id="wPhoto"><div class="ph serif">&ndash;</div></div>
-                <div class="w-floor"><span id="wFloor">First Floor View</span>
-                  <button type="button" class="speak" id="speakView" title="Read aloud">&#9835;</button></div>
-              </div>
-            </div>
-            <div class="sect" id="sectMap">
-              <div class="sect-head" data-toggle="sectMap"><span>Location on plan</span><span class="chev">&#9660;</span></div>
-              <div class="sect-body">
-                <div class="crop" id="wCrop"><div class="crop-inner" id="wCropInner"></div></div>
-                <div class="cropbar">
-                  <button type="button" id="cOut">&minus;</button>
-                  <button type="button" id="cReset">Centre</button>
-                  <button type="button" id="cIn">+</button>
-                </div>
-              </div>
-            </div>
-            <div class="w-hint" id="wHint">Click the marker to pin this view below.</div>
+          <div class="panel-body">
+            <div class="p-photo" id="vPhoto"><div class="ph serif">&ndash;</div></div>
+            <div class="p-floor"><span id="vFloor">First Floor View</span>
+              <button type="button" class="speak" id="speakView" title="Read aloud">&#9835;</button></div>
+            <div class="p-note" id="vNote">Hover a marker to preview. Click to pin it.</div>
           </div>
-          <div class="resize" id="wResize"></div>
+          <div class="presize" data-panel="panelView"></div>
+        </aside>
+
+        <!-- ---------- MAP panel: all navigation lives here ---------- -->
+        <aside class="panel" id="panelMap">
+          <div class="panel-head" id="headMap">
+            <span class="ptitle">Map</span>
+            <button type="button" class="txt" id="btnDock" title="Snap under the rendering panel">Dock</button>
+            <button type="button" class="min" data-panel="panelMap" title="Collapse">&ndash;</button>
+            <button type="button" class="cls" data-panel="panelMap" title="Close">&times;</button>
+          </div>
+          <div class="panel-body">
+            <div class="crop" id="mCrop"><div class="crop-inner" id="mCropInner"></div></div>
+            <div class="cropbar">
+              <button type="button" id="cOut">&minus;</button>
+              <button type="button" id="cFit">Fit</button>
+              <button type="button" id="cCentre">Centre</button>
+              <button type="button" id="cIn">+</button>
+            </div>
+          </div>
+          <div class="presize" data-panel="panelMap"></div>
         </aside>
       </div>
 
-      <div class="hint" id="planHint">Tap a marker to pin it below</div>
+      <div class="hint" id="planHint">Hover a marker to preview &middot; click to pin it &middot; navigate in the Map panel</div>
 
       <section class="gallery">
         <div class="gallery-inner">
@@ -407,7 +404,7 @@
             <div class="ms-map" id="msMap"></div>
           </div>
           <div class="gallery-title serif">Pinned Views</div>
-          <div class="gallery-empty" id="galleryEmpty">Tap any marker above to add it here</div>
+          <div class="gallery-empty" id="galleryEmpty">Click any marker above to add it here</div>
           <div class="gallery-cards" id="galleryCards"></div>
         </div>
       </section>
@@ -415,25 +412,25 @@
   </div>
 
   <div class="present" id="present">
-    <div class="p-top">
-      <span class="p-label serif" id="pLabel">View</span>
+    <div class="pr-top">
+      <span class="pr-label serif" id="prLabel">View</span>
       <button type="button" class="speak" id="speakSlide" title="Read aloud">&#9835;</button>
-      <button type="button" id="pDraw">Draw</button>
-      <button type="button" id="pErase">Eraser</button>
-      <button type="button" id="pClear">Clear</button>
-      <button type="button" id="pDownload">Save</button>
-      <button type="button" id="pFull">Full Screen</button>
-      <button type="button" id="pClose">Close</button>
+      <button type="button" id="prDraw">Draw</button>
+      <button type="button" id="prErase">Eraser</button>
+      <button type="button" id="prClear">Clear</button>
+      <button type="button" id="prSave">Save</button>
+      <button type="button" id="prFull">Full Screen</button>
+      <button type="button" id="prClose">Close</button>
     </div>
-    <div class="p-stage" id="pStage">
-      <button class="p-arrow prev" id="pPrev" type="button">&#8249;</button>
-      <div class="p-holder nodraw" id="pHolder">
-        <img id="pImg" alt="">
-        <canvas id="pCanvas"></canvas>
+    <div class="pr-stage" id="prStage">
+      <button class="pr-arrow prev" id="prPrev" type="button">&#8249;</button>
+      <div class="pr-holder nodraw" id="prHolder">
+        <img id="prImg" alt="">
+        <canvas id="prCanvas"></canvas>
       </div>
-      <button class="p-arrow next" id="pNext" type="button">&#8250;</button>
+      <button class="pr-arrow next" id="prNext" type="button">&#8250;</button>
     </div>
-    <div class="p-count" id="pCount"></div>
+    <div class="pr-count" id="prCount"></div>
   </div>
 
 <script>
@@ -445,8 +442,8 @@ const EXTERIOR_EDITOR_LINK = "";
 
 const INTRO_TEXT =
   "The Burlington Arcade Viewer. Seventeen renderings of the arcade at one hundred fifty Worth Avenue, " +
-  "Palm Beach, each tied to its position on the floor plan. Tap a marker to pin that view below, " +
-  "or tap a quarter of the plan to zoom into it.";
+  "Palm Beach, each tied to its position on the floor plan. Click a marker to pin that view. " +
+  "Every marker you pin keeps its sightline on the plan, so the drawing builds up as you go.";
 
 const VIEW_FLOORS = {
   V1:"First Floor",  V2:"First Floor",  V3:"First Floor",  V4:"First Floor",
@@ -460,7 +457,6 @@ const VIEW_EDITOR_LINKS = {
   V10:"", V11:"", V12:"", V13:"", V14:"", V15:"", V16:"", V17:""
 };
 
-/* Light assets in m/ — see the note at the top of this file for why. */
 const BASE = "m/base.jpg";
 const dotSrc = id => "m/dot-" + id + ".png";
 const triSrc = id => "m/tri-" + id + ".png";
@@ -477,7 +473,7 @@ const IMAGE = {
   V17:"VIEWS-OF-BURLINGTON_0034_VIEW-17-IMAGE.jpg"
 };
 
-/* Marker positions measured from the PNGs on 2026-08-20. */
+/* Marker positions measured from the PNGs. */
 const VIEWS = [
   {n:1,id:"V1",label:"VIEW 1",x:15.7,y:45.7},   {n:2,id:"V2",label:"VIEW 2",x:8.5,y:47.2},
   {n:3,id:"V3",label:"VIEW 3",x:91.5,y:44.1},   {n:4,id:"V4",label:"VIEW 4",x:18.0,y:25.8},
@@ -490,7 +486,7 @@ const VIEWS = [
   {n:17,id:"V17",label:"VIEW 17",x:61.2,y:50.7}
 ];
 
-const QUAD_HINT_MS = 10000;   // how long the "Tap" bubbles stay up
+const QUAD_HINT_MS = 10000;
 
 /* =====================================================================
    HELPERS
@@ -501,21 +497,23 @@ const viewById = id => VIEWS.find(v => v.id === id);
 const isPhone = () => window.matchMedia('(max-width:700px)').matches;
 
 const els = {};
-["splash","app","stage","planWrap","planViewport","planFrame","baseLayer","triLayer",
- "quads","zIn","zOut","zReset","pLeft","pRight","pUp","pDown","flash","planHint",
- "widget","wHead","wTitle","wMin","wClose","wPhoto","wFloor","wCrop","wCropInner",
- "wHint","wResize","cIn","cOut","cReset","speakView","speakIntro","speakSlide",
- "galleryCards","galleryEmpty","interiorEditorLink","exteriorEditorLink","missingNote","msMap",
- "present","pLabel","pDraw","pErase","pClear","pDownload","pFull","pClose","pStage",
- "pPrev","pNext","pHolder","pImg","pCanvas","pCount","btnPresent","btnPdf"]
+["splash","app","stage","planWrap","planViewport","planFrame","baseLayer","quads",
+ "mapctl","zIn","zOut","zReset","flash","planHint","missingNote","msMap",
+ "panelView","headView","vTitle","vPhoto","vFloor","vNote",
+ "panelMap","headMap","mCrop","mCropInner","cIn","cOut","cFit","cCentre","btnDock",
+ "speakIntro","speakView","speakSlide","galleryCards","galleryEmpty",
+ "interiorEditorLink","exteriorEditorLink","btnPanels","btnClearPins","btnPresent","btnPdf",
+ "present","prLabel","prDraw","prErase","prClear","prSave","prFull","prClose","prStage",
+ "prPrev","prNext","prHolder","prImg","prCanvas","prCount"]
  .forEach(k => els[k] = byId(k));
 
 const state = {
   pinned: [], locked: null, hot: null,
-  plan:{z:1,x:0,y:0}, crop:{z:4.5,x:0,y:0,view:null},
-  pres:{i:0, draw:false, erase:false, strokes:{}}
+  plan: {z:1,x:0,y:0},                 /* phone only */
+  crop: {z:1,x:0,y:0,view:null},
+  pres: {i:0, draw:false, erase:false, strokes:{}}
 };
-const marks = new Map();
+const marks = new Map();   /* id -> {mk, tri} */
 const missing = [];
 
 function noteMissing(f){
@@ -524,37 +522,14 @@ function noteMissing(f){
   els.missingNote.textContent = 'Could not load: ' + missing.slice(0,4).join(', ') +
     (missing.length>4 ? ' (+' + (missing.length-4) + ' more)' : '');
 }
-
-/* ---------- speech ---------- */
-let speakingBtn = null;
-function speak(text, btn){
-  if(!('speechSynthesis' in window)){ flash('Audio not supported here'); return; }
-  if(speechSynthesis.speaking){
-    speechSynthesis.cancel();
-    if(speakingBtn) speakingBtn.classList.remove('on');
-    if(speakingBtn === btn){ speakingBtn = null; return; }
-  }
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate = 0.95; u.pitch = 1;
-  u.onend = () => { btn && btn.classList.remove('on'); speakingBtn = null; };
-  btn && btn.classList.add('on');
-  speakingBtn = btn;
-  speechSynthesis.speak(u);
+let flashTimer=null;
+function flash(msg){
+  els.flash.textContent = msg;
+  els.flash.classList.add('show');
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(()=>els.flash.classList.remove('show'), 1500);
 }
-els.speakIntro.addEventListener('click', () => speak(INTRO_TEXT, els.speakIntro));
-els.speakView.addEventListener('click', () => {
-  const v = viewById(state.locked || state.hot);
-  if(v) speak(v.label + '. ' + (VIEW_FLOORS[v.id]||'First Floor') + ' view of the Burlington Arcade.', els.speakView);
-});
-els.speakSlide.addEventListener('click', () => {
-  const id = state.pinned[state.pres.i];
-  if(!id) return;
-  const v = viewById(id);
-  speak(v.label + '. ' + (VIEW_FLOORS[id]||'First Floor') +
-        ' view of the Burlington Arcade at one hundred fifty Worth Avenue, Palm Beach.', els.speakSlide);
-});
 
-/* ---------- image cache ---------- */
 const cache = new Map();
 function getImage(src){
   if(cache.has(src)) return cache.get(src);
@@ -575,10 +550,41 @@ function wireLink(el,url){
 wireLink(els.interiorEditorLink, INTERIOR_EDITOR_LINK);
 wireLink(els.exteriorEditorLink, EXTERIOR_EDITOR_LINK);
 
-els.splash.addEventListener("click", () => {
-  els.splash.classList.add("hidden");
-  els.app.classList.add("visible");
-  if(isPhone()) startQuadHint();   /* quarter-tap is a phone affordance */
+/* ---------- speech ---------- */
+let speakingBtn = null;
+function speak(text, btn){
+  if(!('speechSynthesis' in window)){ flash('Audio not supported'); return; }
+  const same = (speakingBtn === btn);
+  if(speechSynthesis.speaking || speechSynthesis.pending){
+    speechSynthesis.cancel();
+    if(speakingBtn) speakingBtn.classList.remove('on');
+    speakingBtn = null;
+    if(same) return;
+  }
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.95;
+  u.onend = () => { btn.classList.remove('on'); speakingBtn = null; };
+  btn.classList.add('on'); speakingBtn = btn;
+  speechSynthesis.speak(u);
+}
+els.speakIntro.addEventListener('click', function(){ speak(INTRO_TEXT, this); });
+els.speakView.addEventListener('click', function(){
+  const v = viewById(state.locked || state.hot);
+  if(v) speak(v.label + '. ' + (VIEW_FLOORS[v.id]||'First Floor') + ' view of the Burlington Arcade.', this);
+});
+els.speakSlide.addEventListener('click', function(){
+  const id = state.pinned[state.pres.i];
+  if(!id) return;
+  const v = viewById(id);
+  speak(v.label + '. ' + (VIEW_FLOORS[id]||'First Floor') +
+        ' view of the Burlington Arcade at one hundred fifty Worth Avenue, Palm Beach.', this);
+});
+
+els.splash.addEventListener('click', () => {
+  els.splash.classList.add('hidden');
+  els.app.classList.add('visible');
+  if(isPhone()){ startQuadHint(); els.mapctl.classList.add('on'); }
+  else openPanels();
 });
 
 /* =====================================================================
@@ -587,46 +593,62 @@ els.splash.addEventListener("click", () => {
 els.baseLayer.addEventListener('error', () => noteMissing(BASE), {once:true});
 
 VIEWS.forEach(v => {
-  /* the graphic — decoration only, never a click target */
-  const b = document.createElement('div');
-  b.className = 'mk';
-  b.style.left = v.x + '%'; b.style.top = v.y + '%';
+  /* sightline — created once, shown whenever this view is pinned or hovered */
+  const tri = document.createElement('img');
+  tri.className = 'tri'; tri.alt = ''; tri.decoding = 'async';
+  tri.dataset.id = v.id;
+  els.planFrame.appendChild(tri);
+
+  /* marker graphic — decoration only */
+  const mk = document.createElement('div');
+  mk.className = 'mk';
+  mk.style.left = v.x + '%'; mk.style.top = v.y + '%';
   const im = document.createElement('img');
   im.src = dotSrc(v.id); im.alt = ''; im.decoding = 'async';
   im.addEventListener('error', () => noteMissing(dotSrc(v.id)), {once:true});
-  b.appendChild(im);
-  els.planFrame.appendChild(b);
-  marks.set(v.id, b);
+  mk.appendChild(im);
+  els.planFrame.appendChild(mk);
 
-  /* the target — sized to the dot itself, not to the tile around it */
+  /* target — sized to the dot */
   const hit = document.createElement('button');
   hit.className = 'hit'; hit.type = 'button';
   hit.style.left = v.x + '%'; hit.style.top = v.y + '%';
   hit.setAttribute('aria-label', v.label);
   els.planFrame.appendChild(hit);
 
+  marks.set(v.id, {mk, tri, loaded:false});
+
   if(!isPhone()){
-    hit.addEventListener('mouseenter', () => { state.hot = v.id; b.classList.add('is-hot'); showTri(v.id); showWidget(v); });
+    hit.addEventListener('mouseenter', () => {
+      state.hot = v.id;
+      mk.classList.add('is-hot');
+      showTri(v.id);
+      showView(v);
+      focusMap(v);
+    });
     hit.addEventListener('mouseleave', () => {
-      b.classList.remove('is-hot'); state.hot = null;
-      if(state.locked){ showTri(state.locked); showWidget(viewById(state.locked)); }
-      else { hideTri(); hideWidget(); }
+      mk.classList.remove('is-hot');
+      state.hot = null;
+      if(!state.pinned.includes(v.id)) hideTri(v.id);   /* pinned ones stay */
+      if(state.locked){ const lv = viewById(state.locked); showView(lv); focusMap(lv); }
     });
   }
   hit.addEventListener('click', e => { e.stopPropagation(); togglePin(v); });
 });
 
-/* only ever ONE sightline in memory */
+/* a pinned sightline stays on the plan; the file is fetched once, on first need */
 function showTri(id){
-  const src = triSrc(id);
-  if(els.triLayer.dataset.id !== id){
-    els.triLayer.dataset.id = id;
-    els.triLayer.src = src;
+  const m = marks.get(id);
+  if(!m.loaded){
+    m.loaded = true;
+    m.tri.addEventListener('error', () => noteMissing(triSrc(id)), {once:true});
+    m.tri.src = triSrc(id);
   }
-  els.triLayer.classList.add('show');
+  m.tri.classList.add('show');
 }
-function hideTri(){ els.triLayer.classList.remove('show'); }
+function hideTri(id){ marks.get(id).tri.classList.remove('show'); }
 
+/* ---------- phone-only pan / zoom ---------- */
 function applyPlan(){
   const p = state.plan, vp = els.planViewport;
   const w = vp.clientWidth, h = vp.clientHeight;
@@ -634,41 +656,17 @@ function applyPlan(){
   p.y = clamp(p.y, h - h*p.z, 0);
   els.planFrame.style.transform = 'translate(' + p.x + 'px,' + p.y + 'px) scale(' + p.z + ')';
 }
-function zoomAt(f, cx, cy){
+function zoomPlanAt(f, cx, cy){
   const p = state.plan;
   const z2 = clamp(p.z*f, 1, 8), r = z2/p.z;
-  p.x = cx - (cx - p.x)*r;
-  p.y = cy - (cy - p.y)*r;
-  p.z = z2;
+  p.x = cx - (cx-p.x)*r; p.y = cy - (cy-p.y)*r; p.z = z2;
   applyPlan();
 }
 const vpBox = () => els.planViewport.getBoundingClientRect();
-els.zIn.addEventListener('click', () => { const b=vpBox(); zoomAt(1.45,b.width/2,b.height/2); });
-els.zOut.addEventListener('click', () => { const b=vpBox(); zoomAt(1/1.45,b.width/2,b.height/2); });
+els.zIn.addEventListener('click',  () => { const b=vpBox(); zoomPlanAt(1.45,b.width/2,b.height/2); });
+els.zOut.addEventListener('click', () => { const b=vpBox(); zoomPlanAt(1/1.45,b.width/2,b.height/2); });
 els.zReset.addEventListener('click', () => { state.plan={z:1,x:0,y:0}; applyPlan(); });
 
-function nudge(dx,dy){
-  const b = vpBox();
-  state.plan.x += dx * b.width * 0.28;
-  state.plan.y += dy * b.height * 0.28;
-  applyPlan();
-}
-els.pLeft.addEventListener('click',  () => nudge( 1, 0));
-els.pRight.addEventListener('click', () => nudge(-1, 0));
-els.pUp.addEventListener('click',    () => nudge( 0, 1));
-els.pDown.addEventListener('click',  () => nudge( 0,-1));
-
-/* The wheel scrolls the PAGE, as it should. Only a deliberate pinch
-   (trackpad pinch and ctrl+wheel both arrive with ctrlKey set) zooms the
-   plan, so the map never traps the scroll. Use the +/- buttons otherwise. */
-els.planViewport.addEventListener("wheel", e => {
-  if(!e.ctrlKey) return;
-  e.preventDefault();
-  const b = vpBox();
-  zoomAt(e.deltaY < 0 ? 1.13 : 1/1.13, e.clientX-b.left, e.clientY-b.top);
-}, {passive:false});
-
-/* ---------- quarter tap ---------- */
 let quadTimer = null;
 function startQuadHint(){
   els.quads.classList.add('on');
@@ -678,26 +676,24 @@ function startQuadHint(){
 els.quads.addEventListener('click', e => {
   const btn = e.target.closest('.quad');
   if(!btn) return;
-  const q = btn.dataset.q;
-  const b = vpBox();
+  const b = vpBox(), q = btn.dataset.q;
   state.plan.z = 2;
-  // put the chosen quarter in the middle of the frame
-  state.plan.x = (q === 'tl' || q === 'bl') ? 0 : -b.width;
-  state.plan.y = (q === 'tl' || q === 'tr') ? 0 : -b.height;
+  state.plan.x = (q==='tl'||q==='bl') ? 0 : -b.width;
+  state.plan.y = (q==='tl'||q==='tr') ? 0 : -b.height;
   applyPlan();
   els.quads.classList.remove('on');
-  flash('Drag or use the arrows');
+  flash('Drag to move around');
 });
 
-/* ---------- pan / pinch, shared by plan and crop ---------- */
+/* shared pan/pinch — used by the phone plan and by the map panel */
 function makePannable(surface, model, apply, rect, zmax, ignore){
   const pts = new Map(); let start = null;
   surface.addEventListener('pointerdown', e => {
     if(ignore && e.target.closest(ignore)) return;
     surface.setPointerCapture(e.pointerId);
     pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
-    if(pts.size === 1){ start={x:e.clientX,y:e.clientY,mx:model.x,my:model.y}; surface.classList.add('grabbing'); }
-    else if(pts.size === 2){
+    if(pts.size===1){ start={x:e.clientX,y:e.clientY,mx:model.x,my:model.y}; surface.classList.add('grabbing'); }
+    else if(pts.size===2){
       const [a,b]=[...pts.values()];
       start={dist:Math.hypot(a.x-b.x,a.y-b.y), z:model.z, cx:(a.x+b.x)/2, cy:(a.y+b.y)/2, mx:model.x, my:model.y};
     }
@@ -705,13 +701,13 @@ function makePannable(surface, model, apply, rect, zmax, ignore){
   surface.addEventListener('pointermove', e => {
     if(!pts.has(e.pointerId) || !start) return;
     pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
-    if(pts.size === 1){
+    if(pts.size===1){
       model.x = start.mx + (e.clientX-start.x);
       model.y = start.my + (e.clientY-start.y);
       apply();
-    } else if(pts.size === 2 && start.dist){
+    } else if(pts.size===2 && start.dist){
       const [a,b]=[...pts.values()], r0 = rect();
-      const z2 = clamp(start.z * (Math.hypot(a.x-b.x,a.y-b.y)/start.dist), 1, zmax);
+      const z2 = clamp(start.z*(Math.hypot(a.x-b.x,a.y-b.y)/start.dist), 1, zmax);
       const cx = start.cx-r0.left, cy = start.cy-r0.top, r = z2/start.z;
       model.x = cx-(cx-start.mx)*r; model.y = cy-(cy-start.my)*r; model.z = z2;
       apply();
@@ -721,139 +717,203 @@ function makePannable(surface, model, apply, rect, zmax, ignore){
   surface.addEventListener('pointerup', end);
   surface.addEventListener('pointercancel', end);
 }
-makePannable(els.planViewport, state.plan, applyPlan, vpBox, 8, ".hit,.quad");
-window.addEventListener('resize', () => { applyPlan(); if(state.crop.view) applyCrop(); });
+if(isPhone()) makePannable(els.planViewport, state.plan, applyPlan, vpBox, 8, '.hit,.quad');
 
 /* =====================================================================
-   WIDGET (desktop only)
+   PANELS
    ===================================================================== */
-document.querySelectorAll('.sect-head').forEach(h =>
-  h.addEventListener('click', () => byId(h.dataset.toggle).classList.toggle('closed')));
-els.wMin.addEventListener('click', e => { e.stopPropagation(); els.widget.classList.toggle('min'); });
-els.wClose.addEventListener('click', e => { e.stopPropagation(); state.locked=null; hideTri(); hideWidget(); });
-
-let wSeq = 0;
-function showWidget(v){
-  if(isPhone() || !v) return;
-  const seq = ++wSeq;
-  els.widget.classList.add('visible');
-  els.wTitle.textContent = v.label;
-  els.wFloor.textContent = (VIEW_FLOORS[v.id]||'First Floor') + ' View';
-  els.wHint.textContent = state.pinned.includes(v.id)
-    ? 'Pinned below. Click again to unpin.' : 'Click the marker to pin this view below.';
-  els.wPhoto.innerHTML = '<div class="ph serif">' + v.n + '</div>';
-  getImage(IMAGE[v.id]).then(src => {
-    if(seq !== wSeq || !src) return;
-    const im = new Image(); im.src = src; im.alt = v.label; im.decoding='async';
-    els.wPhoto.innerHTML=''; els.wPhoto.appendChild(im);
-  });
-  buildCrop(v);
+function openPanels(){
+  if(isPhone()) return;
+  const wrap = els.planWrap.getBoundingClientRect();
+  const w = Math.min(340, Math.max(220, wrap.width * 0.26));
+  [els.panelView, els.panelMap].forEach(p => { p.classList.add('open'); p.style.width = w + 'px'; });
+  dockPanels();
 }
-function hideWidget(){ els.widget.classList.remove('visible'); }
+function dockPanels(){
+  const wrap = els.planWrap.getBoundingClientRect();
+  const w = els.panelView.getBoundingClientRect().width || 300;
+  const left = wrap.width - w - 18;
+  els.panelView.style.left = left + 'px';
+  els.panelView.style.top  = '20px';
+  const vh = els.panelView.getBoundingClientRect().height || 260;
+  els.panelMap.style.left = left + 'px';
+  els.panelMap.style.top  = (20 + vh + 12) + 'px';
+  els.panelMap.style.width = w + 'px';
+}
+els.btnDock.addEventListener('click', e => { e.stopPropagation(); dockPanels(); flash('Map panel docked'); });
+els.btnPanels.addEventListener('click', () => {
+  if(isPhone()){ flash('Panels are desktop only'); return; }
+  const anyOpen = els.panelView.classList.contains('open') || els.panelMap.classList.contains('open');
+  if(anyOpen){ els.panelView.classList.remove('open'); els.panelMap.classList.remove('open'); }
+  else openPanels();
+});
+document.querySelectorAll('.panel-head .min').forEach(b =>
+  b.addEventListener('click', e => { e.stopPropagation(); byId(b.dataset.panel).classList.toggle('min'); }));
+document.querySelectorAll('.panel-head .cls').forEach(b =>
+  b.addEventListener('click', e => { e.stopPropagation(); byId(b.dataset.panel).classList.remove('open'); }));
 
-function buildCrop(v){
-  if(state.crop.view !== v.id){
-    state.crop.view = v.id; state.crop.z = 4.5;
-    els.wCropInner.innerHTML = '';
-    const b = new Image(); b.className='cbase'; b.src = BASE; b.alt='';
-    const t = new Image(); t.className='ctri';  t.src = triSrc(v.id); t.alt='';
-    const d = new Image(); d.className='cdot';  d.src = dotSrc(v.id); d.alt='';
+/* drag any panel by its header — they move independently */
+function makeDraggable(head, panel){
+  let s = null;
+  head.addEventListener('pointerdown', e => {
+    if(e.target.tagName === 'BUTTON') return;
+    head.setPointerCapture(e.pointerId);
+    const p = panel.getBoundingClientRect(), w = els.planWrap.getBoundingClientRect();
+    s = {x:e.clientX, y:e.clientY, l:p.left-w.left, t:p.top-w.top};
+    head.classList.add('grabbing');
+    panel.style.zIndex = 45;
+  });
+  head.addEventListener('pointermove', e => {
+    if(!s) return;
+    const w = els.planWrap.getBoundingClientRect(), p = panel.getBoundingClientRect();
+    panel.style.left = clamp(s.l + e.clientX - s.x, 0, Math.max(0, w.width  - p.width))  + 'px';
+    panel.style.top  = clamp(s.t + e.clientY - s.y, 0, Math.max(0, w.height - p.height)) + 'px';
+  });
+  const stop = () => { s = null; head.classList.remove('grabbing'); panel.style.zIndex = 40; };
+  head.addEventListener('pointerup', stop);
+  head.addEventListener('pointercancel', stop);
+}
+makeDraggable(els.headView, els.panelView);
+makeDraggable(els.headMap,  els.panelMap);
+
+document.querySelectorAll('.presize').forEach(grip => {
+  const panel = byId(grip.dataset.panel);
+  let s = null;
+  grip.addEventListener('pointerdown', e => {
+    e.stopPropagation(); grip.setPointerCapture(e.pointerId);
+    const p = panel.getBoundingClientRect();
+    s = {x:e.clientX, y:e.clientY, w:p.width, h:p.height};
+  });
+  grip.addEventListener('pointermove', e => {
+    if(!s) return;
+    panel.style.width  = clamp(s.w + e.clientX - s.x, 190, 900) + 'px';
+    panel.style.height = clamp(s.h + e.clientY - s.y, 150, 1100) + 'px';
+    if(panel === els.panelMap) applyCrop();
+  });
+  const stop = () => { s = null; };
+  grip.addEventListener('pointerup', stop);
+  grip.addEventListener('pointercancel', stop);
+});
+
+/* ---------- rendering panel ---------- */
+let vSeq = 0;
+function showView(v){
+  if(isPhone() || !v) return;
+  const seq = ++vSeq;
+  els.panelView.classList.add('open');
+  els.vTitle.textContent = v.label;
+  els.vFloor.textContent = (VIEW_FLOORS[v.id]||'First Floor') + ' View';
+  els.vNote.textContent = state.pinned.includes(v.id)
+    ? 'Pinned below. Click the marker again to remove it.'
+    : 'Click the marker to pin this view.';
+  els.vPhoto.innerHTML = '<div class="ph serif">' + v.n + '</div>';
+  getImage(IMAGE[v.id]).then(src => {
+    if(seq !== vSeq || !src) return;
+    const im = new Image(); im.src = src; im.alt = v.label; im.decoding='async';
+    els.vPhoto.innerHTML=''; els.vPhoto.appendChild(im);
+  });
+}
+
+/* ---------- map panel: the whole plan, zoomable, follows the current view ---------- */
+function buildCrop(){
+  if(els.mCropInner.childElementCount) return;
+  const b = new Image(); b.className='cbase'; b.src = BASE; b.alt='';
+  els.mCropInner.appendChild(b);
+}
+buildCrop();
+
+function syncCropMarkers(){
+  buildCrop();
+  els.mCropInner.querySelectorAll('.ctri,.cdot').forEach(n => n.remove());
+  const ids = state.pinned.slice();
+  const extra = state.hot && !ids.includes(state.hot) ? state.hot : null;
+  if(extra) ids.push(extra);
+  ids.forEach(id => {
+    const v = viewById(id);
+    const t = new Image(); t.className='ctri'; t.src = triSrc(id); t.alt='';
+    const d = new Image(); d.className='cdot'; d.src = dotSrc(id); d.alt='';
     d.style.left = v.x + '%'; d.style.top = v.y + '%';
-    els.wCropInner.append(b,t,d);
-    centreCrop(v);
-  }
+    els.mCropInner.append(t,d);
+  });
+}
+function focusMap(v){
+  if(isPhone() || !v) return;
+  els.panelMap.classList.add('open');
+  syncCropMarkers();
+  if(state.crop.z > 1.05) centreCrop(v);
   applyCrop();
 }
+function cropBox(){ return els.mCrop.getBoundingClientRect(); }
 function centreCrop(v){
-  const box = els.wCrop, w = box.clientWidth||240, h = box.clientHeight||240, z = state.crop.z;
-  const iw = w*z, ih = iw*(3161/4500);
-  state.crop.x = w/2 - (v.x/100)*iw;
-  state.crop.y = h/2 - (v.y/100)*ih;
+  const b = cropBox(), z = state.crop.z;
+  state.crop.x = b.width/2  - (v.x/100) * b.width  * z;
+  state.crop.y = b.height/2 - (v.y/100) * b.height * z;
 }
 function applyCrop(){
-  const c = state.crop;
-  els.wCropInner.style.transform = 'translate(' + c.x + 'px,' + c.y + 'px) scale(' + c.z + ')';
+  const c = state.crop, b = cropBox();
+  if(b.width){
+    c.x = clamp(c.x, b.width  - b.width *c.z, 0);
+    c.y = clamp(c.y, b.height - b.height*c.z, 0);
+  }
+  els.mCropInner.style.transform = 'translate(' + c.x + 'px,' + c.y + 'px) scale(' + c.z + ')';
 }
 function zoomCrop(f){
-  const box = els.wCrop, w = box.clientWidth, h = box.clientHeight, c = state.crop;
-  const z2 = clamp(c.z*f, 1, 16), r = z2/c.z;
-  c.x = w/2-(w/2-c.x)*r; c.y = h/2-(h/2-c.y)*r; c.z = z2;
+  const b = cropBox(), c = state.crop;
+  const z2 = clamp(c.z*f, 1, 14), r = z2/c.z;
+  c.x = b.width/2 - (b.width/2 - c.x)*r;
+  c.y = b.height/2 - (b.height/2 - c.y)*r;
+  c.z = z2;
   applyCrop();
 }
 els.cIn.addEventListener('click',  e => { e.stopPropagation(); zoomCrop(1.4); });
 els.cOut.addEventListener('click', e => { e.stopPropagation(); zoomCrop(1/1.4); });
-els.cReset.addEventListener('click', e => {
+els.cFit.addEventListener('click', e => { e.stopPropagation(); state.crop={...state.crop,z:1,x:0,y:0}; applyCrop(); });
+els.cCentre.addEventListener('click', e => {
   e.stopPropagation();
-  const v = viewById(state.crop.view);
-  if(v){ state.crop.z = 4.5; centreCrop(v); applyCrop(); }
+  const v = viewById(state.locked || state.hot || (state.pinned[0]||'V1'));
+  if(v){ if(state.crop.z < 2) state.crop.z = 3; centreCrop(v); applyCrop(); }
 });
-makePannable(els.wCrop, state.crop, applyCrop, () => els.wCrop.getBoundingClientRect(), 16, null);
+els.mCrop.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoomCrop(e.deltaY < 0 ? 1.15 : 1/1.15);
+}, {passive:false});
+makePannable(els.mCrop, state.crop, applyCrop, cropBox, 14, null);
 
-(function(){          /* drag the widget */
-  let s=null;
-  els.wHead.addEventListener('pointerdown', e => {
-    if(e.target.tagName === 'BUTTON') return;
-    els.wHead.setPointerCapture(e.pointerId);
-    const w = els.widget.getBoundingClientRect(), p = els.planWrap.getBoundingClientRect();
-    s = {x:e.clientX, y:e.clientY, l:w.left-p.left, t:w.top-p.top};
-    els.widget.style.right='auto'; els.widget.style.left = s.l+'px'; els.widget.style.top = s.t+'px';
-    els.wHead.classList.add('grabbing');
-  });
-  els.wHead.addEventListener('pointermove', e => {
-    if(!s) return;
-    const p = els.planWrap.getBoundingClientRect(), w = els.widget.getBoundingClientRect();
-    els.widget.style.left = clamp(s.l+e.clientX-s.x, 0, p.width-w.width)+'px';
-    els.widget.style.top  = clamp(s.t+e.clientY-s.y, 0, p.height-w.height)+'px';
-  });
-  const stop=()=>{ s=null; els.wHead.classList.remove('grabbing'); };
-  els.wHead.addEventListener('pointerup', stop);
-  els.wHead.addEventListener('pointercancel', stop);
-})();
-
-(function(){          /* resize the widget */
-  let s=null;
-  els.wResize.addEventListener('pointerdown', e => {
-    e.stopPropagation(); els.wResize.setPointerCapture(e.pointerId);
-    const w = els.widget.getBoundingClientRect();
-    s = {x:e.clientX,y:e.clientY,w:w.width,h:w.height};
-  });
-  els.wResize.addEventListener('pointermove', e => {
-    if(!s) return;
-    els.widget.style.width  = clamp(s.w+e.clientX-s.x, 170, 900)+'px';
-    els.widget.style.height = clamp(s.h+e.clientY-s.y, 150, 1200)+'px';
-    if(state.crop.view) applyCrop();
-  });
-  const stop=()=>{ s=null; };
-  els.wResize.addEventListener('pointerup', stop);
-  els.wResize.addEventListener('pointercancel', stop);
-})();
+window.addEventListener('resize', () => { if(isPhone()) applyPlan(); applyCrop(); });
 
 /* =====================================================================
    PIN
    ===================================================================== */
-let flashTimer=null;
-function flash(msg){
-  els.flash.textContent = msg;
-  els.flash.classList.add('show');
-  clearTimeout(flashTimer);
-  flashTimer = setTimeout(()=>els.flash.classList.remove('show'), 1500);
-}
-
 function togglePin(v){
-  const b = marks.get(v.id);
+  const m = marks.get(v.id);
   const i = state.pinned.indexOf(v.id);
   if(i > -1){
-    state.pinned.splice(i,1); b.classList.remove('is-pinned');
-    if(state.locked === v.id){ state.locked = null; hideTri(); }
-    flash('View removed');
+    state.pinned.splice(i,1);
+    m.mk.classList.remove('is-pinned');
+    if(state.hot !== v.id) hideTri(v.id);
+    if(state.locked === v.id) state.locked = state.pinned[state.pinned.length-1] || null;
+    flash('Removed');
   } else {
-    state.pinned.push(v.id); b.classList.add('is-pinned');
-    state.locked = v.id; showTri(v.id);
-    flash('Image added below');
+    state.pinned.push(v.id);
+    m.mk.classList.add('is-pinned');
+    showTri(v.id);                 /* stays on the plan from now on */
+    state.locked = v.id;
+    flash('Pinned below');
   }
-  if(!isPhone()){ if(state.locked) showWidget(v); else hideWidget(); }
-  renderGallery();       /* never scrolls the page */
+  if(!isPhone()){ showView(v); focusMap(v); }
+  syncCropMarkers();
+  renderGallery();                 /* never scrolls the page */
 }
+els.btnClearPins.addEventListener('click', () => {
+  state.pinned.slice().forEach(id => {
+    marks.get(id).mk.classList.remove('is-pinned');
+    if(state.hot !== id) hideTri(id);
+  });
+  state.pinned = []; state.locked = null;
+  syncCropMarkers(); renderGallery();
+  flash('All pins cleared');
+});
+
 function move(id,d){
   const i = state.pinned.indexOf(id), j = i+d;
   if(i<0 || j<0 || j>=state.pinned.length) return;
@@ -886,7 +946,7 @@ function renderGallery(){
     card.appendChild(logo);
 
     const wrap = document.createElement('div');
-    wrap.className = 'gcard-image';
+    wrap.className='gcard-image';
     wrap.innerHTML = '<div class="ph serif">' + v.n + '</div>';
     wrap.addEventListener('click', () => openPresent(idx));
     getImage(IMAGE[id]).then(src => {
@@ -907,16 +967,16 @@ function renderGallery(){
 
     const tools = document.createElement('div');
     tools.className='gcard-tools';
-    const mk=(t,c,fn)=>{ const b=document.createElement('button'); b.type='button'; b.textContent=t;
+    const mkBtn=(t,c,fn)=>{ const b=document.createElement('button'); b.type='button'; b.textContent=t;
       if(c) b.className=c; b.addEventListener('click',fn); return b; };
     tools.append(
-      mk('↑','ord',()=>move(id,-1)),
-      mk('↓','ord',()=>move(id,1)),
-      mk('Open',null,()=>openPresent(idx))
+      mkBtn('↑','ord',()=>move(id,-1)),
+      mkBtn('↓','ord',()=>move(id,1)),
+      mkBtn('Open',null,()=>openPresent(idx))
     );
-    if(VIEW_EDITOR_LINKS[id]) tools.append(mk('Editor',null,()=>window.open(VIEW_EDITOR_LINKS[id],'_blank','noopener')));
+    if(VIEW_EDITOR_LINKS[id]) tools.append(mkBtn('Editor',null,()=>window.open(VIEW_EDITOR_LINKS[id],'_blank','noopener')));
     const sp=document.createElement('span'); sp.className='spacer';
-    tools.append(sp, mk('Unpin',null,()=>togglePin(v)));
+    tools.append(sp, mkBtn('Unpin',null,()=>togglePin(v)));
     card.appendChild(tools);
 
     const pf = document.createElement('div');
@@ -946,7 +1006,7 @@ function buildMapSheet(){
 }
 
 /* =====================================================================
-   LIGHTBOX / PRESENTATION — click or swipe through every pin
+   PRESENTATION
    ===================================================================== */
 function openPresent(i){
   if(!state.pinned.length){ flash('Pin some views first'); return; }
@@ -961,26 +1021,27 @@ function closePresent(){
 }
 function showSlide(){
   const id = state.pinned[state.pres.i];
+  if(!id){ closePresent(); return; }
   const v = viewById(id);
-  els.pLabel.textContent = v.label + ' · ' + (VIEW_FLOORS[id]||'First Floor');
-  els.pCount.textContent = (state.pres.i+1) + ' / ' + state.pinned.length;
-  els.pImg.src = IMAGE[id]; els.pImg.alt = v.label;
+  els.prLabel.textContent = v.label + ' · ' + (VIEW_FLOORS[id]||'First Floor');
+  els.prCount.textContent = (state.pres.i+1) + ' / ' + state.pinned.length;
+  els.prImg.src = IMAGE[id]; els.prImg.alt = v.label;
   const ready = () => { sizeCanvas(); restoreStrokes(); };
-  els.pImg.onload = ready;
-  if(els.pImg.complete) ready();
+  els.prImg.onload = ready;
+  if(els.prImg.complete) ready();
 }
 function step(d){
   const n = state.pinned.length;
   if(!n) return;
-  saveStrokes();                       /* save THIS slide before moving on */
+  saveStrokes();
   state.pres.i = (state.pres.i + d + n) % n;
   showSlide();
 }
-els.pPrev.addEventListener('click', ()=>step(-1));
-els.pNext.addEventListener('click', ()=>step(1));
-els.pClose.addEventListener('click', closePresent);
+els.prPrev.addEventListener('click', ()=>step(-1));
+els.prNext.addEventListener('click', ()=>step(1));
+els.prClose.addEventListener('click', closePresent);
 els.btnPresent.addEventListener('click', ()=>openPresent(0));
-els.pFull.addEventListener('click', () => {
+els.prFull.addEventListener('click', () => {
   if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
   else els.present.requestFullscreen().catch(()=>flash('Full screen was blocked'));
 });
@@ -990,32 +1051,27 @@ document.addEventListener('keydown', e => {
   else if(e.key==='ArrowLeft') step(-1);
   else if(e.key==='Escape') closePresent();
 });
-
-/* swipe left/right on the slide (ignored while drawing) */
 (function(){
   let sx=null, sy=null;
-  els.pStage.addEventListener('touchstart', e => {
-    if(state.pres.draw || state.pres.erase) return;
-    if(e.touches.length !== 1) return;
+  els.prStage.addEventListener('touchstart', e => {
+    if(state.pres.draw || state.pres.erase || e.touches.length!==1) return;
     sx = e.touches[0].clientX; sy = e.touches[0].clientY;
   }, {passive:true});
-  els.pStage.addEventListener('touchend', e => {
-    if(sx === null) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - sx, dy = t.clientY - sy;
-    if(Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)*1.4) step(dx < 0 ? 1 : -1);
+  els.prStage.addEventListener('touchend', e => {
+    if(sx===null) return;
+    const t = e.changedTouches[0], dx = t.clientX-sx, dy = t.clientY-sy;
+    if(Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)*1.4) step(dx<0 ? 1 : -1);
     sx = sy = null;
   }, {passive:true});
 })();
 
-/* ---------- drawing ---------- */
-const ctx = els.pCanvas.getContext('2d');
+const ctx = els.prCanvas.getContext('2d');
 function sizeCanvas(){
-  const r = els.pImg.getBoundingClientRect();
+  const r = els.prImg.getBoundingClientRect();
   if(!r.width) return;
   const dpr = window.devicePixelRatio || 1;
-  els.pCanvas.width = Math.round(r.width*dpr);
-  els.pCanvas.height = Math.round(r.height*dpr);
+  els.prCanvas.width = Math.round(r.width*dpr);
+  els.prCanvas.height = Math.round(r.height*dpr);
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.lineCap='round'; ctx.lineJoin='round';
 }
@@ -1024,40 +1080,40 @@ window.addEventListener('resize', () => {
 });
 function saveStrokes(){
   const id = state.pinned[state.pres.i];
-  if(!id || !els.pCanvas.width) return;
-  try { state.pres.strokes[id] = els.pCanvas.toDataURL('image/png'); } catch(e){}
+  if(!id || !els.prCanvas.width) return;
+  try { state.pres.strokes[id] = els.prCanvas.toDataURL('image/png'); } catch(e){}
 }
 function restoreStrokes(){
   const id = state.pinned[state.pres.i];
-  ctx.clearRect(0,0,els.pCanvas.width,els.pCanvas.height);
+  ctx.clearRect(0,0,els.prCanvas.width,els.prCanvas.height);
   const d = state.pres.strokes[id];
   if(!d) return;
   const im = new Image();
-  im.onload = () => { const r = els.pImg.getBoundingClientRect(); ctx.drawImage(im,0,0,r.width,r.height); };
+  im.onload = () => { const r = els.prImg.getBoundingClientRect(); ctx.drawImage(im,0,0,r.width,r.height); };
   im.src = d;
 }
 function setMode(draw, erase){
   state.pres.draw = draw; state.pres.erase = erase;
-  els.pDraw.classList.toggle('on', draw && !erase);
-  els.pErase.classList.toggle('on', erase);
-  els.pHolder.classList.toggle('nodraw', !draw && !erase);
+  els.prDraw.classList.toggle('on', draw && !erase);
+  els.prErase.classList.toggle('on', erase);
+  els.prHolder.classList.toggle('nodraw', !draw && !erase);
 }
-els.pDraw.addEventListener('click', () => setMode(!(state.pres.draw && !state.pres.erase), false));
-els.pErase.addEventListener('click', () => setMode(true, !state.pres.erase));
-els.pClear.addEventListener('click', () => {
-  ctx.clearRect(0,0,els.pCanvas.width,els.pCanvas.height);
+els.prDraw.addEventListener('click', () => setMode(!(state.pres.draw && !state.pres.erase), false));
+els.prErase.addEventListener('click', () => setMode(true, !state.pres.erase));
+els.prClear.addEventListener('click', () => {
+  ctx.clearRect(0,0,els.prCanvas.width,els.prCanvas.height);
   delete state.pres.strokes[state.pinned[state.pres.i]];
 });
 (function(){
   let drawing=false;
-  const pos = e => { const r = els.pCanvas.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; };
-  els.pCanvas.addEventListener('pointerdown', e => {
+  const pos = e => { const r = els.prCanvas.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; };
+  els.prCanvas.addEventListener('pointerdown', e => {
     if(!state.pres.draw && !state.pres.erase) return;
-    els.pCanvas.setPointerCapture(e.pointerId);
+    els.prCanvas.setPointerCapture(e.pointerId);
     drawing = true;
     const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y);
   });
-  els.pCanvas.addEventListener('pointermove', e => {
+  els.prCanvas.addEventListener('pointermove', e => {
     if(!drawing) return;
     const p = pos(e);
     if(state.pres.erase){ ctx.globalCompositeOperation='destination-out'; ctx.lineWidth=26; }
@@ -1065,28 +1121,25 @@ els.pClear.addEventListener('click', () => {
     ctx.lineTo(p.x,p.y); ctx.stroke();
   });
   const end = () => { if(!drawing) return; drawing=false; ctx.globalCompositeOperation='source-over'; saveStrokes(); };
-  els.pCanvas.addEventListener('pointerup', end);
-  els.pCanvas.addEventListener('pointercancel', end);
+  els.prCanvas.addEventListener('pointerup', end);
+  els.prCanvas.addEventListener('pointercancel', end);
 })();
 
-/* ---------- save ---------- */
-els.pDownload.addEventListener('click', () => {
-  const id = state.pinned[state.pres.i], v = viewById(id), img = els.pImg;
+els.prSave.addEventListener('click', () => {
+  const id = state.pinned[state.pres.i], v = viewById(id), img = els.prImg;
   if(!img.naturalWidth){ flash('Image still loading'); return; }
   const out = document.createElement('canvas');
   out.width = img.naturalWidth; out.height = img.naturalHeight;
   const o = out.getContext('2d');
   o.drawImage(img,0,0,out.width,out.height);
-  if(els.pCanvas.width) o.drawImage(els.pCanvas,0,0,out.width,out.height);
+  if(els.prCanvas.width) o.drawImage(els.prCanvas,0,0,out.width,out.height);
   try{
     const a = document.createElement('a');
     a.href = out.toDataURL('image/jpeg',0.92);
     a.download = 'Burlington-' + v.label.replace(/\s+/g,'-') + '.jpg';
     document.body.appendChild(a); a.click(); a.remove();
     flash('Saved');
-  } catch(e){
-    flash('Open the site online to save');
-  }
+  } catch(e){ flash('Open the site online to save'); }
 });
 
 els.btnPdf.addEventListener('click', () => {
@@ -1094,10 +1147,9 @@ els.btnPdf.addEventListener('click', () => {
   window.print();
 });
 
-/* phones get a plainer instruction line */
-if(isPhone()) els.planHint.textContent = 'Tap a quarter to zoom · tap a marker to pin it below';
-
+if(isPhone()) els.planHint.textContent = 'Tap a quarter to zoom, or pinch · tap a marker to pin it below';
 applyPlan();
+applyCrop();
 </script>
 </body>
 </html>
