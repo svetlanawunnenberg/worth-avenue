@@ -108,8 +108,12 @@
 
   /* a marker is now a small tile, not a full-canvas layer */
   .mk{ position:absolute; width:var(--tile); aspect-ratio:1; transform:translate(-50%,-50%);
-       z-index:3; padding:0; border:none; background:transparent; }
-  .mk img{ width:100%; height:100%; display:block; opacity:.45; transition:opacity .14s ease; pointer-events:none; }
+       z-index:3; pointer-events:none; }
+  .mk img{ width:100%; height:100%; display:block; opacity:.45; transition:opacity .14s ease; }
+  /* the clickable target is the DOT, not the whole tile — the tile is 2.5x wider
+     than the graphic, which is why markers used to light up without being touched */
+  .hit{ position:absolute; width:3%; aspect-ratio:1; transform:translate(-50%,-50%);
+    z-index:6; padding:0; border:none; background:transparent; cursor:pointer; }
   .mk.is-hot img, .mk.is-pinned img{ opacity:1; }
   .tri{ position:absolute; inset:0; width:100%; height:100%; opacity:0;
         transition:opacity .18s ease; z-index:1; pointer-events:none; }
@@ -190,30 +194,30 @@
     background:linear-gradient(135deg,transparent 0 48%,var(--line) 48% 56%,transparent 56% 72%,var(--line) 72% 80%,transparent 80%); }
 
   /* ---------- pinned ---------- */
-  section.gallery{ border-top:1px solid var(--line); background:var(--white); padding:22px 14px 56px; }
-  .gallery-inner{ max-width:1000px; margin:0 auto; }
-  .gallery-title{ text-align:center; font-family:'EB Garamond',serif; font-size:17px; margin-bottom:4px; }
+  section.gallery{ border-top:1px solid var(--line); background:var(--white); padding:16px 0 28px; }
+  .gallery-inner{ max-width:none; margin:0; }
+  .gallery-title{ text-align:center; font-family:"EB Garamond",serif; font-size:17px; margin-bottom:4px; }
   .gallery-empty{ text-align:center; color:var(--ink-soft); opacity:.6; font-size:11px;
     letter-spacing:.07em; text-transform:uppercase; padding:8px 0; }
-  .gallery-cards{ display:flex; flex-direction:column; gap:34px; margin-top:18px; }
+  .gallery-cards{ display:flex; flex-direction:column; gap:14px; margin-top:12px; }
   .gcard{ animation:cardIn .3s ease both; }
   @keyframes cardIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
-  .card-logo{ display:block; width:110px; max-width:34%; height:auto; margin:0 auto 12px; }
-  .gcard-image{ position:relative; width:100%; background:var(--ivory-deep); border:1px solid var(--line);
+  .card-logo{ display:block; width:100px; max-width:30%; height:auto; margin:0 auto 8px; }
+  .gcard-image{ position:relative; width:100%; background:var(--ivory-deep); border:none;
     overflow:hidden; cursor:zoom-in; }
   .gcard-image img.shot{ width:100%; height:auto; display:block; }
   .gcard-image .ph{ padding:70px 0; text-align:center; font-family:'EB Garamond',serif; font-size:34px;
     color:var(--ink-soft); opacity:.35; }
   .gcard-image .tag{ position:absolute; top:10px; left:12px; font-family:'EB Garamond',serif; font-size:14px;
     color:var(--ivory); background:rgba(22,19,16,.55); padding:3px 11px; }
-  .refmap{ position:relative; width:100%; max-width:400px; margin:12px auto 0; aspect-ratio:var(--map-aspect);
+  .refmap{ position:relative; width:100%; max-width:340px; margin:8px auto 0; aspect-ratio:var(--map-aspect);
     border:1px solid var(--line); overflow:hidden; background:var(--white); }
   .refmap img.rbase{ position:absolute; inset:0; width:100%; height:100%; display:block; }
   .refmap img.rtri{ position:absolute; inset:0; width:100%; height:100%; opacity:var(--tri-opacity); }
   .refmap img.rdot{ position:absolute; width:var(--tile); aspect-ratio:1; transform:translate(-50%,-50%); }
   .refcap{ text-align:center; font-size:8.5px; letter-spacing:.16em; text-transform:uppercase;
     color:var(--ink-soft); opacity:.7; margin-top:5px; }
-  .gcard-tools{ display:flex; gap:14px; align-items:center; padding:10px 2px 0; flex-wrap:wrap; }
+  .gcard-tools{ display:flex; gap:14px; align-items:center; padding:8px 12px 0; flex-wrap:wrap; }
   .gcard-tools button{ background:none; border:none; padding:3px 0; color:var(--ink-soft);
     font-size:9.5px; letter-spacing:.13em; text-transform:uppercase; }
   .gcard-tools button:hover{ color:var(--brass); }
@@ -284,9 +288,10 @@
 
   /* ---------- phone ---------- */
   @media (max-width:700px){
-    .plan-wrap{ padding:8px 8px 2px; }
+    .plan-wrap{ padding:6px 6px 2px; }
+    .hit{ width:7%; }                 /* a fingertip, not a mouse point */
     .widget{ display:none !important; }         /* no widget on a phone, by request */
-    section.gallery{ padding:16px 10px 44px; }
+    section.gallery{ padding:12px 0 28px; }
     .card-logo{ width:88px; }
     .gcard-tools{ gap:11px; }
     .p-arrow{ width:40px; height:40px; font-size:16px; }
@@ -570,10 +575,10 @@ function wireLink(el,url){
 wireLink(els.interiorEditorLink, INTERIOR_EDITOR_LINK);
 wireLink(els.exteriorEditorLink, EXTERIOR_EDITOR_LINK);
 
-els.splash.addEventListener('click', () => {
-  els.splash.classList.add('hidden');
-  els.app.classList.add('visible');
-  startQuadHint();
+els.splash.addEventListener("click", () => {
+  els.splash.classList.add("hidden");
+  els.app.classList.add("visible");
+  if(isPhone()) startQuadHint();   /* quarter-tap is a phone affordance */
 });
 
 /* =====================================================================
@@ -582,10 +587,10 @@ els.splash.addEventListener('click', () => {
 els.baseLayer.addEventListener('error', () => noteMissing(BASE), {once:true});
 
 VIEWS.forEach(v => {
-  const b = document.createElement('button');
-  b.className = 'mk'; b.type = 'button';
+  /* the graphic — decoration only, never a click target */
+  const b = document.createElement('div');
+  b.className = 'mk';
   b.style.left = v.x + '%'; b.style.top = v.y + '%';
-  b.setAttribute('aria-label', v.label);
   const im = document.createElement('img');
   im.src = dotSrc(v.id); im.alt = ''; im.decoding = 'async';
   im.addEventListener('error', () => noteMissing(dotSrc(v.id)), {once:true});
@@ -593,15 +598,22 @@ VIEWS.forEach(v => {
   els.planFrame.appendChild(b);
   marks.set(v.id, b);
 
+  /* the target — sized to the dot itself, not to the tile around it */
+  const hit = document.createElement('button');
+  hit.className = 'hit'; hit.type = 'button';
+  hit.style.left = v.x + '%'; hit.style.top = v.y + '%';
+  hit.setAttribute('aria-label', v.label);
+  els.planFrame.appendChild(hit);
+
   if(!isPhone()){
-    b.addEventListener('mouseenter', () => { state.hot = v.id; b.classList.add('is-hot'); showTri(v.id); showWidget(v); });
-    b.addEventListener('mouseleave', () => {
+    hit.addEventListener('mouseenter', () => { state.hot = v.id; b.classList.add('is-hot'); showTri(v.id); showWidget(v); });
+    hit.addEventListener('mouseleave', () => {
       b.classList.remove('is-hot'); state.hot = null;
       if(state.locked){ showTri(state.locked); showWidget(viewById(state.locked)); }
       else { hideTri(); hideWidget(); }
     });
   }
-  b.addEventListener('click', e => { e.stopPropagation(); togglePin(v); });
+  hit.addEventListener('click', e => { e.stopPropagation(); togglePin(v); });
 });
 
 /* only ever ONE sightline in memory */
@@ -646,7 +658,11 @@ els.pRight.addEventListener('click', () => nudge(-1, 0));
 els.pUp.addEventListener('click',    () => nudge( 0, 1));
 els.pDown.addEventListener('click',  () => nudge( 0,-1));
 
-els.planViewport.addEventListener('wheel', e => {
+/* The wheel scrolls the PAGE, as it should. Only a deliberate pinch
+   (trackpad pinch and ctrl+wheel both arrive with ctrlKey set) zooms the
+   plan, so the map never traps the scroll. Use the +/- buttons otherwise. */
+els.planViewport.addEventListener("wheel", e => {
+  if(!e.ctrlKey) return;
   e.preventDefault();
   const b = vpBox();
   zoomAt(e.deltaY < 0 ? 1.13 : 1/1.13, e.clientX-b.left, e.clientY-b.top);
@@ -705,7 +721,7 @@ function makePannable(surface, model, apply, rect, zmax, ignore){
   surface.addEventListener('pointerup', end);
   surface.addEventListener('pointercancel', end);
 }
-makePannable(els.planViewport, state.plan, applyPlan, vpBox, 8, '.mk,.quad');
+makePannable(els.planViewport, state.plan, applyPlan, vpBox, 8, ".hit,.quad");
 window.addEventListener('resize', () => { applyPlan(); if(state.crop.view) applyCrop(); });
 
 /* =====================================================================

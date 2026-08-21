@@ -4,18 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>Burlington Arcade â 150 Worth Avenue â Fairfax &amp; Sammons</title>
+<title>Burlington Arcade &mdash; 150 Worth Avenue &mdash; Fairfax &amp; Sammons</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <!-- =====================================================================
-     BURLINGTON ARCADE â PROJECT DASHBOARD
+     BURLINGTON ARCADE — PROJECT DASHBOARD
      150 Worth Avenue, Palm Beach · Fairfax & Sammons Architecture
 
-     THE ONLY THINGS YOU EDIT are in the CONFIG block near the bottom of
-     this file (search for "CONFIG"). Links, the description paragraph,
-     and the internal drive path all live there in plain quotes.
+     ALL THE WORDS ON THIS PAGE live in one place: the TEXT block at the
+     top of the script near the bottom of this file. Search for "TEXT =".
+     Edit between the quotation marks; nothing else needs touching.
+
+     Images live in assets/. To fill an empty slot, drop a JPG in with
+     the filename named in the GALLERY list and it appears by itself.
      ===================================================================== -->
 
 <style>
@@ -24,140 +27,177 @@
     --line:#C9BFA6; --brass:#8A6D3B; --white:#FFFFFF; --live:#4A6B4F;
   }
   *{ box-sizing:border-box; }
-  body{
-    margin:0; background:var(--ivory); color:var(--ink);
-    font-family:'Inter',-apple-system,'Segoe UI',sans-serif; line-height:1.6;
-    -webkit-font-smoothing:antialiased;
-  }
+  body{ margin:0; background:var(--ivory); color:var(--ink); line-height:1.6;
+    font-family:'Inter',-apple-system,'Segoe UI',sans-serif; -webkit-font-smoothing:antialiased; }
   .serif{ font-family:'EB Garamond',Georgia,serif; }
-  .wrap{ max-width:1080px; margin:0 auto; padding:0 26px 90px; }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px 80px; }
+  img{ -webkit-user-drag:none; }
 
-  .header-band{ background:var(--white); border-bottom:1px solid var(--line); padding:34px 26px 30px; text-align:center; }
-  .header-band img{ display:block; width:100%; max-width:900px; height:auto; margin:0 auto; }
+  .header-band{ background:var(--white); border-bottom:1px solid var(--line); padding:30px 24px 26px; text-align:center; }
+  .header-band img{ display:block; width:100%; max-width:880px; height:auto; margin:0 auto; }
 
-  .titleblock{ text-align:center; padding:52px 0 0; }
-  .eyebrow{ font-size:10.5px; letter-spacing:0.32em; text-transform:uppercase; color:var(--brass); margin:0 0 20px; }
-  h1{ font-family:'EB Garamond',Georgia,serif; font-weight:500; font-size:clamp(2.1rem,5.4vw,3.2rem);
-      letter-spacing:0.02em; line-height:1.12; margin:0; }
-  .subtitle{ font-family:'EB Garamond',Georgia,serif; font-style:italic; font-size:1.1rem; color:var(--ink-soft); margin:10px 0 0; }
-  .rule{ width:54px; height:1px; background:var(--line); margin:30px auto; }
-  .lede{ max-width:660px; margin:0 auto; text-align:center; font-family:'EB Garamond',Georgia,serif;
-         font-size:1.12rem; line-height:1.75; color:var(--ink-soft); }
+  .titleblock{ text-align:center; padding:46px 0 0; }
+  .eyebrow{ font-size:10px; letter-spacing:.3em; text-transform:uppercase; color:var(--brass); margin:0 0 18px; }
+  h1{ font-family:'EB Garamond',Georgia,serif; font-weight:500; font-size:clamp(2rem,5.2vw,3.1rem);
+      letter-spacing:.02em; line-height:1.12; margin:0; }
+  .subtitle{ font-family:'EB Garamond',Georgia,serif; font-style:italic; font-size:1.06rem; color:var(--ink-soft); margin:9px 0 0; }
+  .rule{ width:52px; height:1px; background:var(--line); margin:26px auto; }
+  .lede-row{ display:flex; align-items:flex-start; gap:14px; justify-content:center; max-width:720px; margin:0 auto; }
+  .lede{ margin:0; text-align:center; font-family:'EB Garamond',Georgia,serif;
+         font-size:1.1rem; line-height:1.75; color:var(--ink-soft); }
 
-  .section-label{
-    display:flex; align-items:center; gap:16px; margin:64px 0 22px;
-    font-size:10.5px; letter-spacing:0.26em; text-transform:uppercase; color:var(--brass);
-  }
+  .section-label{ display:flex; align-items:center; gap:14px; margin:56px 0 18px;
+    font-size:10px; letter-spacing:.24em; text-transform:uppercase; color:var(--brass); }
   .section-label::after{ content:''; flex:1; height:1px; background:var(--line); }
 
-  .card{
-    display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
-    background:var(--white); border:1px solid var(--line); text-decoration:none; color:inherit;
-    transition:border-color .2s ease, box-shadow .2s ease, transform .2s ease;
-  }
-  .card:hover{ border-color:var(--brass); transform:translateY(-2px); box-shadow:0 10px 34px rgba(22,19,16,.10); }
-  .card-media{ position:relative; overflow:hidden; background:var(--ivory-deep); min-height:230px; }
+  /* ---------- read aloud ---------- */
+  .speak{ border:1px solid var(--line); background:var(--white); color:var(--ink-soft);
+    width:30px; height:30px; padding:0; font-size:13px; line-height:1; flex:none; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center; transition:all .16s ease; }
+  .speak:hover{ background:var(--ink); color:var(--ivory); border-color:var(--ink); }
+  .speak.on{ background:var(--brass); border-color:var(--brass); color:var(--ivory); }
+
+  /* ---------- swipe rails ---------- */
+  .rail-wrap{ position:relative; }
+  .rail{ display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory;
+    scroll-behavior:smooth; -webkit-overflow-scrolling:touch; padding-bottom:4px;
+    scrollbar-width:thin; }
+  .rail::-webkit-scrollbar{ height:6px; }
+  .rail::-webkit-scrollbar-thumb{ background:var(--line); }
+  .rail figure{ margin:0; flex:none; scroll-snap-align:center; cursor:zoom-in; }
+  .rail.views figure{ width:min(76%,420px); }
+  .rail.gal figure{ width:min(82%,520px); }
+  .rail figure .frame{ position:relative; width:100%; aspect-ratio:3/2; overflow:hidden;
+    background:var(--ivory-deep); border:1px solid var(--line); }
+  .rail figure img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .rail figure figcaption{ font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--ink-soft); margin-top:7px; }
+  .rail .empty{ width:100%; height:100%; display:flex; align-items:center; justify-content:center;
+    text-align:center; padding:16px; font-family:'EB Garamond',Georgia,serif; font-style:italic;
+    font-size:.88rem; color:var(--ink-soft); opacity:.65; cursor:default; }
+  .rail-btn{ position:absolute; top:calc(50% - 16px); transform:translateY(-50%); z-index:3;
+    width:38px; height:38px; border:1px solid var(--line); background:rgba(255,255,255,.94);
+    color:var(--ink); font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .rail-btn:hover{ background:var(--ink); color:var(--ivory); }
+  .rail-btn.prev{ left:-6px; } .rail-btn.next{ right:-6px; }
+  @media (hover:none){ .rail-btn{ display:none; } }
+
+  /* ---------- cards ---------- */
+  .card{ display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); background:var(--white);
+    border:1px solid var(--line); text-decoration:none; color:inherit;
+    transition:border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+  .card:hover{ border-color:var(--brass); transform:translateY(-2px); box-shadow:0 10px 32px rgba(22,19,16,.10); }
+  .card-media{ position:relative; overflow:hidden; background:var(--ivory-deep); min-height:220px; }
   .card-media img{ width:100%; height:100%; object-fit:cover; display:block; }
-  .card-body{ padding:34px 34px 30px; display:flex; flex-direction:column; justify-content:center; }
-  .card-body h2{ font-family:'EB Garamond',Georgia,serif; font-weight:600; font-size:1.62rem; margin:0 0 10px; letter-spacing:.01em; }
-  .card-body p{ margin:0 0 20px; font-size:.94rem; color:var(--ink-soft); }
-  .enter{ font-size:10.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink); display:inline-flex; align-items:center; gap:9px; }
+  .card-body{ padding:32px; display:flex; flex-direction:column; justify-content:center; }
+  .card-body h2{ font-family:'EB Garamond',Georgia,serif; font-weight:600; font-size:1.56rem; margin:0 0 9px; }
+  .card-body p{ margin:0 0 18px; font-size:.93rem; color:var(--ink-soft); }
+  .enter{ font-size:10px; letter-spacing:.2em; text-transform:uppercase; display:inline-flex; align-items:center; gap:9px; }
   .enter::after{ content:'\2192'; transition:transform .2s ease; }
   .card:hover .enter::after{ transform:translateX(5px); }
 
-  .editor-row{
-    display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
-    background:var(--white); border:1px solid var(--line); padding:22px 26px; text-decoration:none; color:inherit;
-    transition:border-color .2s ease, transform .2s ease;
-  }
+  .editor-row{ display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap;
+    background:var(--white); border:1px solid var(--line); padding:20px 24px; text-decoration:none; color:inherit;
+    transition:border-color .2s ease, transform .2s ease; }
   .editor-row + .editor-row{ border-top:none; }
   .editor-row:not(.is-off):hover{ border-color:var(--brass); transform:translateY(-1px); }
-  .editor-row h3{ font-family:'EB Garamond',Georgia,serif; font-weight:600; font-size:1.22rem; margin:0 0 3px; }
-  .editor-row p{ margin:0; font-size:.86rem; color:var(--ink-soft); }
-  .badge{ font-size:9.5px; letter-spacing:.18em; text-transform:uppercase; padding:5px 12px; border:1px solid; white-space:nowrap; }
+  .editor-row h3{ font-family:'EB Garamond',Georgia,serif; font-weight:600; font-size:1.18rem; margin:0 0 3px; }
+  .editor-row p{ margin:0; font-size:.85rem; color:var(--ink-soft); }
+  .badge{ font-size:9px; letter-spacing:.17em; text-transform:uppercase; padding:5px 11px; border:1px solid; white-space:nowrap; }
   .badge.live{ color:var(--live); border-color:var(--live); }
   .badge.soon{ color:var(--ink-soft); border-color:var(--line); opacity:.75; }
   .editor-row.is-off{ opacity:.6; pointer-events:none; }
 
-  .links{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
-  .linkbtn{
-    display:flex; flex-direction:column; gap:5px;
-    background:var(--ink); color:var(--ivory); border:1px solid var(--ink);
-    padding:20px 22px; text-decoration:none; text-align:left; font:inherit; cursor:pointer;
-    transition:background .2s ease;
-  }
-  .linkbtn:hover{ background:var(--brass); border-color:var(--brass); }
-  .linkbtn .lb-title{ font-size:11px; letter-spacing:.18em; text-transform:uppercase; }
-  .linkbtn .lb-sub{ font-size:.82rem; opacity:.72; font-family:'EB Garamond',Georgia,serif; font-style:italic; }
+  /* ---------- essays + notes ---------- */
+  .essay{ background:var(--white); border:1px solid var(--line); padding:30px 32px; margin-top:14px; }
+  .essay-head{ display:flex; align-items:center; gap:12px; margin-bottom:4px; }
+  .essay h3{ font-family:'EB Garamond',Georgia,serif; font-weight:600; font-size:1.44rem; margin:0; flex:1; }
+  .essay .kicker{ font-size:9.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--brass); margin:0 0 16px; }
+  .essay p{ margin:0 0 13px; font-family:'EB Garamond',Georgia,serif; font-size:1.05rem; line-height:1.75; color:var(--ink-soft); }
+  .essay p:last-child{ margin-bottom:0; }
+  .more{ display:inline-flex; align-items:center; gap:8px; margin-top:16px; font-size:10px;
+    letter-spacing:.17em; text-transform:uppercase; color:var(--ink); text-decoration:none;
+    border-bottom:1px solid var(--line); padding-bottom:3px; }
+  .more:hover{ border-color:var(--brass); color:var(--brass); }
 
-  .modal{
-    position:fixed; inset:0; z-index:200; background:rgba(22,19,16,.55);
-    display:flex; align-items:center; justify-content:center; padding:26px;
-    opacity:0; visibility:hidden; transition:opacity .22s ease, visibility .22s ease;
-  }
+  .notes{ border-top:1px solid var(--line); margin-top:22px; padding-top:18px; }
+  .notes-label{ font-size:9px; letter-spacing:.22em; text-transform:uppercase; color:var(--brass); margin-bottom:12px; }
+  .notes ul{ margin:0; padding:0; list-style:none; }
+  .notes li{ padding:9px 0; border-bottom:1px dotted var(--line); font-size:.95rem; color:var(--ink-soft); }
+  .notes li:last-child{ border-bottom:none; }
+  .notes li b{ color:var(--ink); font-weight:600; }
+
+  /* ---------- links ---------- */
+  .links{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px; }
+  .linkbtn{ display:flex; flex-direction:column; gap:4px; background:var(--ink); color:var(--ivory);
+    border:1px solid var(--ink); padding:18px 20px; text-decoration:none; text-align:left; font:inherit;
+    cursor:pointer; transition:background .2s ease; }
+  .linkbtn:hover{ background:var(--brass); border-color:var(--brass); }
+  .linkbtn .lb-title{ font-size:10.5px; letter-spacing:.17em; text-transform:uppercase; }
+  .linkbtn .lb-sub{ font-size:.8rem; opacity:.72; font-family:'EB Garamond',Georgia,serif; font-style:italic; }
+
+  /* ---------- modal + lightbox ---------- */
+  .modal{ position:fixed; inset:0; z-index:200; background:rgba(22,19,16,.55);
+    display:flex; align-items:center; justify-content:center; padding:24px;
+    opacity:0; visibility:hidden; transition:opacity .22s ease, visibility .22s ease; }
   .modal.visible{ opacity:1; visibility:visible; }
-  .modal-box{ background:var(--white); border:1px solid var(--line); max-width:620px; width:100%; padding:34px; }
-  .modal-box h3{ font-family:'EB Garamond',Georgia,serif; font-weight:600; font-size:1.4rem; margin:0 0 8px; }
-  .modal-box .note{ font-size:.86rem; color:var(--ink-soft); margin:0 0 20px; }
-  .pathbox{
-    font-family:ui-monospace,Consolas,monospace; font-size:.86rem; background:var(--ivory);
-    border:1px solid var(--line); padding:16px; word-break:break-all; user-select:all; margin:0 0 18px;
-  }
+  .modal-box{ background:var(--white); border:1px solid var(--line); max-width:600px; width:100%; padding:32px; }
+  .modal-box h3{ font-family:'EB Garamond',Georgia,serif; font-weight:600; font-size:1.35rem; margin:0 0 8px; }
+  .modal-box .note{ font-size:.85rem; color:var(--ink-soft); margin:0 0 18px; }
+  .pathbox{ font-family:ui-monospace,Consolas,monospace; font-size:.85rem; background:var(--ivory);
+    border:1px solid var(--line); padding:15px; word-break:break-all; user-select:all; margin:0 0 16px; }
   .modal-actions{ display:flex; gap:10px; flex-wrap:wrap; }
-  .btn{
-    border:1px solid var(--ink); background:var(--ink); color:var(--ivory);
-    padding:12px 22px; font:inherit; font-size:10.5px; letter-spacing:.18em; text-transform:uppercase; cursor:pointer;
-    transition:background .2s ease;
-  }
+  .btn{ border:1px solid var(--ink); background:var(--ink); color:var(--ivory); padding:11px 20px; font:inherit;
+    font-size:10px; letter-spacing:.17em; text-transform:uppercase; cursor:pointer; transition:background .2s ease; }
   .btn:hover{ background:var(--brass); border-color:var(--brass); }
   .btn.ghost{ background:transparent; color:var(--ink); }
   .btn.ghost:hover{ background:var(--ivory-deep); }
-  .copied{ font-size:.82rem; color:var(--live); margin:12px 0 0; display:none; }
+  .copied{ font-size:.8rem; color:var(--live); margin:11px 0 0; display:none; }
   .copied.show{ display:block; }
 
-  footer{ margin-top:76px; padding-top:26px; border-top:1px solid var(--line); text-align:center; font-size:.8rem; color:var(--ink-soft); }
+  .lb{ position:fixed; inset:0; z-index:220; background:#0d0b09; display:none; flex-direction:column; color:var(--ivory); }
+  .lb.visible{ display:flex; }
+  .lb-top{ display:flex; align-items:center; gap:10px; padding:12px 16px; flex:none;
+    border-bottom:1px solid rgba(244,239,228,.16); }
+  .lb-top .lbl{ flex:1; font-family:'EB Garamond',Georgia,serif; font-size:15px; }
+  .lb-top button{ border:1px solid rgba(244,239,228,.4); background:transparent; color:var(--ivory);
+    padding:6px 12px; font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; cursor:pointer; }
+  .lb-top button:hover{ background:var(--ivory); color:var(--ink); }
+  .lb-stage{ flex:1; display:flex; align-items:center; justify-content:center; min-height:0; padding:14px; position:relative; }
+  .lb-stage img{ max-width:100%; max-height:100%; width:auto; height:auto; display:block; }
+  .lb-arrow{ position:absolute; top:50%; transform:translateY(-50%); width:48px; height:48px;
+    border:1px solid rgba(244,239,228,.4); background:rgba(13,11,9,.55); color:var(--ivory);
+    font-size:19px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .lb-arrow:hover{ background:var(--ivory); color:var(--ink); }
+  .lb-arrow.prev{ left:12px; } .lb-arrow.next{ right:12px; }
+  .lb-count{ flex:none; text-align:center; padding:9px; font-size:9.5px; letter-spacing:.18em; opacity:.7; }
+
+  footer{ margin-top:66px; padding-top:24px; border-top:1px solid var(--line); text-align:center;
+    font-size:.79rem; color:var(--ink-soft); }
 
   @media (max-width:760px){
+    .wrap{ padding:0 16px 60px; }
     .card{ grid-template-columns:1fr; }
-    .card-media{ min-height:200px; }
+    .card-media{ min-height:190px; }
+    .essay{ padding:22px 18px; }
+    .rail.views figure{ width:86%; }
+    .rail.gal figure{ width:90%; }
+    .lb-arrow{ width:40px; height:40px; font-size:16px; }
   }
-  /* ---------- read-aloud ---------- */
-  .speak{ border:1px solid var(--line); background:var(--white); color:var(--ink-soft);
-    width:30px; height:30px; padding:0; font-size:13px; line-height:1; flex:none;
-    display:inline-flex; align-items:center; justify-content:center; transition:all .16s ease; }
-  .speak:hover{ background:var(--ink); color:var(--ivory); border-color:var(--ink); }
-  .speak.on{ background:var(--brass); border-color:var(--brass); color:var(--ivory); }
-  .lede-row{ display:flex; align-items:flex-start; gap:14px; justify-content:center; max-width:700px; margin:0 auto; }
-
-  /* ---------- essays ---------- */
-  .essay{ background:var(--white); border:1px solid var(--line); padding:32px 34px; }
-  .essay + .essay{ margin-top:14px; }
-  .essay-head{ display:flex; align-items:center; gap:12px; margin-bottom:6px; }
-  .essay h3{ font-family:'EB Garamond',Georgia,serif; font-weight:600; font-size:1.5rem; margin:0; flex:1; }
-  .essay .kicker{ font-size:9.5px; letter-spacing:.24em; text-transform:uppercase; color:var(--brass); margin:0 0 14px; }
-  .essay p{ margin:0 0 14px; font-size:.97rem; color:var(--ink-soft); font-family:'EB Garamond',Georgia,serif;
-    font-size:1.06rem; line-height:1.75; }
-  .essay p:last-of-type{ margin-bottom:0; }
-  .essay .more{ display:inline-flex; align-items:center; gap:8px; margin-top:18px; font-size:10px;
-    letter-spacing:.18em; text-transform:uppercase; color:var(--ink); text-decoration:none;
-    border-bottom:1px solid var(--line); padding-bottom:3px; }
-  .essay .more:hover{ border-color:var(--brass); color:var(--brass); }
-  @media (max-width:620px){ .essay{ padding:24px 20px; } }
-
 </style>
 </head>
 <body>
 
 <div class="header-band">
-  <img src="assets/burlington-header.png" alt="Burlington Arcade â Fairfax &amp; Sammons, New York ~ Palm Beach">
+  <img src="assets/burlington-header.png" alt="Burlington Arcade — Fairfax &amp; Sammons, New York ~ Palm Beach">
 </div>
 
 <div class="wrap">
 
   <div class="titleblock">
-    <p class="eyebrow">150 Worth Avenue · Palm Beach, Florida</p>
-    <h1 class="serif">Burlington Arcade</h1>
-    <p class="subtitle">Design Viewer</p>
+    <p class="eyebrow">150 Worth Avenue &middot; Palm Beach, Florida</p>
+    <h1 class="serif" id="hTitle">Burlington Arcade</h1>
+    <p class="subtitle" id="hSub">Design Viewer</p>
     <div class="rule"></div>
     <div class="lede-row">
       <p class="lede" id="lede"></p>
@@ -165,29 +205,34 @@
     </div>
   </div>
 
-  <div class="section-label">Floorplan &amp; Renderings</div>
+  <!-- ---------- all seventeen views, swipeable ---------- -->
+  <div class="section-label">The Views</div>
+  <div class="rail-wrap">
+    <button class="rail-btn prev" type="button" data-rail="railViews">&#8249;</button>
+    <div class="rail views" id="railViews"></div>
+    <button class="rail-btn next" type="button" data-rail="railViews">&#8250;</button>
+  </div>
 
+  <div class="section-label">Floorplan &amp; Renderings</div>
   <a class="card" href="floorplan/">
     <div class="card-media">
-      <img src="assets/views-of-burlington.jpg" alt="Views of Burlington â numbered view plan">
+      <img src="assets/views-of-burlington.jpg" alt="Views of Burlington — numbered view plan">
     </div>
     <div class="card-body">
       <h2>Floorplan &amp; Renderings</h2>
-      <p>Every rendering connected to its place on the plan. Hover a marker to preview the view, click to pin it, and open any view full size.</p>
+      <p id="cardFloor"></p>
       <span class="enter">Open the viewer</span>
     </div>
   </a>
 
   <div class="section-label">Facade Renderer</div>
-
-  <a class="editor-row" id="rowInterior" href="esplanade/">
+  <a class="editor-row" href="esplanade/">
     <div>
       <h3>Interior Facade Editor</h3>
-      <p>Mock up arcade retail shopfronts â awnings, colour, signage, logos and retail category.</p>
+      <p>Mock up arcade shopfronts — awnings, colour, signage, logos, retail category.</p>
     </div>
     <span class="badge live">Live</span>
   </a>
-
   <a class="editor-row is-off" id="rowExterior" href="#">
     <div>
       <h3>Exterior Facade Editor</h3>
@@ -196,40 +241,51 @@
     <span class="badge soon">Coming soon</span>
   </a>
 
-  <div class="section-label">The Arcade Tradition</div>
-
-  <div class="essay">
-    <div class="essay-head">
-      <h3 class="serif">Burlington Arcade, London</h3>
-      <button type="button" class="speak" data-read="e1" title="Read aloud">&#9835;</button>
-    </div>
-    <p class="kicker">Piccadilly &middot; opened 20 March 1819</p>
-    <div id="e1">
-      <p>Lord George Cavendish, later the first Earl of Burlington, commissioned the architect Samuel Ware to roof a narrow lane beside Burlington House and line it with shops. The stated purpose was elegant; the private one was practical, since he wanted to stop passers-by tossing oyster shells over his garden wall. What opened in 1819 became one of Britain's first covered shopping arcades and the model for every one that followed.</p>
-      <p>It is still policed by its own beadles, recruited originally from Cavendish's own regiment, the 10th Royal Hussars, and still dressed in frock coats and gold-braided top hats. Running, whistling and singing remain forbidden â whistling because it was once the pickpockets' signal that a beadle was coming.</p>
-      <p>That is the lineage Burlington Arcade at 150 Worth Avenue draws on: a covered street of small shopfronts, daylit from above, held to a standard of behaviour and finish that a department store floor plate cannot produce.</p>
-    </div>
-    <a class="more" href="https://burlingtonarcade.com" target="_blank" rel="noopener">Visit burlingtonarcade.com &rarr;</a>
+  <!-- ---------- Worth Avenue ---------- -->
+  <div class="section-label">Worth Avenue</div>
+  <div class="rail-wrap">
+    <button class="rail-btn prev" type="button" data-rail="railWorth">&#8249;</button>
+    <div class="rail gal" id="railWorth"></div>
+    <button class="rail-btn next" type="button" data-rail="railWorth">&#8250;</button>
   </div>
 
-  <div class="section-label">Worth Avenue</div>
-
   <div class="essay">
     <div class="essay-head">
-      <h3 class="serif">Where Palm Beach Learned to Build</h3>
-      <button type="button" class="speak" data-read="e2" title="Read aloud">&#9835;</button>
+      <h3 class="serif" id="worthTitle"></h3>
+      <button type="button" class="speak" data-read="worthBody" title="Read aloud">&#9835;</button>
     </div>
-    <p class="kicker">Palm Beach, Florida &middot; 1918 to today</p>
-    <div id="e2">
-      <p>In 1918 Addison Mizner arrived in Palm Beach at the invitation of Paris Singer, the sewing-machine heir, who commissioned him to build a club on what was then a sand track. The Everglades Club opened in February 1919, pink-stuccoed and Moorish-inflected, and it set the terms for everything after it.</p>
-      <p>Mizner's instinct was not to design a building but to imply a history. He wanted a Mediterranean village that looked as though it had accumulated over centuries, mixing motifs across countries and eras so that a structure finished in 1919 already read as a hundred years old. In 1923 he cut Via Mizner through the block behind the club â a pedestrian lane of shopfronts, courtyards and balconies, terracotta barrel tile over white stucco, Venice by way of Spain.</p>
-      <p>The Vias are the point. Worth Avenue works because it is not one frontage but a series of intimate passages cut through depth, and that is precisely the move Burlington Arcade makes at 150 Worth: a covered street through a building that had turned its back on the idea.</p>
+    <p class="kicker" id="worthKicker"></p>
+    <div id="worthBody"></div>
+    <div class="notes">
+      <div class="notes-label">Notes</div>
+      <ul id="worthNotes"></ul>
     </div>
     <a class="more" href="https://worth-avenue.com/information/legacy/" target="_blank" rel="noopener">Worth Avenue legacy &rarr;</a>
   </div>
 
-  <div class="section-label">Project Files</div>
+  <!-- ---------- Burlington Arcade, London ---------- -->
+  <div class="section-label">The Arcade Tradition</div>
+  <div class="rail-wrap">
+    <button class="rail-btn prev" type="button" data-rail="railArcade">&#8249;</button>
+    <div class="rail gal" id="railArcade"></div>
+    <button class="rail-btn next" type="button" data-rail="railArcade">&#8250;</button>
+  </div>
 
+  <div class="essay">
+    <div class="essay-head">
+      <h3 class="serif" id="arcTitle"></h3>
+      <button type="button" class="speak" data-read="arcBody" title="Read aloud">&#9835;</button>
+    </div>
+    <p class="kicker" id="arcKicker"></p>
+    <div id="arcBody"></div>
+    <div class="notes">
+      <div class="notes-label">Notes</div>
+      <ul id="arcNotes"></ul>
+    </div>
+    <a class="more" href="https://burlingtonarcade.com" target="_blank" rel="noopener">burlingtonarcade.com &rarr;</a>
+  </div>
+
+  <div class="section-label">Project Files</div>
   <div class="links">
     <a class="linkbtn" id="btnDrive" href="#" target="_blank" rel="noopener">
       <span class="lb-title">Google Drive</span>
@@ -237,7 +293,7 @@
     </a>
     <a class="linkbtn" id="btnDropbox" href="#" target="_blank" rel="noopener">
       <span class="lb-title">Dropbox</span>
-      <span class="lb-sub">150 Worth Ave â published &amp; social</span>
+      <span class="lb-sub">150 Worth Ave — published &amp; social</span>
     </a>
     <button class="linkbtn" id="btnPath" type="button">
       <span class="lb-title">Drive Location</span>
@@ -245,16 +301,13 @@
     </button>
   </div>
 
-  <footer>
-    Internal reference â Fairfax &amp; Sammons Architecture. Not for public distribution.
-  </footer>
-
+  <footer>Internal reference — Fairfax &amp; Sammons Architecture. Not for public distribution.</footer>
 </div>
 
 <div class="modal" id="pathModal">
   <div class="modal-box">
     <h3 class="serif">Internal drive location</h3>
-    <p class="note">This is a folder on the office server, not a web link â it only opens on a computer connected to the office network. Copy it and paste it into the address bar of a File Explorer window.</p>
+    <p class="note">A folder on the office server, not a web link — it opens only on a machine connected to the office network. Copy it and paste it into a File Explorer address bar.</p>
     <p class="pathbox" id="pathText"></p>
     <div class="modal-actions">
       <button class="btn" id="btnCopyPath" type="button">Copy path</button>
@@ -264,84 +317,231 @@
   </div>
 </div>
 
+<div class="lb" id="lb">
+  <div class="lb-top">
+    <span class="lbl" id="lbLabel"></span>
+    <button type="button" id="lbClose">Close</button>
+  </div>
+  <div class="lb-stage" id="lbStage">
+    <button class="lb-arrow prev" type="button" id="lbPrev">&#8249;</button>
+    <img id="lbImg" alt="">
+    <button class="lb-arrow next" type="button" id="lbNext">&#8250;</button>
+  </div>
+  <div class="lb-count" id="lbCount"></div>
+</div>
+
 <script>
 /* =====================================================================
-   CONFIG â everything you might want to change lives here
+   TEXT — every word on this page. Edit between the quote marks.
    ===================================================================== */
+const TEXT = {
 
-// The paragraph under the title.
-// NOTE (2026-08-20): drafted from public reporting and the firm's own
-// portfolio page. Please read it and correct anything wrong â this is the
-// one paragraph on the page that makes a claim about the project.
-const DESCRIPTION =
-  "Burlington Arcade takes the Esplanade at 150 Worth Avenue to a different order of experience — " +
-  "the covered shopping street, borrowed from the London original of 1819 and set down in Palm Beach. " +
-  "Two levels of shopfronts face a sky-lit walk cut through the depth of the block, turning what had been " +
-  "a single large-plate department store into a street of small storefronts with light, air and a way through. " +
-  "This viewer holds the current design set: the numbered renderings tied to their positions on the plan, " +
-  "and the facade tools used to mock up individual shopfronts.";
+  lede:
+    "Burlington Arcade takes the Esplanade at 150 Worth Avenue to a different order of experience — " +
+    "the covered shopping street, borrowed from the London original of 1819 and set down in Palm Beach. " +
+    "Two levels of shopfronts face a sky-lit walk cut through the depth of the block, turning what had been " +
+    "one large-plate department store into a street of small storefronts with light, air and a way through.",
+
+  floorplanCard:
+    "Every rendering tied to its place on the plan. Hover or tap a marker to preview the view, click to pin it, open any view full size.",
+
+  worth: {
+    title: "Where Palm Beach Learned to Build",
+    kicker: "Palm Beach, Florida · 1918 to today",
+    body: [
+      "In 1918 Addison Mizner arrived at the invitation of Paris Singer, who commissioned him to build a club on what was then a sand track. The Everglades Club opened in February 1919, and it set the terms for everything after it.",
+      "Mizner's instinct was not to design a building but to imply a history — a Mediterranean village that appeared to have accumulated over centuries, so that a structure finished in 1919 already read as a hundred years old. In 1923 he cut Via Mizner through the block behind the club: a pedestrian lane of shopfronts, courtyards and balconies, terracotta over white stucco.",
+      "The Vias are the point. Worth Avenue works because it is not one frontage but a sequence of intimate passages cut through depth — which is precisely the move Burlington Arcade makes at 150 Worth."
+    ],
+    notes: [
+      ["Depth, not frontage.", "Worth Avenue's value per foot comes from the Vias cut behind it. A block one shop deep is a strip; a block cut through is a district."],
+      ["Age on delivery.", "Mizner detailed for the weathering he expected — pecky cypress, irregular openings, cast stone that reads as quarried. New work that looks new has to earn its place twice."],
+      ["Small parts, ordinary means.", "Barrel tile, stucco, timber balcony, iron rail. The vocabulary is short. The variety comes from arrangement, not from inventing new elements."],
+      ["Shade is structure.", "Loggia, arcade and overhang do the work here that glazing does further north. The section is a climate response before it is a style."]
+    ]
+  },
+
+  arcade: {
+    title: "Burlington Arcade, London",
+    kicker: "Piccadilly · opened 20 March 1819",
+    body: [
+      "Lord George Cavendish, later first Earl of Burlington, had Samuel Ware roof a narrow lane beside Burlington House and line it with shops. The stated purpose was elegant; the private one was to stop passers-by throwing oyster shells over his garden wall. What opened in 1819 became one of Britain's first covered shopping arcades and the model for those that followed.",
+      "It is still policed by its own beadles, recruited originally from Cavendish's regiment, the 10th Royal Hussars, and still in frock coats and gold-braided top hats. Running, singing and whistling remain forbidden — whistling because it was once the pickpockets' signal that a beadle was coming.",
+      "That is the lineage 150 Worth draws on: a covered street of small shopfronts, daylit from above, held to a standard of behaviour and finish no department store floor plate can produce."
+    ],
+    notes: [
+      ["An arcade is a street with a roof.", "It is governed by its section, not its length. Burlington runs 179 metres and never feels like a corridor because the width-to-height ratio stays companionable."],
+      ["Light from above, not from the end.", "Top-lighting is what lets shopfronts stay shallow and fully glazed. Borrow the daylight from the roof and the plan is freed."],
+      ["The bay is the module.", "One shopfront bay, repeated with small variation, gives rhythm without monotony. Get the bay right and the arcade builds itself."],
+      ["Threshold does the work.", "The entry arch tells you that you have left the public street for something governed. That single move is why the rules are obeyed."],
+      ["Manners are part of the fabric.", "No running, no whistling. Conduct is maintained as deliberately as the marble — and it is a large part of what people are actually buying."]
+    ]
+  }
+};
+
+/* =====================================================================
+   GALLERIES — to fill an empty slot, drop the named JPG into assets/
+   ===================================================================== */
+const GALLERY = {
+  worth: [
+    { src:"assets/worth-vintage-1.jpg", cap:"Worth Avenue, mid-century",
+      note:"Slot 1 — save the colour photograph (awnings, finned cars) as assets/worth-vintage-1.jpg" },
+    { src:"assets/worth-vintage-2.jpg", cap:"Looking down the Avenue, 1940s",
+      note:"Slot 2 — save the black-and-white street photograph as assets/worth-vintage-2.jpg" },
+    { src:"assets/worth-vintage-3.jpg", cap:"Vine-clad facades and the tower",
+      note:"Slot 3 — save the black-and-white tower photograph as assets/worth-vintage-3.jpg" },
+    { src:"assets/worth-mizner.jpg",    cap:"Mizner arcading and balcony, today" }
+  ],
+  arcade: [
+    { src:"assets/arcade-1819.jpg",       cap:"The Piccadilly entrance, engraved c.1828" },
+    { src:"assets/arcade-interior.jpg",   cap:"The arcade today",
+      note:"Slot empty — save the modern interior photograph as assets/arcade-interior.jpg and it appears here." }
+  ]
+};
 
 const DRIVE_LINK    = "https://drive.google.com/drive/folders/1yZgQ2N9G5BVkX0fcC3ViBomkR256XQah";
 const DROPBOX_LINK  = "https://www.dropbox.com/home/Fairfax%20%26%20Sammons%20Project%20Resources/PROJECTS/PUBLISHED/INSTAGRAM%20POSTS/150%20Worth%20Ave%20-%20Esplanade";
 const INTERNAL_PATH = "Y:\\FAIRFAX_SAMMONS_PARTNERS_PB\\PROJECTS\\CURRENT PROJECTS\\24_ESPLANADE_SAKS";
-
-// When the exterior editor exists, paste its link here and the row turns on by itself.
 const EXTERIOR_EDITOR_LINK = "";
+const VIEW_COUNT = 17;
 
 /* =====================================================================
-   Wiring â nothing below here needs editing
+   Build the page — nothing below needs editing
    ===================================================================== */
-document.getElementById('lede').textContent = DESCRIPTION;
-document.getElementById('btnDrive').href = DRIVE_LINK;
-document.getElementById('btnDropbox').href = DROPBOX_LINK;
-document.getElementById('pathText').textContent = INTERNAL_PATH;
+const byId = id => document.getElementById(id);
 
-if (EXTERIOR_EDITOR_LINK) {
-  const row = document.getElementById('rowExterior');
-  row.href = EXTERIOR_EDITOR_LINK;
-  row.classList.remove('is-off');
-  const b = row.querySelector('.badge');
-  b.className = 'badge live';
-  b.textContent = 'Live';
+byId('lede').textContent = TEXT.lede;
+byId('cardFloor').textContent = TEXT.floorplanCard;
+byId('btnDrive').href = DRIVE_LINK;
+byId('btnDropbox').href = DROPBOX_LINK;
+byId('pathText').textContent = INTERNAL_PATH;
+
+function fillEssay(prefix, data, bodyId, notesId){
+  byId(prefix+'Title').textContent = data.title;
+  byId(prefix+'Kicker').textContent = data.kicker;
+  byId(bodyId).innerHTML = data.body.map(p => '<p></p>').join('');
+  byId(bodyId).querySelectorAll('p').forEach((p,i) => p.textContent = data.body[i]);
+  byId(notesId).innerHTML = '';
+  data.notes.forEach(([head, rest]) => {
+    const li = document.createElement('li');
+    const b = document.createElement('b'); b.textContent = head + ' ';
+    li.appendChild(b); li.appendChild(document.createTextNode(rest));
+    byId(notesId).appendChild(li);
+  });
+}
+fillEssay('worth', TEXT.worth, 'worthBody', 'worthNotes');
+fillEssay('arc',   TEXT.arcade, 'arcBody',  'arcNotes');
+
+if(EXTERIOR_EDITOR_LINK){
+  const r = byId('rowExterior');
+  r.href = EXTERIOR_EDITOR_LINK; r.classList.remove('is-off');
+  const b = r.querySelector('.badge'); b.className = 'badge live'; b.textContent = 'Live';
 }
 
-const modal = document.getElementById('pathModal');
-const copied = document.getElementById('copiedNote');
+/* ---------- rails ---------- */
+const lightboxSets = {};
 
-document.getElementById('btnPath').addEventListener('click', () => {
-  copied.classList.remove('show');
-  modal.classList.add('visible');
-});
-document.getElementById('btnCloseModal').addEventListener('click', () => modal.classList.remove('visible'));
-modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('visible'); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.classList.remove('visible'); });
+function buildRail(railId, items, setName){
+  const rail = byId(railId);
+  const usable = [];
+  items.forEach(it => {
+    const fig = document.createElement('figure');
+    const frame = document.createElement('div');
+    frame.className = 'frame';
+    const cap = document.createElement('figcaption');
+    cap.textContent = it.cap;
 
-document.getElementById('btnCopyPath').addEventListener('click', async () => {
-  try {
-    await navigator.clipboard.writeText(INTERNAL_PATH);
-  } catch (err) {
-    const ta = document.createElement('textarea');
-    ta.value = INTERNAL_PATH; ta.style.position = 'fixed'; ta.style.opacity = '0';
-    document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-  }
-  copied.classList.add('show');
+    if(it.note){
+      // slot with no image yet — show what to drop in, and check for it anyway
+      const ph = document.createElement('div');
+      ph.className = 'empty';
+      ph.textContent = it.note;
+      frame.appendChild(ph);
+      fig.style.cursor = 'default';
+      const probe = new Image();
+      probe.onload = () => {            // the file appeared: use it
+        frame.innerHTML = '';
+        const im = new Image(); im.src = it.src; im.alt = it.cap;
+        frame.appendChild(im);
+        fig.style.cursor = 'zoom-in';
+        usable.push({src:it.src, cap:it.cap});
+        fig.addEventListener('click', () => openLb(setName, it.src));
+      };
+      probe.src = it.src;
+    } else {
+      const im = new Image(); im.src = it.src; im.alt = it.cap; im.loading = 'lazy';
+      frame.appendChild(im);
+      usable.push({src:it.src, cap:it.cap});
+      fig.addEventListener('click', () => openLb(setName, it.src));
+    }
+    fig.append(frame, cap);
+    rail.appendChild(fig);
+  });
+  lightboxSets[setName] = usable;
+}
+
+const viewItems = [];
+for(let i=1; i<=VIEW_COUNT; i++) viewItems.push({ src:'assets/views/v'+i+'.jpg', cap:'View '+i });
+buildRail('railViews',  viewItems,        'views');
+buildRail('railWorth',  GALLERY.worth,    'worth');
+buildRail('railArcade', GALLERY.arcade,   'arcade');
+
+document.querySelectorAll('.rail-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const rail = byId(btn.dataset.rail);
+    const step = rail.querySelector('figure').getBoundingClientRect().width + 12;
+    rail.scrollBy({ left: btn.classList.contains('next') ? step : -step, behavior:'smooth' });
+  });
 });
-/* ---------------------------------------------------------------------
-   Read aloud. Uses the voice already built into the browser, so there
-   are no audio files to host and nothing to keep in sync with the text.
-   Press again to stop.
-   --------------------------------------------------------------------- */
+
+/* ---------- lightbox ---------- */
+let lbSet = [], lbI = 0;
+function openLb(setName, src){
+  lbSet = lightboxSets[setName] || [];
+  lbI = Math.max(0, lbSet.findIndex(x => x.src === src));
+  byId('lb').classList.add('visible');
+  showLb();
+}
+function showLb(){
+  if(!lbSet.length) return;
+  const it = lbSet[lbI];
+  byId('lbImg').src = it.src;
+  byId('lbImg').alt = it.cap;
+  byId('lbLabel').textContent = it.cap;
+  byId('lbCount').textContent = (lbI+1) + ' / ' + lbSet.length;
+}
+function lbStep(d){ if(lbSet.length){ lbI = (lbI + d + lbSet.length) % lbSet.length; showLb(); } }
+byId('lbPrev').addEventListener('click', () => lbStep(-1));
+byId('lbNext').addEventListener('click', () => lbStep(1));
+byId('lbClose').addEventListener('click', () => byId('lb').classList.remove('visible'));
+document.addEventListener('keydown', e => {
+  if(!byId('lb').classList.contains('visible')) return;
+  if(e.key === 'ArrowRight') lbStep(1);
+  else if(e.key === 'ArrowLeft') lbStep(-1);
+  else if(e.key === 'Escape') byId('lb').classList.remove('visible');
+});
+(function(){                       /* swipe the lightbox */
+  let sx = null;
+  const st = byId('lbStage');
+  st.addEventListener('touchstart', e => { if(e.touches.length===1) sx = e.touches[0].clientX; }, {passive:true});
+  st.addEventListener('touchend', e => {
+    if(sx === null) return;
+    const dx = e.changedTouches[0].clientX - sx;
+    if(Math.abs(dx) > 45) lbStep(dx < 0 ? 1 : -1);
+    sx = null;
+  }, {passive:true});
+})();
+
+/* ---------- read aloud ---------- */
 let speakingBtn = null;
 function speak(text, btn){
   if(!('speechSynthesis' in window)){ alert('This browser cannot read text aloud.'); return; }
-  const wasSame = (speakingBtn === btn);
+  const same = (speakingBtn === btn);
   if(speechSynthesis.speaking || speechSynthesis.pending){
     speechSynthesis.cancel();
     if(speakingBtn) speakingBtn.classList.remove('on');
     speakingBtn = null;
-    if(wasSame) return;
+    if(same) return;
   }
   const u = new SpeechSynthesisUtterance(text);
   u.rate = 0.95;
@@ -350,19 +550,32 @@ function speak(text, btn){
   speakingBtn = btn;
   speechSynthesis.speak(u);
 }
-
-document.getElementById('speakLede').addEventListener('click', function(){
-  speak(document.getElementById('lede').textContent, this);
-});
+byId('speakLede').addEventListener('click', function(){ speak(byId('lede').textContent, this); });
 document.querySelectorAll('.speak[data-read]').forEach(btn => {
   btn.addEventListener('click', function(){
-    const src = document.getElementById(this.dataset.read);
+    const src = byId(this.dataset.read);
     speak(src ? src.innerText : '', this);
   });
 });
 window.addEventListener('beforeunload', () => { try{ speechSynthesis.cancel(); }catch(e){} });
 
+/* ---------- drive path popup ---------- */
+const modal = byId('pathModal'), copied = byId('copiedNote');
+byId('btnPath').addEventListener('click', () => { copied.classList.remove('show'); modal.classList.add('visible'); });
+byId('btnCloseModal').addEventListener('click', () => modal.classList.remove('visible'));
+modal.addEventListener('click', e => { if(e.target === modal) modal.classList.remove('visible'); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') modal.classList.remove('visible'); });
+byId('btnCopyPath').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(INTERNAL_PATH); }
+  catch(err){
+    const ta = document.createElement('textarea');
+    ta.value = INTERNAL_PATH; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+  }
+  copied.classList.add('show');
+});
 </script>
-
 </body>
 </html>
