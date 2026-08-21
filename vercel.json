@@ -1,0 +1,37 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+
+  "//": [
+    "Caching rules for the Burlington Arcade site.",
+    "The HTML files change whenever we edit them, so they are never cached —",
+    "a push is live for everyone the moment it deploys.",
+    "The images never change once they are in, so browsers are told to keep",
+    "them for a year. That is what makes the second visit feel instant."
+  ],
+
+  "headers": [
+    {
+      "source": "/(.*)\\.(jpg|jpeg|png|gif|webp|svg|ico|woff2)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(.*)\\.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ],
+
+  "cleanUrls": true,
+  "trailingSlash": true
+}

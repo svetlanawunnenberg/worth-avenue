@@ -440,33 +440,53 @@ const lightboxSets = {};
 /* A slot whose file is not there yet simply does not appear — no placeholder,
    no reserved gap. Each figure is built hidden, then revealed once its image
    actually loads, so the order on the page always matches the list above. */
-function buildRail(railId, items, setName){
+/* Two kinds of rail.
+
+   known:true  — the files are known to exist (the seventeen views). These
+   load LAZILY, so the browser fetches a thumbnail only when it is about to
+   scroll into sight. Eager-loading all seventeen was 2.3 MB on first paint.
+
+   known:false — a gallery slot that may or may not have a file behind it
+   yet. Those few are probed, and a figure with no file is removed entirely
+   rather than left as an empty placeholder. */
+function buildRail(railId, items, setName, known){
   const rail = byId(railId);
   const usable = [];
 
-  items.forEach(it => {
+  items.forEach((it, idx) => {
     const fig = document.createElement('figure');
-    fig.style.display = 'none';
     const frame = document.createElement('div');
     frame.className = 'frame';
     const cap = document.createElement('figcaption');
     cap.textContent = it.cap;
-
-    const im = new Image();
+    const im = document.createElement('img');
     im.alt = it.cap;
-    im.addEventListener('load', () => {
-      fig.style.display = '';
-      usable.push({ src: it.src, cap: it.cap });
-      usable.sort((a,b) =>
-        items.findIndex(x => x.src === a.src) - items.findIndex(x => x.src === b.src));
-      fig.addEventListener('click', () => openLb(setName, it.src));
-    });
-    im.addEventListener('error', () => fig.remove());
-    im.src = it.src;
+    im.decoding = 'async';
 
-    frame.appendChild(im);
-    fig.append(frame, cap);
-    rail.appendChild(fig);
+    if(known){
+      // first two eager so the rail is never blank; the rest on demand
+      im.loading = idx < 2 ? 'eager' : 'lazy';
+      usable.push({ src: it.src, cap: it.cap });
+      fig.addEventListener('click', () => openLb(setName, it.src));
+      frame.appendChild(im);
+      fig.append(frame, cap);
+      rail.appendChild(fig);
+      im.src = it.src;
+    } else {
+      fig.style.display = 'none';
+      im.addEventListener('load', () => {
+        fig.style.display = '';
+        usable.push({ src: it.src, cap: it.cap });
+        usable.sort((a,b) =>
+          items.findIndex(x => x.src === a.src) - items.findIndex(x => x.src === b.src));
+        fig.addEventListener('click', () => openLb(setName, it.src));
+      });
+      im.addEventListener('error', () => fig.remove());
+      frame.appendChild(im);
+      fig.append(frame, cap);
+      rail.appendChild(fig);
+      im.src = it.src;
+    }
   });
 
   lightboxSets[setName] = usable;
@@ -474,9 +494,9 @@ function buildRail(railId, items, setName){
 
 const viewItems = [];
 for(let i=1; i<=VIEW_COUNT; i++) viewItems.push({ src:'assets/views/v'+i+'.jpg', cap:'View '+i });
-buildRail('railViews',  viewItems,        'views');
-buildRail('railWorth',  GALLERY.worth,    'worth');
-buildRail('railArcade', GALLERY.arcade,   'arcade');
+buildRail('railViews',  viewItems,      'views',  true);
+buildRail('railWorth',  GALLERY.worth,  'worth',  false);
+buildRail('railArcade', GALLERY.arcade, 'arcade', false);
 
 document.querySelectorAll('.rail-btn').forEach(btn => {
   btn.addEventListener('click', () => {
