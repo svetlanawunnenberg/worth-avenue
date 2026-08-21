@@ -70,11 +70,9 @@
   .rail figure .frame{ position:relative; width:100%; aspect-ratio:3/2; overflow:hidden;
     background:var(--ivory-deep); border:1px solid var(--line); }
   .rail figure img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .rail.gal figure img{ object-fit:contain; background:var(--ivory-deep); }
   .rail figure figcaption{ font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
     color:var(--ink-soft); margin-top:7px; }
-  .rail .empty{ width:100%; height:100%; display:flex; align-items:center; justify-content:center;
-    text-align:center; padding:16px; font-family:'EB Garamond',Georgia,serif; font-style:italic;
-    font-size:.88rem; color:var(--ink-soft); opacity:.65; cursor:default; }
   .rail-btn{ position:absolute; top:calc(50% - 16px); transform:translateY(-50%); z-index:3;
     width:38px; height:38px; border:1px solid var(--line); background:rgba(255,255,255,.94);
     color:var(--ink); font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
@@ -384,18 +382,16 @@ const TEXT = {
    ===================================================================== */
 const GALLERY = {
   worth: [
-    { src:"assets/worth-vintage-1.jpg", cap:"Worth Avenue, mid-century",
-      note:"Slot 1 — save the colour photograph (awnings, finned cars) as assets/worth-vintage-1.jpg" },
-    { src:"assets/worth-vintage-2.jpg", cap:"Looking down the Avenue, 1940s",
-      note:"Slot 2 — save the black-and-white street photograph as assets/worth-vintage-2.jpg" },
-    { src:"assets/worth-vintage-3.jpg", cap:"Vine-clad facades and the tower",
-      note:"Slot 3 — save the black-and-white tower photograph as assets/worth-vintage-3.jpg" },
-    { src:"assets/worth-mizner.jpg",    cap:"Mizner arcading and balcony, today" }
+    { src:"assets/worth-vintage-1.jpg", cap:"Worth Avenue, mid-century" },
+    { src:"assets/worth-vintage-2.jpg", cap:"Looking down the Avenue, 1940s" },
+    { src:"assets/worth-vintage-3.jpg", cap:"Vine-clad facades and the tower" },
+    { src:"assets/worth-entrance.jpg",  cap:"The Avenue today" },
+    { src:"assets/worth-mizner.jpg",    cap:"Mizner arcading and balcony" }
   ],
   arcade: [
-    { src:"assets/arcade-1819.jpg",       cap:"The Piccadilly entrance, engraved c.1828" },
-    { src:"assets/arcade-interior.jpg",   cap:"The arcade today",
-      note:"Slot empty — save the modern interior photograph as assets/arcade-interior.jpg and it appears here." }
+    { src:"assets/arcade-1819.jpg",         cap:"The Piccadilly entrance, engraved c.1828" },
+    { src:"assets/arcade-before-after.jpg", cap:"The arcade in 1905 and today" },
+    { src:"assets/arcade-interior.jpg",     cap:"Under the glazed roof" }
   ]
 };
 
@@ -441,42 +437,38 @@ if(EXTERIOR_EDITOR_LINK){
 /* ---------- rails ---------- */
 const lightboxSets = {};
 
+/* A slot whose file is not there yet simply does not appear — no placeholder,
+   no reserved gap. Each figure is built hidden, then revealed once its image
+   actually loads, so the order on the page always matches the list above. */
 function buildRail(railId, items, setName){
   const rail = byId(railId);
   const usable = [];
+
   items.forEach(it => {
     const fig = document.createElement('figure');
+    fig.style.display = 'none';
     const frame = document.createElement('div');
     frame.className = 'frame';
     const cap = document.createElement('figcaption');
     cap.textContent = it.cap;
 
-    if(it.note){
-      // slot with no image yet — show what to drop in, and check for it anyway
-      const ph = document.createElement('div');
-      ph.className = 'empty';
-      ph.textContent = it.note;
-      frame.appendChild(ph);
-      fig.style.cursor = 'default';
-      const probe = new Image();
-      probe.onload = () => {            // the file appeared: use it
-        frame.innerHTML = '';
-        const im = new Image(); im.src = it.src; im.alt = it.cap;
-        frame.appendChild(im);
-        fig.style.cursor = 'zoom-in';
-        usable.push({src:it.src, cap:it.cap});
-        fig.addEventListener('click', () => openLb(setName, it.src));
-      };
-      probe.src = it.src;
-    } else {
-      const im = new Image(); im.src = it.src; im.alt = it.cap; im.loading = 'lazy';
-      frame.appendChild(im);
-      usable.push({src:it.src, cap:it.cap});
+    const im = new Image();
+    im.alt = it.cap;
+    im.addEventListener('load', () => {
+      fig.style.display = '';
+      usable.push({ src: it.src, cap: it.cap });
+      usable.sort((a,b) =>
+        items.findIndex(x => x.src === a.src) - items.findIndex(x => x.src === b.src));
       fig.addEventListener('click', () => openLb(setName, it.src));
-    }
+    });
+    im.addEventListener('error', () => fig.remove());
+    im.src = it.src;
+
+    frame.appendChild(im);
     fig.append(frame, cap);
     rail.appendChild(fig);
   });
+
   lightboxSets[setName] = usable;
 }
 
