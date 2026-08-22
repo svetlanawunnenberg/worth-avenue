@@ -254,9 +254,40 @@
     .vocab{ grid-template-columns:1fr; }
   }
 
+  /* ---------- first-visit welcome ---------- */
+  .welcome{ position:fixed; inset:0; z-index:300; background:var(--ivory);
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:30px 24px; transition:opacity .6s ease, visibility .6s ease; }
+  .welcome.on{ display:flex; }
+  .welcome.going{ opacity:0; visibility:hidden; }
+  .welcome img{ width:min(180px,38vw); height:auto; margin-bottom:34px; }
+  .welcome .wel-eyebrow{ font-size:10px; letter-spacing:.34em; text-transform:uppercase;
+    color:var(--brass); margin-bottom:20px; }
+  .welcome h2{ font-family:'EB Garamond',Georgia,serif; font-weight:500;
+    font-size:clamp(1.7rem,4.6vw,2.9rem); line-height:1.2; margin:0; max-width:16ch; }
+  .welcome .wel-sub{ font-family:'EB Garamond',Georgia,serif; font-style:italic;
+    font-size:1.02rem; color:var(--ink-soft); margin:16px 0 0; }
+  .welcome .wel-rule{ width:52px; height:1px; background:var(--line); margin:30px 0; }
+  .welcome button{ background:var(--ink); color:var(--ivory); border:1px solid var(--ink);
+    padding:17px 46px; font:inherit; font-size:11px; letter-spacing:.3em; text-transform:uppercase;
+    cursor:pointer; transition:background .2s ease; }
+  .welcome button:hover{ background:var(--brass); border-color:var(--brass); }
+  .welcome .wel-note{ font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--ink-soft); opacity:.5; margin-top:26px; }
+
 </style>
 </head>
 <body>
+
+<div class="welcome" id="welcome">
+  <img src="assets/fs-logo-black.png" alt="Fairfax &amp; Sammons">
+  <div class="wel-eyebrow">150 Worth Avenue &middot; Palm Beach</div>
+  <h2 class="serif">Welcome to the Fairfax &amp; Sammons Esplanade Viewer</h2>
+  <p class="wel-sub">Burlington Arcade &mdash; the current design set</p>
+  <div class="wel-rule"></div>
+  <button type="button" id="welGo">Explore</button>
+  <div class="wel-note">Shown once &middot; you will come straight in next time</div>
+</div>
 
 <div class="header-band">
   <img src="assets/burlington-header.png" alt="Burlington Arcade — Fairfax &amp; Sammons, New York ~ Palm Beach">
@@ -1024,6 +1055,37 @@ document.addEventListener('keydown', e => {
   else if(e.key === 'ArrowLeft') tourStep(-1);
 });
 window.addEventListener('beforeunload', tourStopTalking);
+
+/* =====================================================================
+   FIRST-VISIT WELCOME
+
+   Shown once per browser, then never again — the flag is kept in this
+   browser's own storage, so coming back to the dashboard from any tool
+   lands you straight on the page.
+
+   To see it again yourself: open this page and add ?welcome to the end
+   of the address, or clear the site's storage in the browser settings.
+   ===================================================================== */
+(function welcomeGate(){
+  const KEY = 'fs-esplanade-welcomed';
+  const el = byId('welcome');
+  const forced = location.search.indexOf('welcome') > -1;
+
+  let seen = false;
+  try { seen = localStorage.getItem(KEY) === '1'; } catch(e) { seen = false; }
+
+  if(seen && !forced) return;          // straight in
+
+  document.body.style.overflow = 'hidden';
+  el.classList.add('on');
+
+  byId('welGo').addEventListener('click', () => {
+    try { localStorage.setItem(KEY, '1'); } catch(e) {}
+    el.classList.add('going');
+    document.body.style.overflow = '';
+    setTimeout(() => el.classList.remove('on','going'), 620);
+  });
+})();
 
 </script>
 </body>

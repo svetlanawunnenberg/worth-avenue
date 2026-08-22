@@ -119,8 +119,8 @@
         letter-spacing: 1px; color: #555; cursor: pointer; list-style: none; user-select: none;
     }
     details.control-group summary::-webkit-details-marker { display: none; }
-    details.control-group summary::before { content: "▸ "; color: #999; }
-    details.control-group[open] summary::before { content: "▾ "; color: #333; }
+    details.control-group summary::before { content: "â¸ "; color: #999; }
+    details.control-group[open] summary::before { content: "â¾ "; color: #333; }
     details.control-group > *:not(summary) { margin-top: 4px; }
 
     /* ---------- text-box selection ---------- */
@@ -177,7 +177,7 @@
        The render stays pinned (sticky) at the top of the screen at all
        times. Below it, each numbered section is its own full-screen
        slide you swipe left/right between (or step through with the
-       arrows) — nothing to scroll through, one step at a time. */
+       arrows) â nothing to scroll through, one step at a time. */
     @media (max-width: 900px), (max-width: 1024px) and (orientation: portrait) {
         html, body { height: 100%; }
         body { flex-direction: column; padding: 0; gap: 0; overflow: hidden; }
@@ -235,13 +235,37 @@
         .cat-carousel { display: flex; }
         #category-bubbles { display: none; }
     }
+    /* ---------- return nav (added 2026-08-21) ----------
+       Fixed to the corner rather than placed in the flow, because this
+       page is a flex layout that goes full-height on small screens â
+       anything in the flow would push the editor about. */
+    #fs-nav{
+        position: fixed; left: 12px; bottom: 12px; z-index: 9000;
+        display: flex; gap: 6px; align-items: center;
+        font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+        opacity: .55; transition: opacity .18s ease;
+    }
+    #fs-nav:hover{ opacity: 1; }
+    #fs-nav a{
+        display: inline-block; text-decoration: none;
+        background: #161310; color: #F4EFE4; border: 1px solid #161310;
+        padding: 9px 13px; font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase;
+        box-shadow: 0 4px 14px rgba(22,19,16,.22); transition: background .18s ease;
+    }
+    #fs-nav a.ghost{ background: rgba(255,255,255,.94); color: #161310; border-color: #C9BFA6; }
+    #fs-nav a:hover{ background: #8A6D3B; border-color: #8A6D3B; color: #F4EFE4; }
+    @media (max-width: 900px){
+        #fs-nav{ left: 8px; bottom: 8px; }
+        #fs-nav a{ padding: 8px 11px; font-size: 9px; }
+    }
+
 </style>
 </head>
 
 <body>
 
 <!-- ============================================================= -->
-<!-- FILE MANIFEST — matches your real filenames exactly            -->
+<!-- FILE MANIFEST â matches your real filenames exactly            -->
 <!-- ============================================================= -->
 <script>
 const FILES = {
@@ -250,8 +274,8 @@ const FILES = {
     BASE:            "BASE IMAGE HERE.png",
     BASE_VAGUE:      "BASE VAGUE IMAGE HERE.png",
     BASE_VAGUE_BLUR: "BASE VAGUE BLUR IMAGE HERE.png",
-    PEOPLE_FRONT:    "PEOPLE IMAGE.png",       // FRONT PEOPLE — drawn over everything
-    PEOPLE_BG:       "PEOPLE IMAGE 2.png",      // BACKGROUND PEOPLE — drawn behind awning/category
+    PEOPLE_FRONT:    "PEOPLE IMAGE.png",       // FRONT PEOPLE â drawn over everything
+    PEOPLE_BG:       "PEOPLE IMAGE 2.png",      // BACKGROUND PEOPLE â drawn behind awning/category
 
     // ---------- AWNINGS ----------
     AWNING_1:        "1 AWNING IMAGE HERE.png",
@@ -259,7 +283,7 @@ const FILES = {
 
     // ---------- CATEGORIES : 1-AWNING VERSIONS ----------
     // RULE: CRAFT and SALON have no dedicated color file in the asset
-    // folder (confirmed against the actual file list) — color is set to
+    // folder (confirmed against the actual file list) â color is set to
     // null so the compositor never attempts that fetch at all and just
     // tints the base directly. This is what stopped the category-step
     // glitch: it wasn't a fallback needed after a failed load, it was a
@@ -285,7 +309,7 @@ const FILES = {
         MENS:    { base: "2 MENS CLOTHES BASE IMAGE HERE.png",    color: "2 MENS CLOTHES COLOR IMAGE HERE.png" }
     }
 
-    // ---------- NOT WIRED YET — waiting on exact roles ----------
+    // ---------- NOT WIRED YET â waiting on exact roles ----------
     // Confirmed these exist in your folder but I still don't know which
     // retail bay each represents, so I haven't guessed:
     //   "BASE IMAGE 1 STORE IMAGE EMPTY.png"     -> which retail bay?
@@ -300,7 +324,7 @@ const FILES = {
 <div class="controls" id="controls-deck">
     <h2 class="desktop-title">ESPLANADE RENDER MAKER</h2>
 
-    <!-- WELCOME — mobile only, first slide -->
+    <!-- WELCOME â mobile only, first slide -->
     <details class="control-group welcome-slide" open>
         <summary>Welcome</summary>
         <div class="welcome-text">
@@ -406,7 +430,7 @@ const FILES = {
             <span class="dot" data-val="MENS" onclick="setCategory('MENS')"></span>
         </div>
 
-        <div id="cat-hint" style="font-size:11px; color:#a00; display:none;">Pick 1 AWNING or 2 AWNINGS above — category files are layout-specific.</div>
+        <div id="cat-hint" style="font-size:11px; color:#a00; display:none;">Pick 1 AWNING or 2 AWNINGS above â category files are layout-specific.</div>
     </details>
 
     <details class="control-group" open>
@@ -525,7 +549,7 @@ const FILES = {
 
 <script>
 /* ==========================================================
-   STATE — every toggle is fully independent
+   STATE â every toggle is fully independent
 ========================================================== */
 let retailFilled  = false;   // EMPTY / FILL RETAIL (the vague layer)
 let blurOn        = false;
@@ -562,7 +586,7 @@ function reportMissing() {
     const box = document.getElementById('missing-toast');
     if (missing.size === 0) return;
     const list = [...missing];
-    const shown = list.slice(-1)[0]; // most recent miss — avoids an ever-growing wall of text
+    const shown = list.slice(-1)[0]; // most recent miss â avoids an ever-growing wall of text
     const extra = list.length > 1 ? ` (+${list.length - 1} more)` : '';
     box.textContent = 'Image not found: ' + shown + extra;
     box.classList.add('show');
@@ -587,12 +611,12 @@ function makeOffscreen() {
    Text/logo position, width, and font-size are stored ONLY in the
    native 1600x1200 space (as data-nx/ny/nfs/nls/nw on the element).
    That native value is the single source of truth. Screen pixels are
-   a pure, disposable OUTPUT of it — recomputed fresh any time the
+   a pure, disposable OUTPUT of it â recomputed fresh any time the
    container's size changes (window resize, orientation change, mobile
    vs desktop layout switch), via the exact same scale+crop math the
    photo itself uses (object-fit:cover). This is what keeps every box
    pinned to its exact spot on the photo at any viewport size, and lets
-   the exported image read the SAME numbers the screen just drew —
+   the exported image read the SAME numbers the screen just drew â
    no separate reverse-engineering of the transform at export time.
 ========================================================== */
 function getCoverTransform() {
@@ -631,7 +655,7 @@ function applyAllNativePositions() {
 }
 
 // Seed a new element's native values FROM a convenient current-screen
-// placement (e.g. "40% across, 45% down, 40px tall right now") — used
+// placement (e.g. "40% across, 45% down, 40px tall right now") â used
 // only at creation time. After this, native is the only thing that matters.
 function seedTextDefaults(el, leftFrac, topFrac, screenFontSizePx) {
     const t = getCoverTransform();
@@ -652,7 +676,7 @@ function seedLogoDefaults(img, leftFrac, topFrac, screenWidthPx) {
 }
 
 /* ==========================================================
-   TINT ENGINE — SHADOW PRESERVING (multiply + shadow deepen)
+   TINT ENGINE â SHADOW PRESERVING (multiply + shadow deepen)
 ========================================================== */
 function buildTintedLayer(img, color, opts) {
     const {
@@ -668,7 +692,7 @@ function buildTintedLayer(img, color, opts) {
     const out = makeOffscreen();
     const ctx = out.getContext('2d');
 
-    // 1. the image — shading source, always sharp
+    // 1. the image â shading source, always sharp
     let f = `contrast(${contrastPct}%) brightness(${brightnessPct}%)`;
     if (desaturateBase) f += ' grayscale(100%)';
     else if (hueShiftDeg > 0) f += ` hue-rotate(${hueShiftDeg}deg)`;
@@ -722,7 +746,7 @@ function buildTintedLayer(img, color, opts) {
 }
 
 /* ==========================================================
-   MAIN COMPOSITOR — all layers independent
+   MAIN COMPOSITOR â all layers independent
    ORDER (bottom to top):
    BASE (always)
    -> BASEVAGUE (if retail filled)
@@ -730,7 +754,7 @@ function buildTintedLayer(img, color, opts) {
    -> BLUR LAYER (if blur on; hard-clipped to its OWN alpha)
    -> CATEGORY BASE -> CATEGORY COLOR OVERLAY
    -> AWNING (always top of the storefront)
-   -> FRONT PEOPLE (if front people on) — the very top layer
+   -> FRONT PEOPLE (if front people on) â the very top layer
 ========================================================== */
 async function composeScene() {
     const scene = makeOffscreen();
@@ -738,11 +762,11 @@ async function composeScene() {
     ctx.fillStyle = '#e9ecef';
     ctx.fillRect(0, 0, OFF_W, OFF_H);
 
-    // BASE — always the bottom layer
+    // BASE â always the bottom layer
     const base = await loadImg(FILES.BASE);
     if (base) ctx.drawImage(base, 0, 0, OFF_W, OFF_H);
 
-    // BASEVAGUE — only when retail is filled (the 2 full + 2 sliver side-retail bays)
+    // BASEVAGUE â only when retail is filled (the 2 full + 2 sliver side-retail bays)
     if (retailFilled) {
         const vague = await loadImg(FILES.BASE_VAGUE);
         if (vague) {
@@ -771,16 +795,16 @@ async function composeScene() {
         }
     }
 
-    // BACKGROUND PEOPLE — sits behind the awning/category, in front of the base/fill
+    // BACKGROUND PEOPLE â sits behind the awning/category, in front of the base/fill
     if (showBgPeople) {
         const bgPpl = await loadImg(FILES.PEOPLE_BG);
         if (bgPpl) ctx.drawImage(bgPpl, 0, 0, OFF_W, OFF_H);
     }
 
-    // BLUR LAYER — independent toggle.
+    // BLUR LAYER â independent toggle.
     // The blurred pixels are CLIPPED TO THE BLUR FILE'S OWN ORIGINAL
     // ALPHA before compositing. Blur physically cannot land anywhere
-    // the blur file didn't originally have pixels — no leaking onto
+    // the blur file didn't originally have pixels â no leaking onto
     // the base, the columns, the floor, or outside the frame.
     if (blurOn) {
         const vblur = await loadImg(FILES.BASE_VAGUE_BLUR);
@@ -799,7 +823,7 @@ async function composeScene() {
         }
     }
 
-    // CATEGORY — independent of retail filled.
+    // CATEGORY â independent of retail filled.
     // BASE FILE first (sharp), COLOR OVERLAY on top (edited).
     if (currentCategory !== 'NONE' && currentAwning !== 'NONE') {
         const set = currentAwning === '1' ? FILES.CAT_1 : FILES.CAT_2;
@@ -819,7 +843,7 @@ async function composeScene() {
             // Every category: BASE file first (sharp), COLOR overlay on top
             // where one exists. Accent Layer Opacity fades the overlay so
             // the base shows through. CRAFT/SALON have no color file by
-            // design (see FILES.CAT_1/CAT_2 comment) — entry.color is null
+            // design (see FILES.CAT_1/CAT_2 comment) â entry.color is null
             // for those, so we never attempt that fetch at all.
             const baseImg = await loadImg(entry.base);
             if (baseImg) ctx.drawImage(baseImg, 0, 0, OFF_W, OFF_H);
@@ -835,7 +859,7 @@ async function composeScene() {
         }
     }
 
-    // AWNING — ALWAYS the very top layer
+    // AWNING â ALWAYS the very top layer
     if (currentAwning !== 'NONE') {
         const awnSrc = currentAwning === '1' ? FILES.AWNING_1 : FILES.AWNING_2;
         const awnImg = await loadImg(awnSrc);
@@ -853,7 +877,7 @@ async function composeScene() {
         }
     }
 
-    // FRONT PEOPLE — the VERY TOP layer, over everything including the awning
+    // FRONT PEOPLE â the VERY TOP layer, over everything including the awning
     if (showFrontPeople) {
         const ppl = await loadImg(FILES.PEOPLE_FRONT);
         if (ppl) ctx.drawImage(ppl, 0, 0, OFF_W, OFF_H);
@@ -868,12 +892,12 @@ async function composeScene() {
 
 /* The live preview shows text/logos as DOM overlays (fast dragging,
    no re-render needed while typing). But the canvas image itself never
-   contained them — so Download was silently exporting a render with no
+   contained them â so Download was silently exporting a render with no
    text or logos on it. This bakes those DOM overlays onto a copy of the
    composited scene, so the download matches what you see on screen.
 
    Text/logo native position, width, and font-size are read straight off
-   each element's dataset (nx/ny/nfs/nls/nw) — the same native numbers
+   each element's dataset (nx/ny/nfs/nls/nw) â the same native numbers
    that drive the live on-screen position via applyNativePosition(). No
    transform reverse-engineering here: both the screen and the export
    are just two different renders of one shared set of numbers, so they
@@ -1139,7 +1163,7 @@ function updateBubbles(containerId, activeVal) {
    numbered section = one full-screen slide). This drives the arrow
    buttons and dot indicator that sit in the sticky header. On desktop
    .controls doesn't scroll horizontally, so this code is simply inert
-   there — harmless either way. */
+   there â harmless either way. */
 (function () {
     const deck = document.getElementById('controls-deck');
     const dotsContainer = document.getElementById('step-dots');
@@ -1304,7 +1328,7 @@ function attachTextEvents(el) {
     el.addEventListener('click', e => { e.stopPropagation(); selectText(el); });
 }
 
-/* "✓ DONE" — clears the dashed selection outline so you can see the
+/* "â DONE" â clears the dashed selection outline so you can see the
    clean render. Keeps the box's content/styles exactly as edited;
    it does NOT delete anything. Tap a box again to keep editing it. */
 function confirmTextEdit() {
@@ -1335,7 +1359,7 @@ function deleteSelectedText() {
     selectText(document.querySelector('.draggable-text'));
 }
 
-/* Clones EVERY current text box at once, offset as a single block —
+/* Clones EVERY current text box at once, offset as a single block â
    every box keeps its own font-size/spacing/style exactly as-is, so
    the ratio between boxes in the set never changes. */
 function duplicateAllText() {
@@ -1380,7 +1404,7 @@ function updateAllTextStyles() {
     applyNativePosition(selectedText);
 }
 
-/* drag — shared by text AND logos. Delta is measured in screen px
+/* drag â shared by text AND logos. Delta is measured in screen px
    (however the user's finger/mouse actually moves) then converted to
    native units before being added to the stored native position, so a
    drag always moves the box the same REAL distance across the photo
@@ -1412,7 +1436,7 @@ document.addEventListener('mousedown', e => {
 document.addEventListener('mousemove', e => continueDrag(e.clientX, e.clientY));
 document.addEventListener('mouseup', endDrag);
 
-// touch drag — capture phase so this fires BEFORE the preview's swipe-to-
+// touch drag â capture phase so this fires BEFORE the preview's swipe-to-
 // change-awning listener sees the same touch, and stopPropagation keeps
 // that swipe gesture from also triggering while repositioning a box.
 document.addEventListener('touchstart', e => {
@@ -1437,7 +1461,7 @@ window.addEventListener('resize', applyAllNativePositions);
 window.addEventListener('orientationchange', applyAllNativePositions);
 
 /* ==========================================================
-   DOWNLOAD — flat JPEG, text and logos baked in, no popup.
+   DOWNLOAD â flat JPEG, text and logos baked in, no popup.
    Always re-composes + re-bakes fresh right before exporting, so it's
    never stale relative to whatever was last typed or dragged.
 ========================================================== */
@@ -1465,5 +1489,10 @@ window.onload = () => {
     requestDraw();
 };
 </script>
+<nav id="fs-nav">
+  <a href="../">← Dashboard</a>
+  <a class="ghost" href="../floorplan/">Floorplan</a>
+</nav>
+
 </body>
 </html>

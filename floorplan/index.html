@@ -311,6 +311,23 @@
   .walk-box button.muted{ opacity:.5; }
   .walk-box button:hover{ background:var(--brass); border-color:var(--brass); color:var(--ivory); }
 
+  /* ---------- tools footer ---------- */
+  .toolsbar{ border-top:1px solid var(--line); background:var(--ivory); padding:26px 16px 34px; text-align:center; }
+  .toolsbar .tb-label{ font-size:9px; letter-spacing:.24em; text-transform:uppercase; color:var(--brass); margin-bottom:16px; }
+  .toolsbar .tb-row{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; max-width:760px; margin:0 auto; }
+  .toolsbar a{ display:flex; flex-direction:column; gap:3px; min-width:170px; flex:1 1 170px;
+    border:1px solid var(--line); background:var(--white); color:var(--ink); text-decoration:none;
+    padding:14px 16px; text-align:left; transition:all .18s ease; }
+  .toolsbar a:hover{ border-color:var(--brass); background:var(--white); transform:translateY(-1px); }
+  .toolsbar a.home{ background:var(--ink); color:var(--ivory); border-color:var(--ink); }
+  .toolsbar a.home:hover{ background:var(--brass); border-color:var(--brass); }
+  .toolsbar a.off{ opacity:.45; pointer-events:none; }
+  .toolsbar .tb-t{ font-size:10px; letter-spacing:.16em; text-transform:uppercase; }
+  .toolsbar .tb-s{ font-family:'EB Garamond',serif; font-style:italic; font-size:.8rem; opacity:.72; }
+  .toolsbar .tb-foot{ margin-top:20px; font-size:8.5px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--ink-soft); opacity:.55; }
+  @media print{ .toolsbar{ display:none !important; } }
+
 </style>
 </head>
 <body>
@@ -426,6 +443,16 @@
           <div class="gallery-cards" id="galleryCards"></div>
         </div>
       </section>
+
+      <nav class="toolsbar">
+        <div class="tb-label">Where to next</div>
+        <div class="tb-row">
+          <a class="home" href="../"><span class="tb-t">Dashboard</span><span class="tb-s">Back to the project home</span></a>
+          <a href="../esplanade/"><span class="tb-t">Facade Editor</span><span class="tb-s">Mock up a shopfront</span></a>
+          <a class="off" href="#"><span class="tb-t">Exterior Editor</span><span class="tb-s">Coming soon</span></a>
+        </div>
+        <div class="tb-foot">Fairfax &amp; Sammons Architecture &middot; 150 Worth Ave, Palm Beach</div>
+      </nav>
     </main>
   </div>
 
