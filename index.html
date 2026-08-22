@@ -182,6 +182,76 @@
     .rail.gal figure{ width:90%; }
     .lb-arrow{ width:40px; height:40px; font-size:16px; }
   }
+  /* ---------- vocabulary flip cards ---------- */
+  .vocab{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; }
+  .vcard{ perspective:1000px; aspect-ratio:5/4; cursor:pointer; background:none; border:none; padding:0; font:inherit; text-align:left; }
+  .vcard-inner{ position:relative; width:100%; height:100%; transition:transform .55s cubic-bezier(.4,.2,.2,1);
+    transform-style:preserve-3d; }
+  .vcard.flipped .vcard-inner{ transform:rotateY(180deg); }
+  .vface{ position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+    border:1px solid var(--line); background:var(--white); padding:20px 18px;
+    display:flex; flex-direction:column; justify-content:center; overflow:auto; }
+  .vfront .vterm{ font-family:'EB Garamond',Georgia,serif; font-size:1.42rem; line-height:1.15; }
+  .vfront .vlang{ font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--brass); margin-top:8px; }
+  .vfront .vflip{ font-size:8.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft);
+    opacity:.55; margin-top:auto; padding-top:12px; }
+  .vback{ transform:rotateY(180deg); background:var(--ink); border-color:var(--ink); color:var(--ivory); }
+  .vback .vdef{ font-family:'EB Garamond',Georgia,serif; font-size:.98rem; line-height:1.55; }
+  .vback .vuse{ font-size:.8rem; line-height:1.5; opacity:.72; margin-top:10px; font-style:italic; }
+  .vcard:hover .vface{ border-color:var(--brass); }
+
+  /* ---------- concierge ---------- */
+  .cg-open{ position:fixed; right:20px; bottom:20px; z-index:240; display:flex; align-items:center; gap:9px;
+    background:var(--ink); color:var(--ivory); border:1px solid var(--ink); padding:13px 18px; cursor:pointer;
+    font-size:10px; letter-spacing:.17em; text-transform:uppercase; box-shadow:0 10px 30px rgba(22,19,16,.28); }
+  .cg-open:hover{ background:var(--brass); border-color:var(--brass); }
+  .cg{ position:fixed; right:20px; bottom:20px; width:min(380px,calc(100vw - 32px)); max-height:min(620px,calc(100vh - 40px));
+    background:var(--ivory); border:1px solid var(--line); box-shadow:0 20px 60px rgba(22,19,16,.34);
+    z-index:250; display:none; flex-direction:column; }
+  .cg.open{ display:flex; }
+  .cg-head{ display:flex; align-items:center; gap:8px; padding:12px 14px; background:var(--ink); color:var(--ivory); flex:none; }
+  .cg-head .cg-t{ flex:1; font-family:'EB Garamond',Georgia,serif; font-size:15px; }
+  .cg-head button{ background:none; border:none; color:var(--ivory); font-size:15px; padding:2px 6px; cursor:pointer; opacity:.75; }
+  .cg-head button:hover{ opacity:1; }
+  .cg-log{ flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; min-height:120px; }
+  .cg-msg{ max-width:88%; padding:10px 13px; font-size:.88rem; line-height:1.55; }
+  .cg-msg.bot{ background:var(--white); border:1px solid var(--line); align-self:flex-start; }
+  .cg-msg.you{ background:var(--ink); color:var(--ivory); align-self:flex-end; }
+  .cg-msg b{ font-weight:600; }
+  .cg-chips{ display:flex; flex-wrap:wrap; gap:6px; padding:0 14px 10px; flex:none; }
+  .cg-chip{ border:1px solid var(--line); background:var(--white); color:var(--ink-soft); cursor:pointer;
+    padding:7px 11px; font-size:10px; letter-spacing:.06em; font-family:inherit; }
+  .cg-chip:hover{ background:var(--ink); color:var(--ivory); border-color:var(--ink); }
+  .cg-form{ display:flex; gap:0; border-top:1px solid var(--line); flex:none; }
+  .cg-form input{ flex:1; border:none; padding:13px 14px; font:inherit; font-size:.88rem; background:var(--white); color:var(--ink); }
+  .cg-form input:focus{ outline:2px solid var(--brass); outline-offset:-2px; }
+  .cg-form button{ border:none; background:var(--ink); color:var(--ivory); padding:0 18px; cursor:pointer;
+    font-size:10px; letter-spacing:.16em; text-transform:uppercase; }
+  .cg-form button:hover{ background:var(--brass); }
+
+  /* ---------- guided tour ---------- */
+  .tour-ring{ position:relative; z-index:231; outline:2px solid var(--brass); outline-offset:6px;
+    box-shadow:0 0 0 9999px rgba(22,19,16,.55); border-radius:2px; }
+  .tour-box{ position:fixed; z-index:245; width:min(340px,calc(100vw - 32px)); background:var(--white);
+    border:1px solid var(--line); box-shadow:0 16px 44px rgba(22,19,16,.34); padding:18px 20px; display:none; }
+  .tour-box.on{ display:block; }
+  .tour-box .tstep{ font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--brass); margin-bottom:7px; }
+  .tour-box h4{ font-family:'EB Garamond',Georgia,serif; font-size:1.16rem; margin:0 0 7px; font-weight:600; }
+  .tour-box p{ margin:0 0 16px; font-size:.88rem; line-height:1.55; color:var(--ink-soft); }
+  .tour-box .tnav{ display:flex; gap:8px; align-items:center; }
+  .tour-box .tnav .sp{ flex:1; }
+  .tour-box button{ border:1px solid var(--ink); background:transparent; color:var(--ink); cursor:pointer;
+    padding:8px 14px; font:inherit; font-size:9.5px; letter-spacing:.15em; text-transform:uppercase; }
+  .tour-box button.primary{ background:var(--ink); color:var(--ivory); }
+  .tour-box button:hover{ background:var(--brass); border-color:var(--brass); color:var(--ivory); }
+
+  @media (max-width:620px){
+    .cg{ right:8px; left:8px; bottom:8px; width:auto; max-height:78vh; }
+    .cg-open{ right:12px; bottom:12px; }
+    .vocab{ grid-template-columns:1fr 1fr; }
+    .vcard{ aspect-ratio:4/5; }
+  }
+
 </style>
 </head>
 <body>
@@ -224,7 +294,7 @@
   </a>
 
   <div class="section-label">Facade Renderer</div>
-  <a class="editor-row" href="esplanade/">
+  <a class="editor-row" id="rowInterior" href="esplanade/">
     <div>
       <h3>Interior Facade Editor</h3>
       <p>Mock up arcade shopfronts — awnings, colour, signage, logos, retail category.</p>
@@ -283,6 +353,9 @@
     <a class="more" href="https://burlingtonarcade.com" target="_blank" rel="noopener">burlingtonarcade.com &rarr;</a>
   </div>
 
+  <div class="section-label">The Vocabulary</div>
+  <div class="vocab" id="vocab"></div>
+
   <div class="section-label">Project Files</div>
   <div class="links">
     <a class="linkbtn" id="btnDrive" href="#" target="_blank" rel="noopener">
@@ -300,6 +373,34 @@
   </div>
 
   <footer>Internal reference — Fairfax &amp; Sammons Architecture. Not for public distribution.</footer>
+</div>
+
+<button class="cg-open" id="cgOpen" type="button">&#9634;&nbsp; Ask / Tour</button>
+
+<aside class="cg" id="cg">
+  <div class="cg-head">
+    <span class="cg-t serif">Arcade Concierge</span>
+    <button type="button" id="cgTour" title="Take the tour" style="font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;">Tour</button>
+    <button type="button" id="cgClose" title="Close">&times;</button>
+  </div>
+  <div class="cg-log" id="cgLog"></div>
+  <div class="cg-chips" id="cgChips"></div>
+  <form class="cg-form" id="cgForm">
+    <input type="text" id="cgInput" placeholder="Ask about the project&hellip;" autocomplete="off">
+    <button type="submit">Ask</button>
+  </form>
+</aside>
+
+<div class="tour-box" id="tourBox">
+  <div class="tstep" id="tourStep">Step 1</div>
+  <h4 id="tourTitle"></h4>
+  <p id="tourText"></p>
+  <div class="tnav">
+    <button type="button" id="tourBack">Back</button>
+    <span class="sp"></span>
+    <button type="button" id="tourEnd">End</button>
+    <button type="button" class="primary" id="tourNext">Next</button>
+  </div>
 </div>
 
 <div class="modal" id="pathModal">
@@ -588,6 +689,242 @@ byId('btnCopyPath').addEventListener('click', async () => {
   }
   copied.classList.add('show');
 });
+/* =====================================================================
+   THE VOCABULARY — click a card to turn it over.
+   Add or edit entries here; the cards build themselves.
+   ===================================================================== */
+const VOCAB = [
+  { term:"Percement", lang:"French",
+    def:"The deliberate piercing of a new street or passage through a solid, existing block.",
+    use:"“A sky-lit walk — a deliberate percement through the depth of the block.”" },
+
+  { term:"Passage couvert", lang:"French",
+    def:"The glass-roofed pedestrian shopping street. Paris built the first ones — Passage du Caire, 1798 — two decades before Burlington.",
+    use:"“Not one frontage but a sequence of intimate passages couverts.”" },
+
+  { term:"Poché", lang:"French · Beaux-Arts",
+    def:"The solid mass of a plan — the blacked-in wall. Public space is what you carve out of it.",
+    use:"“A block whose poché is carved into a pedestrian sequence becomes a district.”" },
+
+  { term:"Transitus", lang:"Latin",
+    def:"The way through. In classical urbanism, the permeability of a block — whether a person on foot can cross it at all.",
+    use:"“Light, air, and crucial permeability restored to the block.”" },
+
+  { term:"Flânerie", lang:"French",
+    def:"Unhurried strolling, looking and lingering. The arcade exists for it. The one doing it is a flâneur.",
+    use:"“Daylit from above, designed not merely for retail but for elegant flânerie.”" },
+
+  { term:"Enfilade", lang:"French",
+    def:"Openings aligned on one axis so the eye travels the whole length uninterrupted. Why a 179-metre arcade never reads as a corridor.",
+    use:"“The shopfronts hold an enfilade the length of the arcade.”" },
+
+  { term:"Parti", lang:"French · Beaux-Arts",
+    def:"The governing idea of a plan — the single organising move every other decision serves.",
+    use:"“The parti is one covered street, top-lit, cut clean through the block.”" },
+
+  { term:"Arcade vs. colonnade", lang:"Latin root · arcus",
+    def:"An arcade is arches carried on piers. A colonnade is columns carrying a straight entablature. Burlington is properly an arcade — the arch is doing the work.",
+    use:"“Arches on piers, not columns on a lintel — an arcade in the strict sense.”" }
+];
+
+(function buildVocab(){
+  const wrap = byId('vocab');
+  VOCAB.forEach(v => {
+    const card = document.createElement('button');
+    card.className = 'vcard';
+    card.type = 'button';
+    card.setAttribute('aria-label', v.term + ' — turn over for the definition');
+    card.innerHTML =
+      '<span class="vcard-inner">' +
+        '<span class="vface vfront">' +
+          '<span class="vterm serif"></span>' +
+          '<span class="vlang"></span>' +
+          '<span class="vflip">Click to turn</span>' +
+        '</span>' +
+        '<span class="vface vback">' +
+          '<span class="vdef"></span>' +
+          '<span class="vuse"></span>' +
+        '</span>' +
+      '</span>';
+    card.querySelector('.vterm').textContent = v.term;
+    card.querySelector('.vlang').textContent = v.lang;
+    card.querySelector('.vdef').textContent  = v.def;
+    card.querySelector('.vuse').textContent  = v.use;
+    card.addEventListener('click', () => card.classList.toggle('flipped'));
+    wrap.appendChild(card);
+  });
+})();
+
+/* =====================================================================
+   THE CONCIERGE
+
+   This is NOT an AI. It matches what you type against the list below and
+   replies with the answer written here. So it is instant, costs nothing,
+   works offline — and it cannot invent a fact about the project, which
+   matters more on a firm's page than cleverness does.
+
+   To teach it something new, add an entry to KB: some keywords, and the
+   answer you want it to give.
+   ===================================================================== */
+const KB = [
+  { k:["what is this","what is burlington","about","project","explain","overview"],
+    a:"Burlington Arcade is Fairfax &amp; Sammons' scheme for the Esplanade at 150 Worth Avenue, Palm Beach — the former Saks space reworked as a covered shopping street on two levels, daylit from above. This page holds the working set: the renderings, the plan they sit on, and the facade tools." },
+
+  { k:["where","address","location","palm beach","worth avenue"],
+    a:"150 Worth Avenue, Palm Beach, Florida — the Esplanade. Note it is Palm Beach, not West Palm Beach. Different towns, and the distinction matters on a submission." },
+
+  { k:["london","1819","original","piccadilly","cavendish","beadle","arcade tradition"],
+    a:"The London Burlington Arcade opened 20 March 1819 off Piccadilly — Lord George Cavendish had Samuel Ware roof a lane beside Burlington House. It is still policed by beadles in frock coats, and running, singing and whistling remain forbidden. See <b>The Arcade Tradition</b> below." },
+
+  { k:["mizner","everglades","via","1918","1923","mediterranean","worth ave history"],
+    a:"Addison Mizner arrived in 1918 at Paris Singer's invitation; the Everglades Club opened February 1919, and Via Mizner was cut through the block behind it in 1923. Those Vias are the direct precedent for what the arcade does at 150 Worth. See <b>Worth Avenue</b>." },
+
+  { k:["floorplan","plan","map","marker","dot","viewer","seventeen"],
+    a:"Open <b>Floorplan &amp; Renderings</b>. Seventeen markers sit on the plan where each rendering was taken from. Hover one to preview, click to pin. Every pin keeps its sightline on the plan, so your selection builds up as you go." },
+
+  { k:["pin","pinned","select","choose","curate"],
+    a:"Click a marker to pin that view. Pinned markers stay lit with their sightlines showing, so you can pin three or four and read all of them on the plan at once. Pinned views collect underneath, where you can reorder them or unpin." },
+
+  { k:["pdf","print","download","export","deck","presentation","save"],
+    a:"Pin the views you want, then <b>Download PDF</b>. It builds a title page, then a plan carrying every marker you chose, then one page per view with the logo and a reference map. Pick <i>Save as PDF</i> as the destination. <b>Presentation</b> gives full screen with arrows, a red pen and a Save button." },
+
+  { k:["editor","facade","awning","shopfront","mock","retail","signage","tenant"],
+    a:"The <b>Interior Facade Editor</b> is live — awnings, colour, logos, retail category, signage and text, with an export at the end. The exterior editor is not built yet." },
+
+  { k:["file","drive","dropbox","folder","server","original"],
+    a:"Three buttons under <b>Project Files</b>: Google Drive, Dropbox, and <b>Drive Location</b>, which shows the internal Y drive path with a copy button. That last one is a folder on the office server, not a web link — it only opens on the office network." },
+
+  { k:["phone","mobile","ipad","tablet","iphone","crash"],
+    a:"It works on a phone. Tap a quarter of the plan to zoom into it, or just pinch. There are no floating panels on a phone by design — pinned views stack underneath instead." },
+
+  { k:["private","public","who can see","secure","password","share","safe"],
+    a:"The page is <b>unlisted</b>, not private. It carries a noindex tag so Google will not list it, and nobody stumbles on it — but anyone holding the link can open it. A real password gate would need Cloudflare or a paid plan." },
+
+  { k:["vocab","word","term","percement","poche","couvert","flanerie","enfilade","parti","transitus","latin","french"],
+    a:"Scroll to <b>The Vocabulary</b> — eight terms worth having ready. Click any card to turn it over for the definition and a sentence using it properly." },
+
+  { k:["who built","fairfax","sammons","architect","anne","richard","firm"],
+    a:"Fairfax &amp; Sammons Architecture — Anne Fairfax and Richard Sammons, New York and Palm Beach. Thirty years of classical and traditional practice." },
+
+  { k:["tour","show me","guide","walk me","how do i use","help","start"],
+    a:"TOUR" }
+];
+
+const CG_CHIPS = ["Take the tour","What is this project?","How do I pin views?","Make a PDF","The London arcade","Who can see this page?"];
+
+const cgPanel = byId('cg'), cgLog = byId('cgLog');
+function cgSay(html, who){
+  const d = document.createElement('div');
+  d.className = 'cg-msg ' + (who || 'bot');
+  d.innerHTML = html;
+  cgLog.appendChild(d);
+  cgLog.scrollTop = cgLog.scrollHeight;
+}
+function cgAnswer(q){
+  const t = q.toLowerCase();
+  let best = null, bestScore = 0;
+  KB.forEach(entry => {
+    let score = 0;
+    entry.k.forEach(key => { if(t.indexOf(key) !== -1) score += key.length; });
+    if(score > bestScore){ bestScore = score; best = entry; }
+  });
+  if(!best){
+    cgSay("I do not have that one. Try a button below, or ask about the plan, pinning views, the PDF, the facade editor, the project files, or the history.");
+    return;
+  }
+  if(best.a === 'TOUR'){ cgSay("Let us walk through it."); setTimeout(startTour, 400); return; }
+  cgSay(best.a);
+}
+function cgBuildChips(){
+  const wrap = byId('cgChips');
+  wrap.innerHTML = '';
+  CG_CHIPS.forEach(c => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'cg-chip'; b.textContent = c;
+    b.addEventListener('click', () => { cgSay(c,'you'); cgAnswer(c); });
+    wrap.appendChild(b);
+  });
+}
+function cgShow(){
+  cgPanel.classList.add('open');
+  byId('cgOpen').style.display = 'none';
+  if(!cgLog.childElementCount){
+    cgSay("I can answer questions about the Burlington Arcade set, or walk you through this page. Pick something below, or just type.");
+    cgBuildChips();
+  }
+  setTimeout(() => byId('cgInput').focus(), 120);
+}
+function cgHide(){ cgPanel.classList.remove('open'); byId('cgOpen').style.display = ''; }
+byId('cgOpen').addEventListener('click', cgShow);
+byId('cgClose').addEventListener('click', cgHide);
+byId('cgTour').addEventListener('click', startTour);
+byId('cgForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const inp = byId('cgInput'), q = inp.value.trim();
+  if(!q) return;
+  cgSay(q, 'you');
+  inp.value = '';
+  setTimeout(() => cgAnswer(q), 220);
+});
+
+/* =====================================================================
+   GUIDED TOUR
+   ===================================================================== */
+const TOUR = [
+  { sel:'.titleblock', title:'What this is',
+    text:'The Burlington Arcade set for 150 Worth Avenue. The paragraph here is the short version, and the speaker button reads it aloud.' },
+  { sel:'#railViews', title:'All seventeen views',
+    text:'Swipe, or use the arrows. Click any one to open it full size and step through the rest.' },
+  { sel:'.card', title:'The plan',
+    text:'This is the working tool. Markers sit where each rendering was taken from. Hover to preview, click to pin, and pinned views keep their sightlines on the plan.' },
+  { sel:'#rowInterior', title:'Facade editor',
+    text:'Mock up a shopfront: awnings, colour, signage, logos, retail category. The exterior version is not built yet.' },
+  { sel:'#worthTitle', title:'Worth Avenue',
+    text:'Mizner, the Everglades Club and the Vias — the local precedent for cutting a pedestrian street through a solid block.' },
+  { sel:'#vocab', title:'The vocabulary',
+    text:'Eight terms worth having ready in a meeting. Click a card to turn it over for the definition and a sentence that uses it properly.' },
+  { sel:'.links', title:'The files',
+    text:'Drive, Dropbox, and the internal server path with a copy button. That last one only opens on the office network.' }
+];
+let tourI = -1;
+const tourBox = byId('tourBox');
+function clearRing(){ document.querySelectorAll('.tour-ring').forEach(n => n.classList.remove('tour-ring')); }
+function startTour(){ cgHide(); tourI = -1; tourStep(1); }
+function endTour(){ clearRing(); tourBox.classList.remove('on'); tourI = -1; }
+function tourStep(d){
+  clearRing();
+  tourI += d;
+  if(tourI < 0) tourI = 0;
+  if(tourI >= TOUR.length){ endTour(); return; }
+  const s = TOUR[tourI];
+  const el = document.querySelector(s.sel);
+  if(!el){ tourStep(d || 1); return; }
+
+  el.classList.add('tour-ring');
+  el.scrollIntoView({ behavior:'smooth', block:'center' });
+
+  byId('tourStep').textContent = 'Step ' + (tourI+1) + ' of ' + TOUR.length;
+  byId('tourTitle').textContent = s.title;
+  byId('tourText').textContent = s.text;
+  byId('tourBack').style.visibility = tourI === 0 ? 'hidden' : 'visible';
+  byId('tourNext').textContent = tourI === TOUR.length-1 ? 'Finish' : 'Next';
+  tourBox.classList.add('on');
+
+  setTimeout(() => {
+    const r = el.getBoundingClientRect(), b = tourBox.getBoundingClientRect();
+    let top = r.bottom + 16;
+    if(top + b.height > window.innerHeight - 12) top = Math.max(12, r.top - b.height - 16);
+    let left = r.left + r.width/2 - b.width/2;
+    left = Math.max(12, Math.min(left, window.innerWidth - b.width - 12));
+    tourBox.style.top = top + 'px';
+    tourBox.style.left = left + 'px';
+  }, 420);
+}
+byId('tourNext').addEventListener('click', () => tourStep(1));
+byId('tourBack').addEventListener('click', () => tourStep(-1));
+byId('tourEnd').addEventListener('click', endTour);
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && tourI > -1) endTour(); });
+
 </script>
 </body>
 </html>
