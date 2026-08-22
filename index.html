@@ -183,21 +183,23 @@
     .lb-arrow{ width:40px; height:40px; font-size:16px; }
   }
   /* ---------- vocabulary flip cards ---------- */
-  .vocab{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; }
-  .vcard{ perspective:1000px; aspect-ratio:5/4; cursor:pointer; background:none; border:none; padding:0; font:inherit; text-align:left; }
-  .vcard-inner{ position:relative; width:100%; height:100%; transition:transform .55s cubic-bezier(.4,.2,.2,1);
-    transform-style:preserve-3d; }
+  .vocab{ display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:14px; }
+  .vcard{ display:block; width:100%; min-height:210px; perspective:1200px; cursor:pointer;
+    background:none; border:none; padding:0; font:inherit; text-align:left; }
+  .vcard-inner{ display:block; position:relative; width:100%; min-height:210px;
+    transition:transform .5s cubic-bezier(.4,.2,.2,1); transform-style:preserve-3d; }
   .vcard.flipped .vcard-inner{ transform:rotateY(180deg); }
   .vface{ position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
-    border:1px solid var(--line); background:var(--white); padding:20px 18px;
-    display:flex; flex-direction:column; justify-content:center; overflow:auto; }
-  .vfront .vterm{ font-family:'EB Garamond',Georgia,serif; font-size:1.42rem; line-height:1.15; }
-  .vfront .vlang{ font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--brass); margin-top:8px; }
-  .vfront .vflip{ font-size:8.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft);
-    opacity:.55; margin-top:auto; padding-top:12px; }
+    border:1px solid var(--line); background:var(--white); padding:22px 20px; overflow:hidden;
+    display:flex; flex-direction:column; }
+  .vfront .vterm{ display:block; font-family:"EB Garamond",Georgia,serif; font-size:1.5rem; line-height:1.15; }
+  .vfront .vlang{ display:block; font-size:9px; letter-spacing:.2em; text-transform:uppercase;
+    color:var(--brass); margin-top:9px; }
+  .vfront .vflip{ display:block; font-size:8.5px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--ink-soft); opacity:.5; margin-top:auto; }
   .vback{ transform:rotateY(180deg); background:var(--ink); border-color:var(--ink); color:var(--ivory); }
-  .vback .vdef{ font-family:'EB Garamond',Georgia,serif; font-size:.98rem; line-height:1.55; }
-  .vback .vuse{ font-size:.8rem; line-height:1.5; opacity:.72; margin-top:10px; font-style:italic; }
+  .vback .vdef{ display:block; font-family:"EB Garamond",Georgia,serif; font-size:1rem; line-height:1.5; }
+  .vback .vuse{ display:block; font-size:.79rem; line-height:1.5; opacity:.7; margin-top:10px; font-style:italic; }
   .vcard:hover .vface{ border-color:var(--brass); }
 
   /* ---------- concierge ---------- */
@@ -238,7 +240,8 @@
   .tour-box .tstep{ font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--brass); margin-bottom:7px; }
   .tour-box h4{ font-family:'EB Garamond',Georgia,serif; font-size:1.16rem; margin:0 0 7px; font-weight:600; }
   .tour-box p{ margin:0 0 16px; font-size:.88rem; line-height:1.55; color:var(--ink-soft); }
-  .tour-box .tnav{ display:flex; gap:8px; align-items:center; }
+  .tour-box .tnav{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .tour-box button.muted{ opacity:.5; }
   .tour-box .tnav .sp{ flex:1; }
   .tour-box button{ border:1px solid var(--ink); background:transparent; color:var(--ink); cursor:pointer;
     padding:8px 14px; font:inherit; font-size:9.5px; letter-spacing:.15em; text-transform:uppercase; }
@@ -248,8 +251,7 @@
   @media (max-width:620px){
     .cg{ right:8px; left:8px; bottom:8px; width:auto; max-height:78vh; }
     .cg-open{ right:12px; bottom:12px; }
-    .vocab{ grid-template-columns:1fr 1fr; }
-    .vcard{ aspect-ratio:4/5; }
+    .vocab{ grid-template-columns:1fr; }
   }
 
 </style>
@@ -397,6 +399,8 @@
   <p id="tourText"></p>
   <div class="tnav">
     <button type="button" id="tourBack">Back</button>
+    <button type="button" id="tourPlay">Play</button>
+    <button type="button" id="tourSound">Sound on</button>
     <span class="sp"></span>
     <button type="button" id="tourEnd">End</button>
     <button type="button" class="primary" id="tourNext">Next</button>
@@ -553,44 +557,34 @@ const lightboxSets = {};
    known:false — a gallery slot that may or may not have a file behind it
    yet. Those few are probed, and a figure with no file is removed entirely
    rather than left as an empty placeholder. */
-function buildRail(railId, items, setName, known){
+function buildRail(railId, items, setName){
   const rail = byId(railId);
   const usable = [];
 
   items.forEach((it, idx) => {
-    const fig = document.createElement('figure');
-    const frame = document.createElement('div');
-    frame.className = 'frame';
-    const cap = document.createElement('figcaption');
+    const fig = document.createElement("figure");
+    const frame = document.createElement("div");
+    frame.className = "frame";
+    const cap = document.createElement("figcaption");
     cap.textContent = it.cap;
-    const im = document.createElement('img');
-    im.alt = it.cap;
-    im.decoding = 'async';
 
-    if(known){
-      // first two eager so the rail is never blank; the rest on demand
-      im.loading = idx < 2 ? 'eager' : 'lazy';
-      usable.push({ src: it.src, cap: it.cap });
-      fig.addEventListener('click', () => openLb(setName, it.src));
-      frame.appendChild(im);
-      fig.append(frame, cap);
-      rail.appendChild(fig);
-      im.src = it.src;
-    } else {
-      fig.style.display = 'none';
-      im.addEventListener('load', () => {
-        fig.style.display = '';
-        usable.push({ src: it.src, cap: it.cap });
-        usable.sort((a,b) =>
-          items.findIndex(x => x.src === a.src) - items.findIndex(x => x.src === b.src));
-        fig.addEventListener('click', () => openLb(setName, it.src));
-      });
-      im.addEventListener('error', () => fig.remove());
-      frame.appendChild(im);
-      fig.append(frame, cap);
-      rail.appendChild(fig);
-      im.src = it.src;
-    }
+    const im = document.createElement("img");
+    im.alt = it.cap;
+    im.decoding = "async";
+    im.loading = idx < 2 ? "eager" : "lazy";   /* only what is about to be seen */
+    im.addEventListener("error", () => {        /* a file that is not there just goes away */
+      fig.remove();
+      const k = usable.findIndex(x => x.src === it.src);
+      if(k > -1) usable.splice(k,1);
+    });
+    im.src = it.src;
+
+    usable.push({ src:it.src, cap:it.cap });
+    fig.addEventListener("click", () => openLb(setName, it.src));
+
+    frame.appendChild(im);
+    fig.append(frame, cap);
+    rail.appendChild(fig);
   });
 
   lightboxSets[setName] = usable;
@@ -598,9 +592,9 @@ function buildRail(railId, items, setName, known){
 
 const viewItems = [];
 for(let i=1; i<=VIEW_COUNT; i++) viewItems.push({ src:'assets/views/v'+i+'.jpg', cap:'View '+i });
-buildRail('railViews',  viewItems,      'views',  true);
-buildRail('railWorth',  GALLERY.worth,  'worth',  false);
-buildRail('railArcade', GALLERY.arcade, 'arcade', false);
+buildRail("railViews",  viewItems,      "views");
+buildRail("railWorth",  GALLERY.worth,  "worth");
+buildRail("railArcade", GALLERY.arcade, "arcade");
 
 document.querySelectorAll('.rail-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -733,27 +727,38 @@ const VOCAB = [
 (function buildVocab(){
   const wrap = byId('vocab');
   VOCAB.forEach(v => {
-    const card = document.createElement('button');
+    // built from divs, not spans: a span is inline and has no height to fill,
+    // which is what collapsed these cards to little scrolling squares.
+    const card = document.createElement('div');
     card.className = 'vcard';
-    card.type = 'button';
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
     card.setAttribute('aria-label', v.term + ' — turn over for the definition');
-    card.innerHTML =
-      '<span class="vcard-inner">' +
-        '<span class="vface vfront">' +
-          '<span class="vterm serif"></span>' +
-          '<span class="vlang"></span>' +
-          '<span class="vflip">Click to turn</span>' +
-        '</span>' +
-        '<span class="vface vback">' +
-          '<span class="vdef"></span>' +
-          '<span class="vuse"></span>' +
-        '</span>' +
-      '</span>';
-    card.querySelector('.vterm').textContent = v.term;
-    card.querySelector('.vlang').textContent = v.lang;
-    card.querySelector('.vdef').textContent  = v.def;
-    card.querySelector('.vuse').textContent  = v.use;
-    card.addEventListener('click', () => card.classList.toggle('flipped'));
+
+    const inner = document.createElement('div');
+    inner.className = 'vcard-inner';
+
+    const front = document.createElement('div');
+    front.className = 'vface vfront';
+    const term = document.createElement('div'); term.className = 'vterm serif'; term.textContent = v.term;
+    const lang = document.createElement('div'); lang.className = 'vlang'; lang.textContent = v.lang;
+    const flip = document.createElement('div'); flip.className = 'vflip'; flip.textContent = 'Click to turn';
+    front.append(term, lang, flip);
+
+    const back = document.createElement('div');
+    back.className = 'vface vback';
+    const def = document.createElement('div'); def.className = 'vdef'; def.textContent = v.def;
+    const use = document.createElement('div'); use.className = 'vuse'; use.textContent = v.use;
+    back.append(def, use);
+
+    inner.append(front, back);
+    card.appendChild(inner);
+
+    const turn = () => card.classList.toggle('flipped');
+    card.addEventListener('click', turn);
+    card.addEventListener('keydown', e => {
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); turn(); }
+    });
     wrap.appendChild(card);
   });
 })();
@@ -872,6 +877,15 @@ byId('cgForm').addEventListener('submit', e => {
 
 /* =====================================================================
    GUIDED TOUR
+
+   Three ways to take it:
+     click through with Next
+     press Play and it advances itself
+     narration reads each step aloud, and can be switched off
+
+   The box is positioned only AFTER the smooth scroll has actually
+   settled — waiting a fixed number of milliseconds was what made it
+   land in the wrong place and feel stuck.
    ===================================================================== */
 const TOUR = [
   { sel:'.titleblock', title:'What this is',
@@ -883,50 +897,133 @@ const TOUR = [
   { sel:'#rowInterior', title:'Facade editor',
     text:'Mock up a shopfront: awnings, colour, signage, logos, retail category. The exterior version is not built yet.' },
   { sel:'#worthTitle', title:'Worth Avenue',
-    text:'Mizner, the Everglades Club and the Vias — the local precedent for cutting a pedestrian street through a solid block.' },
+    text:'Mizner, the Everglades Club and the Vias, which are the local precedent for cutting a pedestrian street through a solid block.' },
   { sel:'#vocab', title:'The vocabulary',
     text:'Eight terms worth having ready in a meeting. Click a card to turn it over for the definition and a sentence that uses it properly.' },
   { sel:'.links', title:'The files',
     text:'Drive, Dropbox, and the internal server path with a copy button. That last one only opens on the office network.' }
 ];
-let tourI = -1;
+
+const tour = { i:-1, auto:false, narrate:true, timer:null, settle:null };
 const tourBox = byId('tourBox');
+
 function clearRing(){ document.querySelectorAll('.tour-ring').forEach(n => n.classList.remove('tour-ring')); }
-function startTour(){ cgHide(); tourI = -1; tourStep(1); }
-function endTour(){ clearRing(); tourBox.classList.remove('on'); tourI = -1; }
-function tourStep(d){
+
+function tourStopTalking(){
+  try{ speechSynthesis.cancel(); }catch(e){}
+  clearTimeout(tour.timer);
+  cancelAnimationFrame(tour.settle);
+}
+
+function startTour(){ cgHide(); tour.i = -1; tourStep(1); }
+
+function endTour(){
+  tourStopTalking();
   clearRing();
-  tourI += d;
-  if(tourI < 0) tourI = 0;
-  if(tourI >= TOUR.length){ endTour(); return; }
-  const s = TOUR[tourI];
+  tourBox.classList.remove('on');
+  tour.i = -1;
+  tour.auto = false;
+  byId('tourPlay').textContent = 'Play';
+}
+
+/* poll the element's position until it stops moving, then place the box */
+function placeBox(el){
+  let last = null, still = 0;
+  const tick = () => {
+    const r = el.getBoundingClientRect();
+    if(last !== null && Math.abs(r.top - last) < 0.5){ still++; } else { still = 0; }
+    last = r.top;
+    if(still < 3){ tour.settle = requestAnimationFrame(tick); return; }
+
+    const b = tourBox.getBoundingClientRect();
+    let top = r.bottom + 16;
+    if(top + b.height > window.innerHeight - 12) top = r.top - b.height - 16;
+    if(top < 12) top = Math.max(12, window.innerHeight - b.height - 16);
+    let left = r.left + r.width/2 - b.width/2;
+    left = Math.max(12, Math.min(left, window.innerWidth - b.width - 12));
+    tourBox.style.top = top + 'px';
+    tourBox.style.left = left + 'px';
+  };
+  cancelAnimationFrame(tour.settle);
+  tour.settle = requestAnimationFrame(tick);
+}
+
+function tourStep(d){
+  tourStopTalking();
+  clearRing();
+  tour.i += d;
+  if(tour.i < 0) tour.i = 0;
+  if(tour.i >= TOUR.length){ endTour(); return; }
+
+  const s = TOUR[tour.i];
   const el = document.querySelector(s.sel);
   if(!el){ tourStep(d || 1); return; }
 
   el.classList.add('tour-ring');
   el.scrollIntoView({ behavior:'smooth', block:'center' });
 
-  byId('tourStep').textContent = 'Step ' + (tourI+1) + ' of ' + TOUR.length;
+  byId('tourStep').textContent = 'Step ' + (tour.i+1) + ' of ' + TOUR.length;
   byId('tourTitle').textContent = s.title;
   byId('tourText').textContent = s.text;
-  byId('tourBack').style.visibility = tourI === 0 ? 'hidden' : 'visible';
-  byId('tourNext').textContent = tourI === TOUR.length-1 ? 'Finish' : 'Next';
+  byId('tourBack').style.visibility = tour.i === 0 ? 'hidden' : 'visible';
+  byId('tourNext').textContent = tour.i === TOUR.length-1 ? 'Finish' : 'Next';
   tourBox.classList.add('on');
+  placeBox(el);
 
-  setTimeout(() => {
-    const r = el.getBoundingClientRect(), b = tourBox.getBoundingClientRect();
-    let top = r.bottom + 16;
-    if(top + b.height > window.innerHeight - 12) top = Math.max(12, r.top - b.height - 16);
-    let left = r.left + r.width/2 - b.width/2;
-    left = Math.max(12, Math.min(left, window.innerWidth - b.width - 12));
-    tourBox.style.top = top + 'px';
-    tourBox.style.left = left + 'px';
-  }, 420);
+  const advance = () => { if(tour.auto) tourStep(1); };
+  const line = s.title + '. ' + s.text;
+
+  if(tour.narrate && 'speechSynthesis' in window){
+    const u = new SpeechSynthesisUtterance(line);
+    u.rate = 0.95;
+    u.onend = advance;
+    u.onerror = () => { if(tour.auto) tour.timer = setTimeout(advance, 1200); };
+    speechSynthesis.speak(u);
+  } else if(tour.auto){
+    // no narration: pace it by how much there is to read
+    tour.timer = setTimeout(advance, 2600 + line.length * 28);
+  }
 }
+
 byId('tourNext').addEventListener('click', () => tourStep(1));
 byId('tourBack').addEventListener('click', () => tourStep(-1));
 byId('tourEnd').addEventListener('click', endTour);
-document.addEventListener('keydown', e => { if(e.key === 'Escape' && tourI > -1) endTour(); });
+
+byId('tourPlay').addEventListener('click', function(){
+  tour.auto = !tour.auto;
+  this.textContent = tour.auto ? 'Pause' : 'Play';
+  this.classList.toggle('primary', tour.auto);
+  if(tour.auto){
+    // if nothing is currently talking, move on straight away
+    if(!('speechSynthesis' in window) || !speechSynthesis.speaking) tourStep(1);
+  } else {
+    tourStopTalking();
+  }
+});
+
+byId('tourSound').addEventListener('click', function(){
+  tour.narrate = !tour.narrate;
+  this.textContent = tour.narrate ? 'Sound on' : 'Sound off';
+  this.classList.toggle('muted', !tour.narrate);
+  if(!tour.narrate){
+    tourStopTalking();
+    if(tour.auto){
+      const s = TOUR[tour.i];
+      const line = s ? (s.title + '. ' + s.text) : '';
+      tour.timer = setTimeout(() => { if(tour.auto) tourStep(1); }, 2600 + line.length * 28);
+    }
+  } else if(tour.i > -1){
+    tourStep(0);   // re-read the step we are on
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if(tour.i === -1) return;
+  if(e.key === 'Escape') endTour();
+  else if(e.key === 'ArrowRight') tourStep(1);
+  else if(e.key === 'ArrowLeft') tourStep(-1);
+});
+window.addEventListener('beforeunload', tourStopTalking);
 
 </script>
 </body>

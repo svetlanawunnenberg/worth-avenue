@@ -294,6 +294,23 @@
     .pr-arrow.prev{ left:4px; } .pr-arrow.next{ right:4px; }
     .refmap{ max-width:100%; }
   }
+  /* ---------- walkthrough ---------- */
+  .tour-ring{ position:relative; z-index:231; outline:2px solid var(--brass); outline-offset:6px;
+    box-shadow:0 0 0 9999px rgba(22,19,16,.55); }
+  .walk-box{ position:fixed; z-index:245; width:min(360px,calc(100vw - 24px)); background:var(--white);
+    border:1px solid var(--line); box-shadow:0 16px 44px rgba(22,19,16,.34); padding:18px 20px; display:none; }
+  .walk-box.on{ display:block; }
+  .walk-box .wstep{ font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--brass); margin-bottom:7px; }
+  .walk-box h4{ font-family:'EB Garamond',serif; font-size:1.16rem; margin:0 0 7px; font-weight:600; }
+  .walk-box p{ margin:0 0 16px; font-size:.88rem; line-height:1.55; color:var(--ink-soft); }
+  .walk-box .wnav{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .walk-box .wnav .sp{ flex:1; }
+  .walk-box button{ border:1px solid var(--ink); background:transparent; color:var(--ink);
+    padding:8px 13px; font:inherit; font-size:9.5px; letter-spacing:.15em; text-transform:uppercase; }
+  .walk-box button.primary{ background:var(--ink); color:var(--ivory); }
+  .walk-box button.muted{ opacity:.5; }
+  .walk-box button:hover{ background:var(--brass); border-color:var(--brass); color:var(--ivory); }
+
 </style>
 </head>
 <body>
@@ -320,6 +337,7 @@
         <a href="#" id="exteriorEditorLink" target="_blank" rel="noopener">Exterior Editor</a>
         <button type="button" id="btnPanels">Panels</button>
         <button type="button" id="btnClearPins">Clear Pins</button>
+        <button type="button" id="btnWalk">Walkthrough</button>
         <button type="button" id="btnPresent">Presentation</button>
         <button type="button" id="btnPdf">Download PDF</button>
         <button type="button" class="speak" id="speakIntro" title="Read aloud">&#9835;</button>
@@ -409,6 +427,20 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <div class="walk-box" id="walkBox">
+    <div class="wstep" id="walkStep">Step 1</div>
+    <h4 id="walkTitle"></h4>
+    <p id="walkText"></p>
+    <div class="wnav">
+      <button type="button" id="walkBack">Back</button>
+      <button type="button" id="walkPlay">Play</button>
+      <button type="button" id="walkSound">Sound on</button>
+      <span class="sp"></span>
+      <button type="button" id="walkEnd">End</button>
+      <button type="button" class="primary" id="walkNext">Next</button>
+    </div>
   </div>
 
   <div class="present" id="present">
@@ -1150,6 +1182,147 @@ els.btnPdf.addEventListener('click', () => {
 if(isPhone()) els.planHint.textContent = 'Tap a quarter to zoom, or pinch · tap a marker to pin it below';
 applyPlan();
 applyCrop();
+/* =====================================================================
+   WALKTHROUGH — how to work the plan
+
+   Click through it, or press Play and let it run itself. Narration is on
+   by default and can be switched off. Steps that do not apply to the
+   device you are on are skipped.
+   ===================================================================== */
+const WALK_ALL = [
+  { sel:'#planViewport', desk:true, phone:true, title:'The plan',
+    text:'Seventeen markers, each sitting where its rendering was taken from. On a computer the plan stays put — it does not zoom or slide about under you.' },
+
+  { sel:'#planViewport', desk:false, phone:true, title:'Getting closer',
+    text:'Tap any quarter of the plan to zoom into it, or pinch with two fingers. Drag to move around, and press Fit to come back out.' },
+
+  { sel:'#planViewport', desk:true, phone:false, title:'Hovering a marker',
+    text:'Point at a marker. The dot goes solid, its sightline fans out across the plan, and the rendering appears in the panel on the right. Nothing is committed yet.' },
+
+  { sel:'#planViewport', desk:true, phone:true, title:'Clicking to pin',
+    text:'Click a marker and it stays. The dot stays lit and the sightline stays on the plan. Pin three or four and you can read all of them at once, which is the point when you are choosing a set.' },
+
+  { sel:'#panelView', desk:true, phone:false, title:'The Rendering panel',
+    text:'Drag it anywhere by the dark bar. Pull the corner to resize. The minus collapses it and the cross closes it. Press Panels in the top bar to bring it back.' },
+
+  { sel:'#panelMap', desk:true, phone:false, title:'The Map panel',
+    text:'All navigation lives here rather than on the plan itself. Plus and minus zoom, Fit shows the whole floor, Centre jumps to the marker you are on, and you can drag inside it. Dock snaps it back under the Rendering panel.' },
+
+  { sel:'.gallery', desk:true, phone:true, title:'Your pinned views',
+    text:'Everything you pin collects here, each with the logo above it and a small plan showing where it was taken. The arrows reorder them, Unpin removes one, and Open shows it full screen.' },
+
+  { sel:'#btnPresent', desk:true, phone:true, title:'Presentation and PDF',
+    text:'Presentation gives you full screen with arrows, a red pen for marking up, and Save to keep the marked image. Download PDF builds a title page, a plan of everything you chose, then one page for each view.' },
+
+  { sel:'#btnClearPins', desk:true, phone:true, title:'Starting over',
+    text:'Clear Pins empties the whole selection in one go. That is the walkthrough — press Finish and have a go.' }
+];
+const WALK = WALK_ALL.filter(s => isPhone() ? s.phone : s.desk);
+
+const walk = { i:-1, auto:false, narrate:true, timer:null, settle:null };
+const walkBox = byId('walkBox');
+
+function walkClearRing(){ document.querySelectorAll('.tour-ring').forEach(n => n.classList.remove('tour-ring')); }
+function walkStopTalking(){
+  try{ speechSynthesis.cancel(); }catch(e){}
+  clearTimeout(walk.timer);
+  cancelAnimationFrame(walk.settle);
+}
+function startWalk(){ walk.i = -1; walkStep(1); }
+function endWalk(){
+  walkStopTalking(); walkClearRing();
+  walkBox.classList.remove('on');
+  walk.i = -1; walk.auto = false;
+  byId('walkPlay').textContent = 'Play';
+  byId('walkPlay').classList.remove('primary');
+}
+
+/* wait for the smooth scroll to actually settle before placing the box */
+function walkPlace(el){
+  let last = null, still = 0;
+  const tick = () => {
+    const r = el.getBoundingClientRect();
+    if(last !== null && Math.abs(r.top - last) < 0.5) still++; else still = 0;
+    last = r.top;
+    if(still < 3){ walk.settle = requestAnimationFrame(tick); return; }
+    const b = walkBox.getBoundingClientRect();
+    let top = r.bottom + 16;
+    if(top + b.height > window.innerHeight - 12) top = r.top - b.height - 16;
+    if(top < 12) top = Math.max(12, window.innerHeight - b.height - 16);
+    let left = r.left + r.width/2 - b.width/2;
+    left = Math.max(12, Math.min(left, window.innerWidth - b.width - 12));
+    walkBox.style.top = top + 'px';
+    walkBox.style.left = left + 'px';
+  };
+  cancelAnimationFrame(walk.settle);
+  walk.settle = requestAnimationFrame(tick);
+}
+
+function walkStep(d){
+  walkStopTalking();
+  walkClearRing();
+  walk.i += d;
+  if(walk.i < 0) walk.i = 0;
+  if(walk.i >= WALK.length){ endWalk(); return; }
+
+  const s = WALK[walk.i];
+  const el = document.querySelector(s.sel);
+  if(!el){ walkStep(d || 1); return; }
+
+  el.classList.add('tour-ring');
+  el.scrollIntoView({ behavior:'smooth', block:'center' });
+
+  byId('walkStep').textContent = 'Step ' + (walk.i+1) + ' of ' + WALK.length;
+  byId('walkTitle').textContent = s.title;
+  byId('walkText').textContent = s.text;
+  byId('walkBack').style.visibility = walk.i === 0 ? 'hidden' : 'visible';
+  byId('walkNext').textContent = walk.i === WALK.length-1 ? 'Finish' : 'Next';
+  walkBox.classList.add('on');
+  walkPlace(el);
+
+  const advance = () => { if(walk.auto) walkStep(1); };
+  const line = s.title + '. ' + s.text;
+  if(walk.narrate && 'speechSynthesis' in window){
+    const u = new SpeechSynthesisUtterance(line);
+    u.rate = 0.95;
+    u.onend = advance;
+    u.onerror = () => { if(walk.auto) walk.timer = setTimeout(advance, 1200); };
+    speechSynthesis.speak(u);
+  } else if(walk.auto){
+    walk.timer = setTimeout(advance, 2600 + line.length * 28);
+  }
+}
+
+byId('btnWalk').addEventListener('click', startWalk);
+byId('walkNext').addEventListener('click', () => walkStep(1));
+byId('walkBack').addEventListener('click', () => walkStep(-1));
+byId('walkEnd').addEventListener('click', endWalk);
+byId('walkPlay').addEventListener('click', function(){
+  walk.auto = !walk.auto;
+  this.textContent = walk.auto ? 'Pause' : 'Play';
+  this.classList.toggle('primary', walk.auto);
+  if(walk.auto){
+    if(walk.i === -1){ startWalk(); return; }
+    if(!('speechSynthesis' in window) || !speechSynthesis.speaking) walkStep(1);
+  } else walkStopTalking();
+});
+byId('walkSound').addEventListener('click', function(){
+  walk.narrate = !walk.narrate;
+  this.textContent = walk.narrate ? 'Sound on' : 'Sound off';
+  this.classList.toggle('muted', !walk.narrate);
+  if(!walk.narrate){
+    walkStopTalking();
+    if(walk.auto) walk.timer = setTimeout(() => { if(walk.auto) walkStep(1); }, 2200);
+  } else if(walk.i > -1) walkStep(0);
+});
+document.addEventListener('keydown', e => {
+  if(walk.i === -1) return;
+  if(e.key === 'Escape') endWalk();
+  else if(e.key === 'ArrowRight' && !els.present.classList.contains('visible')) walkStep(1);
+  else if(e.key === 'ArrowLeft'  && !els.present.classList.contains('visible')) walkStep(-1);
+});
+window.addEventListener('beforeunload', walkStopTalking);
+
 </script>
 </body>
 </html>
