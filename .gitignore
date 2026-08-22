@@ -1,3 +1,6 @@
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Original photos before conversion — kept on disk, not shipped to the site
+assets/_source/
