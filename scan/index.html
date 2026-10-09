@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>150 Worth Scan Viewer</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pannellum/2.5.6/pannellum.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#111; --paper:#fff; --mute:#8a8a8a; --line:#d9d9d9; --panel:rgba(255,255,255,.94); }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:var(--ink); color:var(--ink); font:14px/1.4 Inter, system-ui, sans-serif; }
+  header { position:fixed; inset:0 0 auto 0; height:52px; z-index:10; display:flex; align-items:center; gap:16px;
+           padding:0 16px; background:var(--paper); border-bottom:1px solid var(--line); }
+  header h1 { margin:0; font:600 20px/1 "Cormorant Garamond", Georgia, serif; letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; }
+  header .where { color:var(--mute); font-size:12px; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  header .sp { flex:1; }
+  header .back { color:var(--ink); text-decoration:none; font-size:28px; line-height:1; padding:0 4px 4px 0; }
+  button { font:500 12px/1 Inter, sans-serif; letter-spacing:.08em; text-transform:uppercase; background:var(--paper); color:var(--ink);
+           border:1px solid var(--ink); padding:9px 12px; cursor:pointer; }
+  button:hover, button.on { background:var(--ink); color:var(--paper); }
+  #pano { position:fixed; inset:52px 0 0 0; }
+  #plan { position:fixed; right:16px; bottom:16px; z-index:10; width:380px; background:var(--panel); border:1px solid var(--ink); }
+  #plan .cap { display:flex; justify-content:space-between; padding:8px 10px; border-bottom:1px solid var(--line);
+               font-size:11px; letter-spacing:.1em; text-transform:uppercase; }
+  #plan svg { display:block; width:100%; height:auto; }
+  #plan.hidden { display:none; }
+  .dot { fill:var(--paper); stroke:var(--ink); stroke-width:1.2; vector-effect:non-scaling-stroke; cursor:pointer; }
+  .dot:hover { fill:var(--ink); }
+  .dot.cur { fill:var(--ink); }
+  .cone { fill:rgba(17,17,17,.22); stroke:none; pointer-events:none; }
+  #toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); z-index:20; background:var(--ink); color:var(--paper);
+           padding:10px 14px; font-size:12px; letter-spacing:.06em; opacity:0; transition:opacity .2s; pointer-events:none; }
+  #toast.show { opacity:1; }
+  /* walk arrows */
+  .walk { width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.85); border:2px solid var(--ink); cursor:pointer; }
+  .walk::after { content:""; position:absolute; left:50%; top:50%; width:10px; height:10px; margin:-3px 0 0 -5px;
+                 border-left:2px solid var(--ink); border-top:2px solid var(--ink); transform:rotate(45deg); }
+  .walk:hover { background:var(--paper); }
+  .walk span { visibility:hidden; position:absolute; bottom:42px; left:50%; transform:translateX(-50%); white-space:nowrap;
+               background:var(--ink); color:var(--paper); padding:5px 8px; font-size:11px; letter-spacing:.06em; }
+  .walk:hover span { visibility:visible; }
+  .pnlm-container { background:var(--ink); }
+  .pnlm-orientation-button { display:none !important; }   /* replaced by the Motion button in the header */
+  @media (max-width:640px) {
+    header { gap:8px; }
+    header h1 { font-size:16px; }
+    header .where { display:none; }
+    #plan { left:16px; right:16px; width:auto; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <a href="../" class="back" title="Back to Burlington Arcade">&#8249;</a>
+  <h1>150 Worth Avenue</h1>
+  <div class="where" id="where"></div>
+  <div class="sp"></div>
+  <button id="btnMotion" type="button" hidden>Motion</button>
+  <button id="btnPlan" class="on" type="button">Plan</button>
+  <button id="btnLink" type="button">Copy link</button>
+</header>
+<div id="pano"></div>
+<div id="plan"><div class="cap"><span>Second floor · scan stations</span><span id="count"></span></div><svg id="map"></svg></div>
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pannellum/2.5.6/pannellum.js"></script>
+<script src="data.js"></script>
+<script>
+// Scanner image geometry (from the .rcc header): 360° across, +89.8° down to -60.0° vertically.
+const VAOV = 149.86, VOFFSET = 14.88;
+// Calibration between panorama yaw and the ReCap world frame.
+const YAW_OFFSET = 0, YAW_SIGN = -1;
+const EYE = 1.5;          // approx. scanner height above floor, metres
+const LINK_RADIUS = 9;    // metres
+const LINK_MAX = 6;
+
+const S = window.STATIONS.filter(s => s.floor === "F2");
+const byId = Object.fromEntries(S.map(s => [s.id, s]));
+const norm = a => ((a % 360) + 540) % 360 - 180;
+const deg = r => r * 180 / Math.PI;
+
+// panorama yaw that looks from station a toward world bearing b (deg, CCW from +x)
+const yawFor = (a, bearing) => norm(YAW_SIGN * (bearing - a.rz) + YAW_OFFSET);
+const bearingFor = (a, yaw) => norm(a.rz + YAW_SIGN * (yaw - YAW_OFFSET));
+
+function neighbours(a) {
+  return S.filter(b => b !== a)
+    .map(b => ({ b, d: Math.hypot(b.x - a.x, b.y - a.y) }))
+    .sort((p, q) => p.d - q.d)
+    .filter((p, i) => i < 2 || p.d <= LINK_RADIUS)
+    .slice(0, LINK_MAX);
+}
+
+function walkTooltip(div, args) {
+  div.classList.add("walk");
+  const s = document.createElement("span");
+  s.textContent = args.label;
+  div.appendChild(s);
+}
+
+// Field of view: natural default, capped so it never goes fish-eye or past the photo's sharpness.
+const HFOV = 80, MIN_HFOV = 45, MAX_HFOV = 100;
+const DBL_CLICK_CONE = 45;   // double-click walks to the nearest spot within this many degrees
+
+const links = {};            // scene id -> [{ id, yaw, pitch, d }]
+const scenes = {};
+for (const a of S) {
+  links[a.id] = neighbours(a).map(({ b, d }) => ({
+    id: b.id, d,
+    yaw: yawFor(a, deg(Math.atan2(b.y - a.y, b.x - a.x))),
+    pitch: -deg(Math.atan2(EYE, d))
+  }));
+  scenes[a.id] = {
+    type: "equirectangular", panorama: `panos/${a.id}.jpg`,
+    haov: 360, vaov: VAOV, vOffset: VOFFSET, hfov: HFOV, minHfov: MIN_HFOV, maxHfov: MAX_HFOV,
+    // pannellum keeps (yaw + northOffset) constant when walking, so this keeps the world heading
+    northOffset: norm(YAW_SIGN * a.rz - YAW_OFFSET),
+    hotSpots: links[a.id].map(l => ({
+      type: "info", yaw: l.yaw, pitch: l.pitch,
+      createTooltipFunc: walkTooltip,
+      createTooltipArgs: { label: `${l.id} · ${l.d.toFixed(1)} m` },
+      clickHandlerFunc: () => walkTo(l)
+    }))
+  };
+}
+
+// start from the share link if there is one
+const h = new URLSearchParams(location.hash.slice(1));
+const first = byId[h.get("s")] ? h.get("s") : S[0].id;
+if (h.has("y")) Object.assign(scenes[first], { yaw: +h.get("y"), pitch: +h.get("p") || 0, hfov: +h.get("f") || HFOV });
+
+const viewer = pannellum.viewer("pano", {
+  default: { firstScene: first, sceneFadeDuration: 450, autoLoad: true, showControls: true, compass: false,
+             friction: 0.12, orientationOnByDefault: false },
+  scenes
+});
+
+// Walk: turn to face the spot, push in a little like stepping forward, then fade into the next panorama.
+let walking = false;
+function walkTo(l) {
+  if (walking) return;
+  walking = true;
+  const pitch = Math.max(viewer.getPitch(), -10);
+  viewer.lookAt(pitch, l.yaw, Math.max(MIN_HFOV, viewer.getHfov() * 0.7), 380, () => {
+    viewer.loadScene(l.id, pitch, "sameAzimuth", HFOV);
+  });
+}
+viewer.on("scenechange", () => { walking = false; });
+
+// Double-click anywhere: walk to the nearest linked spot in that direction.
+viewer.getContainer().addEventListener("dblclick", e => {
+  const [, yaw] = viewer.mouseEventToCoords(e);
+  const best = (links[viewer.getScene()] || [])
+    .map(l => ({ l, off: Math.abs(norm(l.yaw - yaw)) }))
+    .filter(c => c.off <= DBL_CLICK_CONE)
+    .sort((p, q) => (p.off + p.l.d * 2) - (q.off + q.l.d * 2))[0];
+  if (best) walkTo(best.l); else toast("No scan spot that way");
+});
+
+// Preload the neighbouring panoramas so walking feels instant.
+const preloaded = new Set();
+function preloadAround(id) {
+  for (const l of links[id] || []) {
+    if (preloaded.has(l.id)) continue;
+    preloaded.add(l.id);
+    new Image().src = `panos/${l.id}.jpg`;
+  }
+}
+
+// plan map
+const svg = document.getElementById("map");
+const xs = S.map(s => s.x), ys = S.map(s => s.y), pad = 3;
+const minX = Math.min(...xs) - pad, maxX = Math.max(...xs) + pad, minY = Math.min(...ys) - pad, maxY = Math.max(...ys) + pad;
+svg.setAttribute("viewBox", `${minX} ${-maxY} ${maxX - minX} ${maxY - minY}`);
+const NS = "http://www.w3.org/2000/svg";
+const cone = document.createElementNS(NS, "path");
+cone.setAttribute("class", "cone");
+svg.appendChild(cone);
+const dots = {};
+for (const s of S) {
+  const c = document.createElementNS(NS, "circle");
+  c.setAttribute("cx", s.x); c.setAttribute("cy", -s.y); c.setAttribute("r", 0.5);
+  c.setAttribute("class", "dot");
+  const t = document.createElementNS(NS, "title"); t.textContent = s.id; c.appendChild(t);
+  c.addEventListener("click", () => viewer.loadScene(s.id));
+  svg.appendChild(c); dots[s.id] = c;
+}
+document.getElementById("count").textContent = `${S.length} stations`;
+
+function drawCone() {
+  requestAnimationFrame(drawCone);
+  const a = byId[viewer.getScene()];
+  if (!a) return;
+  const b = bearingFor(a, viewer.getYaw()), half = viewer.getHfov() / 2, r = 6;
+  const p = ang => `${a.x + r * Math.cos(ang * Math.PI / 180)} ${-(a.y + r * Math.sin(ang * Math.PI / 180))}`;
+  cone.setAttribute("d", `M${a.x} ${-a.y} L${p(b - half)} A${r} ${r} 0 0 0 ${p(b + half)} Z`);
+}
+
+function onScene(id) {
+  Object.values(dots).forEach(d => d.classList.remove("cur"));
+  dots[id].classList.add("cur");
+  svg.appendChild(dots[id]);   // bring to front
+  document.getElementById("where").textContent = `Second floor · ${id}`;
+}
+viewer.on("scenechange", onScene);
+let coneRunning = false;
+viewer.on("load", () => {
+  onScene(viewer.getScene());
+  preloadAround(viewer.getScene());
+  if (!coneRunning) { coneRunning = true; requestAnimationFrame(drawCone); }
+});
+
+function linkHere() {
+  const q = new URLSearchParams({ s: viewer.getScene(), y: viewer.getYaw().toFixed(1), p: viewer.getPitch().toFixed(1), f: viewer.getHfov().toFixed(0) });
+  return `${location.origin}${location.pathname}#${q}`;
+}
+viewer.on("animatefinished", () => history.replaceState(null, "", linkHere()));
+
+const toast = msg => { const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 1600); };
+document.getElementById("btnLink").onclick = async () => {
+  try { await navigator.clipboard.writeText(linkHere()); toast("Link to this view copied"); }
+  catch { toast(linkHere()); }
+};
+// Phone motion: look around by turning the phone. Only offered on touch devices that support it
+// (needs https once hosted). Off by default so people sitting down can just drag.
+const btnMotion = document.getElementById("btnMotion");
+viewer.on("load", () => {
+  if ("ontouchstart" in window && viewer.isOrientationSupported()) btnMotion.hidden = false;
+});
+btnMotion.onclick = () => {
+  if (viewer.isOrientationActive()) { viewer.stopOrientation(); btnMotion.classList.remove("on"); }
+  else { viewer.startOrientation(); btnMotion.classList.add("on"); }
+};
+document.getElementById("btnPlan").onclick = e => {
+  document.getElementById("plan").classList.toggle("hidden");
+  e.currentTarget.classList.toggle("on");
+};
+</script>
+</body>
+</html>
