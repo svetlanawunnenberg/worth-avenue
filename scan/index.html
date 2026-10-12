@@ -25,7 +25,12 @@
   #plan { position:fixed; right:16px; bottom:16px; z-index:10; width:380px; background:var(--panel); border:1px solid var(--ink); }
   #plan .cap { display:flex; justify-content:space-between; padding:8px 10px; border-bottom:1px solid var(--line);
                font-size:11px; letter-spacing:.1em; text-transform:uppercase; }
-  #plan svg { display:block; width:100%; height:auto; }
+  #plan svg { display:block; width:100%; height:auto; max-height:46vh; }
+  #floors { display:flex; border-bottom:1px solid var(--ink); }
+  #floors button { flex:1; border:0; border-right:1px solid var(--line); padding:8px 6px; font-size:10.5px; text-align:left; line-height:1.3; }
+  #floors button:last-child { border-right:0; }
+  #floors button small { display:block; font-size:10px; letter-spacing:.06em; opacity:.65; }
+  #floors button:disabled { color:var(--mute); background:var(--paper); cursor:default; }
   #plan.hidden { display:none; }
   .dot { fill:var(--paper); stroke:var(--ink); stroke-width:1.2; vector-effect:non-scaling-stroke; cursor:pointer; }
   .dot:hover { fill:var(--ink); }
@@ -63,13 +68,13 @@
   <button id="btnLink" type="button">Copy link</button>
 </header>
 <div id="pano"></div>
-<div id="plan"><div class="cap"><span>Second floor · scan stations</span><span id="count"></span></div><svg id="map"></svg></div>
+<div id="plan"><div id="floors"></div><svg id="map"></svg></div>
 <div id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pannellum/2.5.6/pannellum.js"></script>
 <script src="data.js"></script>
 <script>
-// Scanner image geometry (from the .rcc header): 360° across, +89.8° down to -60.0° vertically.
+// Scanner image geometry (from the .rcc header): 360Â° across, +89.8Â° down to -60.0Â° vertically.
 const VAOV = 149.86, VOFFSET = 14.88;
 // Calibration between panorama yaw and the ReCap world frame.
 const YAW_OFFSET = 0, YAW_SIGN = -1;
@@ -77,8 +82,17 @@ const EYE = 1.5;          // approx. scanner height above floor, metres
 const LINK_RADIUS = 9;    // metres
 const LINK_MAX = 6;
 
-const S = window.STATIONS.filter(s => s.floor === "F2");
+// Floors, top to bottom. A floor with no scans yet shows as Pending.
+const FLOORS = [
+  { key: "F2",  name: "Floor 2" },
+  { key: "F1",  name: "Floor 1 Interior" },
+  { key: "F1X", name: "Floor 1 Exterior" },
+  { key: "B",   name: "Basement" }
+];
+const S = window.STATIONS;
 const byId = Object.fromEntries(S.map(s => [s.id, s]));
+const onFloor = key => S.filter(s => s.floor === key);
+const floorName = key => (FLOORS.find(f => f.key === key) || {}).name || key;
 const norm = a => ((a % 360) + 540) % 360 - 180;
 const deg = r => r * 180 / Math.PI;
 
@@ -87,7 +101,7 @@ const yawFor = (a, bearing) => norm(YAW_SIGN * (bearing - a.rz) + YAW_OFFSET);
 const bearingFor = (a, yaw) => norm(a.rz + YAW_SIGN * (yaw - YAW_OFFSET));
 
 function neighbours(a) {
-  return S.filter(b => b !== a)
+  return S.filter(b => b !== a && b.floor === a.floor)
     .map(b => ({ b, d: Math.hypot(b.x - a.x, b.y - a.y) }))
     .sort((p, q) => p.d - q.d)
     .filter((p, i) => i < 2 || p.d <= LINK_RADIUS)
@@ -121,7 +135,7 @@ for (const a of S) {
     hotSpots: links[a.id].map(l => ({
       type: "info", yaw: l.yaw, pitch: l.pitch,
       createTooltipFunc: walkTooltip,
-      createTooltipArgs: { label: `${l.id} · ${l.d.toFixed(1)} m` },
+      createTooltipArgs: { label: `${l.id} Â· ${l.d.toFixed(1)} m` },
       clickHandlerFunc: () => walkTo(l)
     }))
   };
@@ -129,7 +143,9 @@ for (const a of S) {
 
 // start from the share link if there is one
 const h = new URLSearchParams(location.hash.slice(1));
-const first = byId[h.get("s")] ? h.get("s") : S[0].id;
+// #s=<spot> opens a spot; #floor=<key> opens the first spot on that floor
+const first = byId[h.get("s")] ? h.get("s")
+  : (onFloor(h.get("floor") || "").length ? onFloor(h.get("floor"))[0].id : onFloor("F2")[0].id);
 if (h.has("y")) Object.assign(scenes[first], { yaw: +h.get("y"), pitch: +h.get("p") || 0, hfov: +h.get("f") || HFOV });
 
 const viewer = pannellum.viewer("pano", {
@@ -170,25 +186,50 @@ function preloadAround(id) {
   }
 }
 
-// plan map
+// plan map: one layer of dots per floor, only the current floor shown
 const svg = document.getElementById("map");
-const xs = S.map(s => s.x), ys = S.map(s => s.y), pad = 3;
-const minX = Math.min(...xs) - pad, maxX = Math.max(...xs) + pad, minY = Math.min(...ys) - pad, maxY = Math.max(...ys) + pad;
-svg.setAttribute("viewBox", `${minX} ${-maxY} ${maxX - minX} ${maxY - minY}`);
 const NS = "http://www.w3.org/2000/svg";
+const layers = {}, dots = {};
+let shownFloor = null;
+for (const f of FLOORS) {
+  const g = document.createElementNS(NS, "g");
+  g.style.display = "none";
+  svg.appendChild(g); layers[f.key] = g;
+  for (const s of onFloor(f.key)) {
+    const c = document.createElementNS(NS, "circle");
+    c.setAttribute("cx", s.x); c.setAttribute("cy", -s.y); c.setAttribute("r", 0.5);
+    c.setAttribute("class", "dot");
+    const t = document.createElementNS(NS, "title"); t.textContent = s.id; c.appendChild(t);
+    c.addEventListener("click", () => viewer.loadScene(s.id));
+    g.appendChild(c); dots[s.id] = c;
+  }
+}
 const cone = document.createElementNS(NS, "path");
 cone.setAttribute("class", "cone");
 svg.appendChild(cone);
-const dots = {};
-for (const s of S) {
-  const c = document.createElementNS(NS, "circle");
-  c.setAttribute("cx", s.x); c.setAttribute("cy", -s.y); c.setAttribute("r", 0.5);
-  c.setAttribute("class", "dot");
-  const t = document.createElementNS(NS, "title"); t.textContent = s.id; c.appendChild(t);
-  c.addEventListener("click", () => viewer.loadScene(s.id));
-  svg.appendChild(c); dots[s.id] = c;
+
+function showFloor(key) {
+  if (shownFloor === key) return;
+  shownFloor = key;
+  for (const k in layers) layers[k].style.display = k === key ? "" : "none";
+  const fs = onFloor(key), pad = 3;
+  const xs = fs.map(s => s.x), ys = fs.map(s => s.y);
+  const minX = Math.min(...xs) - pad, maxX = Math.max(...xs) + pad, minY = Math.min(...ys) - pad, maxY = Math.max(...ys) + pad;
+  svg.setAttribute("viewBox", `${minX} ${-maxY} ${maxX - minX} ${maxY - minY}`);
+  document.querySelectorAll("#floors button").forEach(b => b.classList.toggle("on", b.dataset.floor === key));
 }
-document.getElementById("count").textContent = `${S.length} stations`;
+
+// floor tabs: spots per floor, or Pending
+const floorsEl = document.getElementById("floors");
+for (const f of FLOORS) {
+  const n = onFloor(f.key).length;
+  const b = document.createElement("button");
+  b.type = "button"; b.dataset.floor = f.key;
+  b.innerHTML = `${f.name}<small>${n ? n + " spots" : "Pending"}</small>`;
+  if (!n) b.disabled = true;
+  else b.onclick = () => { if (byId[viewer.getScene()].floor !== f.key) viewer.loadScene(onFloor(f.key)[0].id); };
+  floorsEl.appendChild(b);
+}
 
 function drawCone() {
   requestAnimationFrame(drawCone);
@@ -200,10 +241,12 @@ function drawCone() {
 }
 
 function onScene(id) {
+  const s = byId[id];
+  showFloor(s.floor);
   Object.values(dots).forEach(d => d.classList.remove("cur"));
   dots[id].classList.add("cur");
-  svg.appendChild(dots[id]);   // bring to front
-  document.getElementById("where").textContent = `Second floor · ${id}`;
+  dots[id].parentNode.appendChild(dots[id]);   // bring to front
+  document.getElementById("where").textContent = `${floorName(s.floor)} Â· ${id}`;
 }
 viewer.on("scenechange", onScene);
 let coneRunning = false;
