@@ -133,6 +133,11 @@ const FLOOR_START = { F1: "Galerry_1_st_Scan_164", F2: "F2-040", B: "Basement_pa
 // The scan itself always shows as BEFORE_LABEL.
 const BEFORE_LABEL = "Before";
 const LOOKS = {
+  "Fasad__Scan_464": [
+    { key: "nocars",    label: "Before, no cars", file: "Fasad__Scan_464-nocars.jpg" },
+    { key: "renovated", label: "Renovated",       file: "Fasad__Scan_464-renovated.jpg" },
+    { key: "designed",  label: "Designed",        file: "Fasad__Scan_464-designed.jpg" }
+  ],
   "F2-040": [
     { key: "render", label: "Render me", file: "F2-040-render.jpg" },
     { key: "decor",  label: "Designed",  file: "F2-040-decor.jpg" }
@@ -218,7 +223,10 @@ const h = new URLSearchParams(location.hash.slice(1));
 const first = scenes[h.get("s")] ? h.get("s")
   : (onFloor(h.get("floor") || "").length ? startOf(h.get("floor"))
   : (byId[START] ? START : onFloor("F2")[0].id));
+// the view people land on at the start spot (looking down Worth Avenue at the arcade)
+const START_VIEW = { yaw: 90.6, pitch: 2.2, hfov: 100 };
 if (h.has("y")) Object.assign(scenes[first], { yaw: +h.get("y"), pitch: +h.get("p") || 0, hfov: +h.get("f") || HFOV });
+else if (baseOf(first) === START) for (const id of Object.keys(scenes)) if (baseOf(id) === START) Object.assign(scenes[id], START_VIEW);
 
 const viewer = pannellum.viewer("pano", {
   default: { firstScene: first, sceneFadeDuration: 450, autoLoad: true, showControls: true, compass: false,
