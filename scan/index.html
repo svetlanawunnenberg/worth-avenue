@@ -52,6 +52,21 @@
   #looks { position:fixed; left:16px; bottom:16px; z-index:10; display:flex; gap:8px; }
   #looks[hidden] { display:none; }
   #looks button { padding:13px 18px; font-size:13px; letter-spacing:.12em; box-shadow:0 2px 10px rgba(0,0,0,.25); }
+  /* title page */
+  #intro { position:fixed; inset:0; z-index:50; background:var(--paper); display:flex; align-items:center; justify-content:center;
+           padding:24px 16px; overflow:auto; transition:opacity .45s ease; }
+  #intro.out { opacity:0; pointer-events:none; }
+  #intro .in { display:flex; flex-direction:column; align-items:center; text-align:center; max-width:640px; width:100%; }
+  #intro .logo { width:min(300px, 64vw); height:auto; display:block; }
+  #intro .rule { width:56px; height:1px; background:var(--ink); margin:28px 0 22px; }
+  #intro .title { margin:0 0 36px; font:500 clamp(30px, 6vw, 46px)/1 "Cormorant Garamond", Georgia, serif;
+                  letter-spacing:.32em; text-transform:uppercase; padding-left:.32em; }
+  #intro .place { font:500 14px/1 Inter, sans-serif; letter-spacing:.22em; padding:18px 30px; max-width:100%; white-space:nowrap; }
+  #intro .place[aria-expanded="true"] { background:var(--ink); color:var(--paper); cursor:default; }
+  #intro .choose { margin-top:28px; display:flex; flex-wrap:wrap; justify-content:center; gap:10px; }
+  #intro .choose[hidden] { display:none; }
+  #intro .choose button { min-width:150px; padding:15px 20px; font-size:13px; letter-spacing:.14em; }
+  #intro .hint { margin:22px 0 0; color:var(--mute); font-size:11px; letter-spacing:.14em; text-transform:uppercase; }
   .pnlm-container { background:var(--ink); }
   .pnlm-orientation-button { display:none !important; }   /* replaced by the Motion button in the header */
   @media (max-width:640px) {
@@ -61,6 +76,8 @@
     #plan { left:16px; right:16px; width:auto; }
     #floors button { padding:7px 8px; font-size:10px; }
     #looks { bottom:auto; top:112px; }
+    #intro .place { font-size:12px; letter-spacing:.14em; padding:16px 18px; }
+    #intro .choose button { min-width:0; flex:1 1 0; padding:14px 6px; font-size:12px; letter-spacing:.08em; white-space:nowrap; }
   }
 </style>
 </head>
@@ -80,6 +97,16 @@
 <div id="plan"><svg id="map"></svg></div>
 <div id="looks" hidden></div>
 <div id="toast"></div>
+<div id="intro">
+  <div class="in">
+    <img class="logo" src="fs-logo.png" alt="Fairfax &amp; Sammons">
+    <div class="rule"></div>
+    <h2 class="title">360 Viewer</h2>
+    <button id="introPlace" class="place" type="button" aria-expanded="false">150 Worth Ave ~ Palm Beach</button>
+    <div id="introChoose" class="choose" hidden></div>
+    <p id="introHint" class="hint" hidden>Choose a view</p>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pannellum/2.5.6/pannellum.js"></script>
 <script src="data.js"></script>
@@ -103,16 +130,28 @@ const FLOORS = [
 const FLOOR_START = { F1: "Galerry_1_st_Scan_164", F2: "F2-040", B: "Basement_parking_Scan_307" };
 // Rendered versions of a spot, drawn over the same 360 view. Add a spot here to give it buttons.
 // Each image goes in panos/ and must have the same proportions as the scan (about 2.42 : 1).
+// The scan itself always shows as BEFORE_LABEL.
+const BEFORE_LABEL = "Before";
 const LOOKS = {
   "F2-040": [
     { key: "render", label: "Render me", file: "F2-040-render.jpg" },
-    { key: "decor",  label: "Decor",     file: "F2-040-decor.jpg" }
+    { key: "decor",  label: "Designed",  file: "F2-040-decor.jpg" }
   ]
 };
 const START = "F2-040";      // the spot the viewer opens on when there is no share link
 const SEP = "__";            // scene id for a look: "F2-040__render"
-const baseOf = id => String(id).split(SEP)[0];
-const lookOf = id => String(id).split(SEP)[1] || "";
+// Only a known look counts as a suffix (scan names like "Fasad__Scan_438" contain "__" too).
+function splitId(id) {
+  id = String(id);
+  const i = id.lastIndexOf(SEP);
+  if (i > 0) {
+    const b = id.slice(0, i), k = id.slice(i + SEP.length);
+    if ((LOOKS[b] || []).some(l => l.key === k)) return [b, k];
+  }
+  return [id, ""];
+}
+const baseOf = id => splitId(id)[0];
+const lookOf = id => splitId(id)[1];
 
 const S = window.STATIONS;
 const byId = Object.fromEntries(S.map(s => [s.id, s]));
@@ -273,11 +312,12 @@ function drawCone() {
   cone.setAttribute("d", `M${a.x} ${-a.y} L${p(b - half)} A${r} ${r} 0 0 0 ${p(b + half)} Z`);
 }
 
-// Render buttons: switch the picture but keep looking the same way.
-// Pressing the lit button goes back to the scan.
+// Before / Render me / Designed: switch the picture but keep looking the same way.
 const looksEl = document.getElementById("looks");
+const lookChoices = base => (LOOKS[base] || []).length
+  ? [{ key: "", label: BEFORE_LABEL }, ...LOOKS[base]] : [];
 function showLooks(id) {
-  const base = baseOf(id), cur = lookOf(id), opts = LOOKS[base] || [];
+  const base = baseOf(id), cur = lookOf(id), opts = lookChoices(base);
   looksEl.hidden = !opts.length;
   looksEl.innerHTML = "";
   for (const lk of opts) {
@@ -286,8 +326,8 @@ function showLooks(id) {
     b.classList.toggle("on", cur === lk.key);
     b.setAttribute("aria-pressed", cur === lk.key);
     b.onclick = () => {
-      const target = cur === lk.key ? base : base + SEP + lk.key;
-      viewer.loadScene(target, viewer.getPitch(), viewer.getYaw(), viewer.getHfov());
+      if (cur === lk.key) return;
+      viewer.loadScene(lk.key ? base + SEP + lk.key : base, viewer.getPitch(), viewer.getYaw(), viewer.getHfov());
     };
     looksEl.appendChild(b);
   }
@@ -346,6 +386,41 @@ document.getElementById("btnPlan").onclick = e => {
   document.getElementById("plan").classList.toggle("hidden");
   e.currentTarget.classList.toggle("on");
 };
+
+// Title page: Fairfax & Sammons 360 Viewer -> 150 Worth Ave -> Before / Render me / Designed.
+// Every link opens here; the choice decides which picture the shared view starts on.
+(() => {
+  const intro = document.getElementById("intro");
+  const place = document.getElementById("introPlace");
+  const choose = document.getElementById("introChoose");
+  const hint = document.getElementById("introHint");
+  const base = baseOf(first);
+  const view = { pitch: h.has("y") ? +h.get("p") || 0 : null, yaw: h.has("y") ? +h.get("y") : null, hfov: +h.get("f") || HFOV };
+  for (const lk of LOOKS[base] || []) new Image().src = `panos/${lk.file}`;   // ready before anyone clicks
+
+  function enter(target) {
+    if (target !== viewer.getScene()) {
+      viewer.loadScene(target, view.pitch ?? viewer.getPitch(), view.yaw ?? viewer.getYaw(), view.hfov);
+    }
+    intro.classList.add("out");
+    setTimeout(() => { intro.hidden = true; }, 480);
+  }
+
+  place.onclick = () => {
+    const opts = lookChoices(base);
+    if (!opts.length) return enter(base);              // no renders here: go straight in
+    if (place.getAttribute("aria-expanded") === "true") return;
+    place.setAttribute("aria-expanded", "true");
+    for (const lk of opts) {
+      const b = document.createElement("button");
+      b.type = "button"; b.textContent = lk.label;
+      b.onclick = () => enter(lk.key ? base + SEP + lk.key : base);
+      choose.appendChild(b);
+    }
+    choose.hidden = false; hint.hidden = false;
+    choose.querySelector("button").focus();
+  };
+})();
 </script>
 </body>
 </html>
