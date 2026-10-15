@@ -427,7 +427,7 @@ document.getElementById("btnPlan").onclick = e => {
   const choose = document.getElementById("introChoose");
   const hint = document.getElementById("introHint");
   const base = baseOf(first);
-  const view = { pitch: h.has("y") ? +h.get("p") || 0 : null, yaw: h.has("y") ? +h.get("y") : null, hfov: +h.get("f") || HFOV };
+  const view = { pitch: h.has("y") ? +h.get("p") || 0 : null, yaw: h.has("y") ? +h.get("y") : null, hfov: +h.get("f") || (base === START ? START_VIEW.hfov : HFOV) };
   for (const lk of LOOKS[base] || []) new Image().src = `panos/${lk.file}`;   // ready before anyone clicks
 
   function enter(target) {
