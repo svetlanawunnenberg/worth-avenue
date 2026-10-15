@@ -138,6 +138,7 @@ const LOOKS = {
   // key "" is the raw scan: listing it here replaces the automatic Before button (small = shown as a small button)
   "Fasad__Scan_464": [
     { key: "before",    label: "Before",            file: "Fasad__Scan_464-before.jpg" },
+    { key: "nocars",    label: "Before, no cars",   file: "Fasad__Scan_464-nocars.jpg" },
     { key: "renovated", label: "Renovated",         file: "Fasad__Scan_464-renovated.jpg" },
     { key: "designed",  label: "Designed",          file: "Fasad__Scan_464-designed.jpg" },
     { key: "",          label: "Unenhanced before", small: true }
@@ -216,7 +217,7 @@ for (const a of S) {
     }))
   };
   // same view and walk arrows, different picture
-  for (const lk of LOOKS[a.id] || []) {
+  for (const lk of (LOOKS[a.id] || []).filter(l => l.file)) {
     scenes[a.id + SEP + lk.key] = { ...scenes[a.id], panorama: `panos/${lk.file}` };
   }
 }
@@ -360,7 +361,7 @@ let coneRunning = false;
 viewer.on("load", () => {
   onScene(viewer.getScene());
   preloadAround(baseOf(viewer.getScene()));
-  for (const lk of LOOKS[baseOf(viewer.getScene())] || []) new Image().src = `panos/${lk.file}`;
+  for (const lk of LOOKS[baseOf(viewer.getScene())] || []) if (lk.file) new Image().src = `panos/${lk.file}`;
   if (!coneRunning) { coneRunning = true; requestAnimationFrame(drawCone); }
 });
 
@@ -433,7 +434,7 @@ document.getElementById("btnPlan").onclick = e => {
   const hint = document.getElementById("introHint");
   const base = baseOf(first);
   const view = { pitch: h.has("y") ? +h.get("p") || 0 : null, yaw: h.has("y") ? +h.get("y") : null, hfov: +h.get("f") || (base === START ? START_VIEW.hfov : HFOV) };
-  for (const lk of LOOKS[base] || []) new Image().src = `panos/${lk.file}`;   // ready before anyone clicks
+  for (const lk of LOOKS[base] || []) if (lk.file) new Image().src = `panos/${lk.file}`;   // ready before anyone clicks
 
   function enter(target) {
     if (target !== viewer.getScene()) {
