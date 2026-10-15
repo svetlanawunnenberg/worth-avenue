@@ -50,6 +50,17 @@
     font-size:10px; letter-spacing:.24em; text-transform:uppercase; color:var(--brass); }
   .section-label::after{ content:''; flex:1; height:1px; background:var(--line); }
 
+
+  /* ---------- latest rendering note ---------- */
+  .latest{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    margin:40px 0 0; padding:16px 20px; background:var(--white); border:1px solid var(--ink);
+    color:var(--ink); text-decoration:none; transition:background .16s ease, color .16s ease; }
+  .latest:hover, .latest:focus-visible{ background:var(--ink); color:var(--ivory); }
+  .latest:focus-visible{ outline:2px solid var(--brass); outline-offset:3px; }
+  .latest strong{ font-family:'EB Garamond',Georgia,serif; font-weight:500; font-size:1.25rem; letter-spacing:.01em; }
+  .latest small{ display:block; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass); margin-top:2px; }
+  .latest .arrow{ font-size:11px; letter-spacing:.2em; text-transform:uppercase; white-space:nowrap; }
+
   /* ---------- read aloud ---------- */
   .speak{ border:1px solid var(--line); background:var(--white); color:var(--ink-soft);
     width:30px; height:30px; padding:0; font-size:13px; line-height:1; flex:none; cursor:pointer;
@@ -306,6 +317,15 @@
     </div>
   </div>
 
+  <!-- ---------- latest rendering: replace the PDF in assets/ and update the date below ---------- -->
+  <a class="latest" href="assets/2026-10-13_Burlington_landscaping.pdf" target="_blank" rel="noopener">
+    <span>
+      <strong>Click here for most updated rendering</strong>
+      <small>Burlington landscaping set &middot; 13 October 2026 &middot; PDF, 42 pages</small>
+    </span>
+    <span class="arrow">Open &#8250;</span>
+  </a>
+
   <!-- ---------- 360 viewer, first thing on the page ---------- -->
   <div class="section-label">360 Viewer</div>
   <a class="card" href="scan/">
@@ -318,31 +338,24 @@
       <span class="enter">Open the 360 viewer</span>
     </div>
   </a>
-  <a class="editor-row" href="scan/#floor=F2">
+  <a class="editor-row" href="scan/#floor=F1">
     <div>
-      <h3>Floor 2</h3>
-      <p>86 scan spots across the second floor.</p>
+      <h3>Level 1 + Exterior</h3>
+      <p>327 scan spots through the arcade, gallery, Saks entrance and Unit 2169, and along the Worth Avenue facade.</p>
     </div>
     <span class="badge live">Live</span>
-  </a>
-  <a class="editor-row is-off" href="#">
-    <div>
-      <h3>Floor 1 Interior</h3>
-      <p>The arcade, gallery and via. Awaiting the scans from the surveyor.</p>
-    </div>
-    <span class="badge soon">Pending</span>
-  </a>
-  <a class="editor-row is-off" href="#">
-    <div>
-      <h3>Floor 1 Exterior</h3>
-      <p>The Worth Avenue facade. Awaiting the scans from the surveyor.</p>
-    </div>
-    <span class="badge soon">Pending</span>
   </a>
   <a class="editor-row" id="row360Basement" href="scan/#floor=B">
     <div>
       <h3>Basement</h3>
-      <p>30 scan spots through the parking level.</p>
+      <p>206 scan spots through the parking level. Cars and people pixelated.</p>
+    </div>
+    <span class="badge live">Live</span>
+  </a>
+  <a class="editor-row" href="scan/#floor=F2">
+    <div>
+      <h3>Level 2</h3>
+      <p>247 scan spots through the upper gallery, the west wing, the Saks entrance and Units 1204, 1260 and 2172.</p>
     </div>
     <span class="badge live">Live</span>
   </a>

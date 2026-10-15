@@ -71,6 +71,7 @@
   <div class="where" id="where"></div>
   <div class="sp"></div>
   <button id="btnMotion" type="button" hidden>Motion</button>
+  <button id="btnAngle" type="button" title="Frame a still view: wide lenses, straight verticals, capture">Angle finder</button>
   <button id="btnPlan" class="on" type="button">Plan</button>
   <button id="btnLink" type="button">Copy link</button>
 </header>
@@ -82,6 +83,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pannellum/2.5.6/pannellum.js"></script>
 <script src="data.js"></script>
+<script src="angle-finder.js"></script>
 <script>
 // Scanner image geometry (from the .rcc header): 360° across, +89.8° down to -60.0° vertically.
 const VAOV = 149.86, VOFFSET = 14.88;
@@ -93,11 +95,12 @@ const LINK_MAX = 6;
 
 // Floors, top to bottom. A floor with no scans yet shows as Pending.
 const FLOORS = [
-  { key: "F2",  name: "Floor 2" },
-  { key: "F1",  name: "Floor 1 Interior" },
-  { key: "F1X", name: "Floor 1 Exterior" },
-  { key: "B",   name: "Basement" }
+  { key: "F1",  name: "Level 1 + Exterior" },
+  { key: "B",   name: "Basement" },
+  { key: "F2",  name: "Level 2" }
 ];
+// where a floor tab opens: the main gallery, not a side room
+const FLOOR_START = { F1: "Galerry_1_st_Scan_164", F2: "F2-040", B: "Basement_parking_Scan_307" };
 // Rendered versions of a spot, drawn over the same 360 view. Add a spot here to give it buttons.
 // Each image goes in panos/ and must have the same proportions as the scan (about 2.42 : 1).
 const LOOKS = {
@@ -114,6 +117,7 @@ const lookOf = id => String(id).split(SEP)[1] || "";
 const S = window.STATIONS;
 const byId = Object.fromEntries(S.map(s => [s.id, s]));
 const onFloor = key => S.filter(s => s.floor === key);
+const startOf = key => byId[FLOOR_START[key]] ? FLOOR_START[key] : onFloor(key)[0].id;
 const floorName = key => (FLOORS.find(f => f.key === key) || {}).name || key;
 const norm = a => ((a % 360) + 540) % 360 - 180;
 const deg = r => r * 180 / Math.PI;
@@ -123,7 +127,8 @@ const yawFor = (a, bearing) => norm(YAW_SIGN * (bearing - a.rz) + YAW_OFFSET);
 const bearingFor = (a, yaw) => norm(a.rz + YAW_SIGN * (yaw - YAW_OFFSET));
 
 function neighbours(a) {
-  return S.filter(b => b !== a && b.floor === a.floor)
+  // exterior and interior spots only link where they are close (doorways), never through walls
+  return S.filter(b => b !== a && b.floor === a.floor && (!!b.ext === !!a.ext || Math.hypot(b.x - a.x, b.y - a.y) < 3.5))
     .map(b => ({ b, d: Math.hypot(b.x - a.x, b.y - a.y) }))
     .sort((p, q) => p.d - q.d)
     .filter((p, i) => i < 2 || p.d <= LINK_RADIUS)
@@ -151,7 +156,8 @@ for (const a of S) {
   }));
   scenes[a.id] = {
     type: "equirectangular", panorama: `panos/${a.id}.jpg`,
-    haov: 360, vaov: VAOV, vOffset: VOFFSET, hfov: HFOV, minHfov: MIN_HFOV, maxHfov: MAX_HFOV,
+    // December scans keep the scanner's 150-degree strip; v3 scans ("full") are padded to a full sphere
+    haov: 360, vaov: a.full ? 180 : VAOV, vOffset: a.full ? 0 : VOFFSET, hfov: HFOV, minHfov: MIN_HFOV, maxHfov: MAX_HFOV,
     // pannellum keeps (yaw + northOffset) constant when walking, so this keeps the world heading
     northOffset: norm(YAW_SIGN * a.rz - YAW_OFFSET),
     hotSpots: links[a.id].map(l => ({
@@ -171,7 +177,7 @@ for (const a of S) {
 const h = new URLSearchParams(location.hash.slice(1));
 // #s=<spot> opens a spot; #floor=<key> opens the first spot on that floor
 const first = scenes[h.get("s")] ? h.get("s")
-  : (onFloor(h.get("floor") || "").length ? onFloor(h.get("floor"))[0].id
+  : (onFloor(h.get("floor") || "").length ? startOf(h.get("floor"))
   : (byId[START] ? START : onFloor("F2")[0].id));
 if (h.has("y")) Object.assign(scenes[first], { yaw: +h.get("y"), pitch: +h.get("p") || 0, hfov: +h.get("f") || HFOV });
 
@@ -254,7 +260,7 @@ for (const f of FLOORS) {
   b.type = "button"; b.dataset.floor = f.key;
   b.innerHTML = `${f.name}<small>${n ? n + " spots" : "Pending"}</small>`;
   if (!n) b.disabled = true;
-  else b.onclick = () => { if (byId[baseOf(viewer.getScene())].floor !== f.key) viewer.loadScene(onFloor(f.key)[0].id); };
+  else b.onclick = () => { if (byId[baseOf(viewer.getScene())].floor !== f.key) viewer.loadScene(startOf(f.key)); };
   floorsEl.appendChild(b);
 }
 
@@ -325,6 +331,16 @@ viewer.on("load", () => {
 btnMotion.onclick = () => {
   if (viewer.isOrientationActive()) { viewer.stopOrientation(); btnMotion.classList.remove("on"); }
   else { viewer.startOrientation(); btnMotion.classList.add("on"); }
+};
+// Angle finder: frame a still from this panorama (or from the render being shown) with wide lenses and straight verticals.
+document.getElementById("btnAngle").onclick = () => {
+  const id = viewer.getScene(), base = baseOf(id), a = byId[base];
+  const lk = (LOOKS[base] || []).find(l => l.key === lookOf(id));
+  AngleFinder.open({
+    url: `panos/${lk ? lk.file : base + ".jpg"}`, vaov: a.full ? 180 : VAOV, voff: a.full ? 0 : VOFFSET,
+    yaw: viewer.getYaw(), pitch: viewer.getPitch(), hfov: viewer.getHfov(),
+    title: `${floorName(a.floor)} · ${base}${lk ? " · " + lk.label : ""}`
+  });
 };
 document.getElementById("btnPlan").onclick = e => {
   document.getElementById("plan").classList.toggle("hidden");
