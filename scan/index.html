@@ -51,6 +51,8 @@
   /* render options: shown only on spots that have renders */
   #looks { position:fixed; left:16px; bottom:16px; z-index:10; display:flex; gap:8px; }
   #looks[hidden] { display:none; }
+  #looks { align-items:flex-end; }
+  #looks button.small { padding:6px 9px; font-size:10px; letter-spacing:.08em; opacity:.85; }
   #looks button { padding:13px 18px; font-size:13px; letter-spacing:.12em; box-shadow:0 2px 10px rgba(0,0,0,.25); }
   /* title page */
   #intro { position:fixed; inset:0; z-index:50; background:var(--paper); display:flex; align-items:center; justify-content:center;
@@ -133,10 +135,12 @@ const FLOOR_START = { F1: "Galerry_1_st_Scan_164", F2: "F2-040", B: "Basement_pa
 // The scan itself always shows as BEFORE_LABEL.
 const BEFORE_LABEL = "Before";
 const LOOKS = {
+  // key "" is the raw scan: listing it here replaces the automatic Before button (small = shown as a small button)
   "Fasad__Scan_464": [
-    { key: "nocars",    label: "Before, no cars", file: "Fasad__Scan_464-nocars.jpg" },
-    { key: "renovated", label: "Renovated",       file: "Fasad__Scan_464-renovated.jpg" },
-    { key: "designed",  label: "Designed",        file: "Fasad__Scan_464-designed.jpg" }
+    { key: "before",    label: "Before",            file: "Fasad__Scan_464-before.jpg" },
+    { key: "renovated", label: "Renovated",         file: "Fasad__Scan_464-renovated.jpg" },
+    { key: "designed",  label: "Designed",          file: "Fasad__Scan_464-designed.jpg" },
+    { key: "",          label: "Unenhanced before", small: true }
   ],
   "F2-040": [
     { key: "render", label: "Render me", file: "F2-040-render.jpg" },
@@ -222,7 +226,7 @@ const h = new URLSearchParams(location.hash.slice(1));
 // #s=<spot> opens a spot; #floor=<key> opens the first spot on that floor
 const first = scenes[h.get("s")] ? h.get("s")
   : (onFloor(h.get("floor") || "").length ? startOf(h.get("floor"))
-  : (byId[START] ? START : onFloor("F2")[0].id));
+  : (byId[START] ? (scenes[START + SEP + "before"] ? START + SEP + "before" : START) : onFloor("F2")[0].id));
 // the view people land on at the start spot (looking down Worth Avenue at the arcade)
 const START_VIEW = { yaw: 90.6, pitch: 2.2, hfov: 100 };
 if (h.has("y")) Object.assign(scenes[first], { yaw: +h.get("y"), pitch: +h.get("p") || 0, hfov: +h.get("f") || HFOV });
@@ -322,8 +326,8 @@ function drawCone() {
 
 // Before / Render me / Designed: switch the picture but keep looking the same way.
 const looksEl = document.getElementById("looks");
-const lookChoices = base => (LOOKS[base] || []).length
-  ? [{ key: "", label: BEFORE_LABEL }, ...LOOKS[base]] : [];
+const lookChoices = base => !(LOOKS[base] || []).length ? []
+  : LOOKS[base].some(l => l.key === "") ? LOOKS[base] : [{ key: "", label: BEFORE_LABEL }, ...LOOKS[base]];
 function showLooks(id) {
   const base = baseOf(id), cur = lookOf(id), opts = lookChoices(base);
   looksEl.hidden = !opts.length;
@@ -331,6 +335,7 @@ function showLooks(id) {
   for (const lk of opts) {
     const b = document.createElement("button");
     b.type = "button"; b.textContent = lk.label;
+    if (lk.small) b.classList.add("small");
     b.classList.toggle("on", cur === lk.key);
     b.setAttribute("aria-pressed", cur === lk.key);
     b.onclick = () => {
@@ -444,6 +449,7 @@ document.getElementById("btnPlan").onclick = e => {
     if (place.getAttribute("aria-expanded") === "true") return;
     place.setAttribute("aria-expanded", "true");
     for (const lk of opts) {
+      if (lk.small) continue;                          // small extras stay in the viewer only
       const b = document.createElement("button");
       b.type = "button"; b.textContent = lk.label;
       b.onclick = () => enter(lk.key ? base + SEP + lk.key : base);
