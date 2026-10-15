@@ -48,6 +48,10 @@
   .walk span { visibility:hidden; position:absolute; bottom:42px; left:50%; transform:translateX(-50%); white-space:nowrap;
                background:var(--ink); color:var(--paper); padding:5px 8px; font-size:11px; letter-spacing:.06em; }
   .walk:hover span { visibility:visible; }
+  /* render options: shown only on spots that have renders */
+  #looks { position:fixed; left:16px; bottom:16px; z-index:10; display:flex; gap:8px; }
+  #looks[hidden] { display:none; }
+  #looks button { padding:13px 18px; font-size:13px; letter-spacing:.12em; box-shadow:0 2px 10px rgba(0,0,0,.25); }
   .pnlm-container { background:var(--ink); }
   .pnlm-orientation-button { display:none !important; }   /* replaced by the Motion button in the header */
   @media (max-width:640px) {
@@ -56,6 +60,7 @@
     header .where { display:none; }
     #plan { left:16px; right:16px; width:auto; }
     #floors button { padding:7px 8px; font-size:10px; }
+    #looks { bottom:auto; top:112px; }
   }
 </style>
 </head>
@@ -72,12 +77,13 @@
 <div id="pano"></div>
 <nav id="floors" aria-label="Floors"></nav>
 <div id="plan"><svg id="map"></svg></div>
+<div id="looks" hidden></div>
 <div id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pannellum/2.5.6/pannellum.js"></script>
 <script src="data.js"></script>
 <script>
-// Scanner image geometry (from the .rcc header): 360Â° across, +89.8Â° down to -60.0Â° vertically.
+// Scanner image geometry (from the .rcc header): 360° across, +89.8° down to -60.0° vertically.
 const VAOV = 149.86, VOFFSET = 14.88;
 // Calibration between panorama yaw and the ReCap world frame.
 const YAW_OFFSET = 0, YAW_SIGN = -1;
@@ -92,6 +98,19 @@ const FLOORS = [
   { key: "F1X", name: "Floor 1 Exterior" },
   { key: "B",   name: "Basement" }
 ];
+// Rendered versions of a spot, drawn over the same 360 view. Add a spot here to give it buttons.
+// Each image goes in panos/ and must have the same proportions as the scan (about 2.42 : 1).
+const LOOKS = {
+  "F2-040": [
+    { key: "render", label: "Render me", file: "F2-040-render.jpg" },
+    { key: "decor",  label: "Decor",     file: "F2-040-decor.jpg" }
+  ]
+};
+const START = "F2-040";      // the spot the viewer opens on when there is no share link
+const SEP = "__";            // scene id for a look: "F2-040__render"
+const baseOf = id => String(id).split(SEP)[0];
+const lookOf = id => String(id).split(SEP)[1] || "";
+
 const S = window.STATIONS;
 const byId = Object.fromEntries(S.map(s => [s.id, s]));
 const onFloor = key => S.filter(s => s.floor === key);
@@ -138,17 +157,22 @@ for (const a of S) {
     hotSpots: links[a.id].map(l => ({
       type: "info", yaw: l.yaw, pitch: l.pitch,
       createTooltipFunc: walkTooltip,
-      createTooltipArgs: { label: `${l.id} Â· ${l.d.toFixed(1)} m` },
+      createTooltipArgs: { label: `${l.id} · ${l.d.toFixed(1)} m` },
       clickHandlerFunc: () => walkTo(l)
     }))
   };
+  // same view and walk arrows, different picture
+  for (const lk of LOOKS[a.id] || []) {
+    scenes[a.id + SEP + lk.key] = { ...scenes[a.id], panorama: `panos/${lk.file}` };
+  }
 }
 
 // start from the share link if there is one
 const h = new URLSearchParams(location.hash.slice(1));
 // #s=<spot> opens a spot; #floor=<key> opens the first spot on that floor
-const first = byId[h.get("s")] ? h.get("s")
-  : (onFloor(h.get("floor") || "").length ? onFloor(h.get("floor"))[0].id : onFloor("F2")[0].id);
+const first = scenes[h.get("s")] ? h.get("s")
+  : (onFloor(h.get("floor") || "").length ? onFloor(h.get("floor"))[0].id
+  : (byId[START] ? START : onFloor("F2")[0].id));
 if (h.has("y")) Object.assign(scenes[first], { yaw: +h.get("y"), pitch: +h.get("p") || 0, hfov: +h.get("f") || HFOV });
 
 const viewer = pannellum.viewer("pano", {
@@ -172,7 +196,7 @@ viewer.on("scenechange", () => { walking = false; });
 // Double-click anywhere: walk to the nearest linked spot in that direction.
 viewer.getContainer().addEventListener("dblclick", e => {
   const [, yaw] = viewer.mouseEventToCoords(e);
-  const best = (links[viewer.getScene()] || [])
+  const best = (links[baseOf(viewer.getScene())] || [])
     .map(l => ({ l, off: Math.abs(norm(l.yaw - yaw)) }))
     .filter(c => c.off <= DBL_CLICK_CONE)
     .sort((p, q) => (p.off + p.l.d * 2) - (q.off + q.l.d * 2))[0];
@@ -230,32 +254,54 @@ for (const f of FLOORS) {
   b.type = "button"; b.dataset.floor = f.key;
   b.innerHTML = `${f.name}<small>${n ? n + " spots" : "Pending"}</small>`;
   if (!n) b.disabled = true;
-  else b.onclick = () => { if (byId[viewer.getScene()].floor !== f.key) viewer.loadScene(onFloor(f.key)[0].id); };
+  else b.onclick = () => { if (byId[baseOf(viewer.getScene())].floor !== f.key) viewer.loadScene(onFloor(f.key)[0].id); };
   floorsEl.appendChild(b);
 }
 
 function drawCone() {
   requestAnimationFrame(drawCone);
-  const a = byId[viewer.getScene()];
+  const a = byId[baseOf(viewer.getScene())];
   if (!a) return;
   const b = bearingFor(a, viewer.getYaw()), half = viewer.getHfov() / 2, r = 6;
   const p = ang => `${a.x + r * Math.cos(ang * Math.PI / 180)} ${-(a.y + r * Math.sin(ang * Math.PI / 180))}`;
   cone.setAttribute("d", `M${a.x} ${-a.y} L${p(b - half)} A${r} ${r} 0 0 0 ${p(b + half)} Z`);
 }
 
+// Render buttons: switch the picture but keep looking the same way.
+// Pressing the lit button goes back to the scan.
+const looksEl = document.getElementById("looks");
+function showLooks(id) {
+  const base = baseOf(id), cur = lookOf(id), opts = LOOKS[base] || [];
+  looksEl.hidden = !opts.length;
+  looksEl.innerHTML = "";
+  for (const lk of opts) {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = lk.label;
+    b.classList.toggle("on", cur === lk.key);
+    b.setAttribute("aria-pressed", cur === lk.key);
+    b.onclick = () => {
+      const target = cur === lk.key ? base : base + SEP + lk.key;
+      viewer.loadScene(target, viewer.getPitch(), viewer.getYaw(), viewer.getHfov());
+    };
+    looksEl.appendChild(b);
+  }
+}
+
 function onScene(id) {
-  const s = byId[id];
+  const base = baseOf(id), s = byId[base], lk = (LOOKS[base] || []).find(l => l.key === lookOf(id));
   showFloor(s.floor);
   Object.values(dots).forEach(d => d.classList.remove("cur"));
-  dots[id].classList.add("cur");
-  dots[id].parentNode.appendChild(dots[id]);   // bring to front
-  document.getElementById("where").textContent = `${floorName(s.floor)} Â· ${id}`;
+  dots[base].classList.add("cur");
+  dots[base].parentNode.appendChild(dots[base]);   // bring to front
+  document.getElementById("where").textContent = `${floorName(s.floor)} · ${base}${lk ? " · " + lk.label : ""}`;
+  showLooks(id);
 }
 viewer.on("scenechange", onScene);
 let coneRunning = false;
 viewer.on("load", () => {
   onScene(viewer.getScene());
-  preloadAround(viewer.getScene());
+  preloadAround(baseOf(viewer.getScene()));
+  for (const lk of LOOKS[baseOf(viewer.getScene())] || []) new Image().src = `panos/${lk.file}`;
   if (!coneRunning) { coneRunning = true; requestAnimationFrame(drawCone); }
 });
 
