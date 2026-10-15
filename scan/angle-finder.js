@@ -1,7 +1,9 @@
 /* Angle Finder: frame a still view from any equirectangular panorama.
    Wide lenses, Panini and fisheye projections, straight verticals with lens shift,
    tilt, framing presets, and a high-resolution capture.
-   Usage: AngleFinder.open({ url, vaov:180, voff:0, yaw:0, pitch:0, hfov:90, title:"..." })
+   Usage: AngleFinder.open({ url, vaov:180, voff:0, yaw:0, pitch:0, hfov:90, title:"...",
+            canMove(dir, yaw) -> bool, move(dir, yaw) -> { url, vaov, voff, yaw, title } | null })
+   dir is relative to the view: 0 forward, -90 left, 90 right, 180 back. canMove / move are optional.
    yaw / pitch / hfov in degrees, yaw positive to the right of the panorama centre. */
 (function () {
   const CSS = `
@@ -27,6 +29,11 @@
   .af-btn.solid{background:#f2f2f0;color:#111;border-color:#f2f2f0;font-weight:600}
   .af-seg button:focus-visible,.af-btn:focus-visible{outline:2px solid #ff5a4f;outline-offset:2px}
   .af-chk{display:flex;gap:8px;align-items:center;cursor:pointer}
+  .af-move{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"f f" "l r" "b b";gap:4px}
+  .af-move button{font:inherit;font-size:12px;padding:7px 9px;border:1px solid #3a3a38;background:transparent;color:#f2f2f0;cursor:pointer;border-radius:2px}
+  .af-move button:hover:not(:disabled){background:#f2f2f0;color:#111}
+  .af-move button:disabled{opacity:.3;cursor:default}
+  .af-move button:focus-visible{outline:2px solid #ff5a4f;outline-offset:2px}
   .af-note{font-size:11.5px;color:#9a9a95;line-height:1.45}
   .af-row{display:flex;gap:6px;flex-wrap:wrap}
   .af-shot{position:fixed;inset:0;z-index:1001;background:rgba(10,10,10,.92);display:grid;place-items:center;padding:24px 16px}
@@ -84,6 +91,13 @@
       <div class="af-stage" id="afStage"><canvas id="afCanvas"></canvas><svg class="af-grid" id="afGrid"></svg></div>
       <div class="af-side">
         <div><div class="af-h">Angle Finder</div><div class="af-sub" id="afTitle"></div></div>
+        <div class="af-sec" id="afMoveWrap"><div class="af-lab">Move to the next spot <b>keeps your angle</b></div>
+          <div class="af-move">
+            <button type="button" data-dir="0" style="grid-area:f">&#9650; Forward</button>
+            <button type="button" data-dir="-90" style="grid-area:l">&#9664; Left</button>
+            <button type="button" data-dir="90" style="grid-area:r">Right &#9654;</button>
+            <button type="button" data-dir="180" style="grid-area:b">&#9660; Back</button>
+          </div></div>
         <div class="af-sec"><div class="af-lab">Lens</div><div class="af-seg" id="afProj"></div></div>
         <div class="af-sec"><div class="af-lab">Field of view <b id="afFovV"></b></div><input type="range" id="afFov" min="20" max="170" step="1"></div>
         <label class="af-chk"><input type="checkbox" id="afStraight" checked> Keep verticals straight</label>
@@ -112,6 +126,7 @@
     $("afClose").onclick = close;
     $("afReset").onclick = () => { Object.assign(st, defaults(st.yaw0, 0, 90)); layout(); sync(); };
     $("afCapture").onclick = capture;
+    root.querySelectorAll(".af-move button").forEach(b => b.onclick = () => step(+b.dataset.dir));
     document.addEventListener("keydown", onKey);
     // drag to aim
     const stage = $("afStage"); let drag = null;
@@ -138,7 +153,35 @@
     texObj = gl.createTexture();
   }
   function defaults(yaw, pitch, fov) { return { yaw0: yaw, yaw, pitch: 0, shift: Math.tan(pitch * D2R) * 0.9, shiftX: 0, fov: Math.max(60, fov), roll: 0, proj: 0, panD: 1, straight: true, aspect: st ? st.aspect : 0, thirds: true }; }
-  function onKey(e) { if (e.key === "Escape" && root && !root.hidden) { const s = document.querySelector(".af-shot"); if (s) s.remove(); else close(); } }
+  function onKey(e) {
+    if (!root || root.hidden) return;
+    if (e.key === "Escape") { const s = document.querySelector(".af-shot"); if (s) s.remove(); else close(); return; }
+    // arrow keys move between spots, unless a slider has focus
+    const keys = { ArrowUp: 0, ArrowLeft: -90, ArrowRight: 90, ArrowDown: 180 };
+    if (e.key in keys && !(document.activeElement && document.activeElement.type === "range") && !document.querySelector(".af-shot")) {
+      e.preventDefault(); step(keys[e.key]);
+    }
+  }
+
+  // Move to a neighbouring spot. The host decides which spot lies in that direction and
+  // returns its panorama plus the yaw that keeps the same real-world heading; every other
+  // setting (lens, field of view, shift, tilt, frame) stays as it is.
+  let moving = false;
+  function step(dir) {
+    if (moving || !opts.move) return;
+    const r = opts.move(dir, st.yaw);
+    if (!r) return;
+    moving = true;
+    opts = Object.assign({}, opts, r);
+    root.querySelector("#afTitle").textContent = opts.title;
+    load(opts.url, () => { st.yaw = st.yaw0 = r.yaw; moving = false; sync(); });
+  }
+  function syncMoves() {
+    const wrap = root.querySelector("#afMoveWrap");
+    wrap.hidden = !opts.canMove;
+    if (!opts.canMove) return;
+    root.querySelectorAll(".af-move button").forEach(b => { b.disabled = !opts.canMove(+b.dataset.dir, st.yaw); });
+  }
 
   function halfTanFor(proj, fov) {
     const h = Math.min(fov, 178) * D2R / 2;
@@ -186,6 +229,7 @@
     g.innerHTML = st.thirds ? `<g stroke="rgba(255,255,255,.45)" stroke-width="1" fill="none">
       <line x1="${w / 3}" y1="0" x2="${w / 3}" y2="${h}"/><line x1="${2 * w / 3}" y1="0" x2="${2 * w / 3}" y2="${h}"/>
       <line x1="0" y1="${h / 3}" x2="${w}" y2="${h / 3}"/><line x1="0" y1="${2 * h / 3}" x2="${w}" y2="${2 * h / 3}"/></g>` + horizonLine(w, h) : "";
+    syncMoves();
     draw();
   }
   function horizonLine(w, h) {

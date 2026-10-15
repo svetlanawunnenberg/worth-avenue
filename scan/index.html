@@ -373,14 +373,38 @@ btnMotion.onclick = () => {
   else { viewer.startOrientation(); btnMotion.classList.add("on"); }
 };
 // Angle finder: frame a still from this panorama (or from the render being shown) with wide lenses and straight verticals.
+// Inside the Angle Finder you can step to the next spot (Forward / Left / Right / Back, or the arrow keys):
+// it picks the nearest linked spot within 45 degrees of that direction and keeps the same real-world heading.
+let afBase = null;
+const afPanoFor = (id, lk) => {
+  const a = byId[id];
+  return { url: `panos/${lk ? lk.file : id + ".jpg"}`, vaov: a.full ? 180 : VAOV, voff: a.full ? 0 : VOFFSET,
+           title: `${floorName(a.floor)} · ${id}${lk ? " · " + lk.label : ""}` };
+};
+function afNext(dir, yaw) {
+  const want = norm(yaw + dir);
+  return (links[afBase] || [])
+    .map(l => ({ l, off: Math.abs(norm(l.yaw - want)) }))
+    .filter(c => c.off <= 45)
+    .sort((p, q) => (p.l.d + p.off / 15) - (q.l.d + q.off / 15))[0];
+}
 document.getElementById("btnAngle").onclick = () => {
-  const id = viewer.getScene(), base = baseOf(id), a = byId[base];
+  const id = viewer.getScene(), base = baseOf(id);
   const lk = (LOOKS[base] || []).find(l => l.key === lookOf(id));
-  AngleFinder.open({
-    url: `panos/${lk ? lk.file : base + ".jpg"}`, vaov: a.full ? 180 : VAOV, voff: a.full ? 0 : VOFFSET,
+  afBase = base;
+  AngleFinder.open(Object.assign(afPanoFor(base, lk), {
     yaw: viewer.getYaw(), pitch: viewer.getPitch(), hfov: viewer.getHfov(),
-    title: `${floorName(a.floor)} · ${base}${lk ? " · " + lk.label : ""}`
-  });
+    canMove: (dir, yaw) => !!afNext(dir, yaw),
+    move: (dir, yaw) => {
+      const c = afNext(dir, yaw);
+      if (!c) return null;
+      // yaw + northOffset is the same real-world heading in every scan
+      const newYaw = norm(yaw + scenes[afBase].northOffset - scenes[c.l.id].northOffset);
+      afBase = c.l.id;
+      viewer.loadScene(afBase, viewer.getPitch(), newYaw, viewer.getHfov());   // the 360 view follows, so Back to 360 lands here
+      return Object.assign(afPanoFor(afBase), { yaw: newYaw });
+    }
+  }));
 };
 document.getElementById("btnPlan").onclick = e => {
   document.getElementById("plan").classList.toggle("hidden");
