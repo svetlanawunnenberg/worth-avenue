@@ -33,8 +33,8 @@
   .wrap{ max-width:1080px; margin:0 auto; padding:0 24px 80px; }
   img{ -webkit-user-drag:none; }
 
-  .header-band{ background:var(--white); border-bottom:1px solid var(--line); padding:30px 24px 26px; text-align:center; }
-  .header-band img{ display:block; width:100%; max-width:880px; height:auto; margin:0 auto; }
+  .header-band{ background:var(--white); border-bottom:1px solid var(--line); padding:14px 24px 12px; text-align:center; }
+  .header-band img{ display:block; width:100%; max-width:360px; height:auto; margin:0 auto; }
 
   .titleblock{ text-align:center; padding:46px 0 0; }
   .eyebrow{ font-size:10px; letter-spacing:.3em; text-transform:uppercase; color:var(--brass); margin:0 0 18px; }
@@ -292,19 +292,35 @@
     border:1px solid var(--line); background:var(--white); padding:9px 14px; }
   .jump a:hover{ background:var(--ink); color:var(--ivory); border-color:var(--ink); }
   html{ scroll-behavior:smooth; }
+
+  /* ---------- simple top ---------- */
+  .hero{ padding-top:26px; }
+  .hero h1{ font-size:clamp(1.9rem,6vw,3rem); max-width:18ch; margin:0 auto; }
+  .bigbtns{ display:flex; flex-direction:column; gap:12px; max-width:640px; margin:30px auto 0; }
+  .big{ display:flex; flex-direction:column; gap:4px; text-align:left; text-decoration:none; width:100%;
+    background:var(--white); color:var(--ink); border:1px solid var(--ink); padding:22px 24px; font:inherit; cursor:pointer;
+    min-height:76px; justify-content:center; transition:background .16s ease, color .16s ease; }
+  .big:hover,.big:focus-visible{ background:var(--ink); color:var(--ivory); }
+  .big:focus-visible{ outline:3px solid var(--brass); outline-offset:3px; }
+  .big-t{ font-family:'EB Garamond',Georgia,serif; font-size:1.45rem; font-weight:600; line-height:1.15; }
+  .big-s{ font-size:.85rem; opacity:.75; }
+  .big.primary{ background:var(--ink); color:var(--ivory); padding:28px 24px; }
+  .big.primary .big-t{ font-size:1.7rem; }
+  .big.primary:hover{ background:var(--brass); border-color:var(--brass); }
+  .alert{ background:#FBF1D6; border:1px solid var(--brass); border-left:5px solid var(--brass);
+    padding:14px 18px; font-size:.95rem; color:var(--ink); margin:-2px 0 6px; }
+  .allpres{ display:flex; flex-direction:column; gap:8px; margin:-4px 0 4px; padding-left:14px; border-left:3px solid var(--brass); }
+  .allpres[hidden]{ display:none; }
+  .allpres a{ display:block; background:var(--white); border:1px solid var(--line); padding:14px 18px; text-decoration:none; color:var(--ink); }
+  .allpres a:hover{ border-color:var(--brass); }
+  .allpres small{ display:block; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--brass); margin-top:2px; }
+  .quick-label{ max-width:640px; margin:30px auto 10px; font-size:10px; letter-spacing:.24em; text-transform:uppercase; color:var(--brass); }
+  .links{ max-width:640px; margin:0 auto; }
+  .more-divider{ margin:64px 0 0; text-align:center; border-top:1px solid var(--line); padding-top:14px;
+    font-size:10px; letter-spacing:.3em; text-transform:uppercase; color:var(--ink-soft); }
 </style>
 </head>
 <body>
-
-<div class="welcome" id="welcome">
-  <img src="assets/fs-logo-black.png" alt="Fairfax &amp; Sammons">
-  <div class="wel-eyebrow">150 Worth Avenue &middot; Palm Beach</div>
-  <h2 class="serif">Welcome to the Fairfax &amp; Sammons Esplanade Viewer</h2>
-  <p class="wel-sub">Burlington Arcade &mdash; the current design set</p>
-  <div class="wel-rule"></div>
-  <button type="button" id="welGo">Explore</button>
-  <div class="wel-note">Shown once &middot; you will come straight in next time</div>
-</div>
 
 <div class="header-band">
   <img src="assets/burlington-header.png" alt="Burlington Arcade — Fairfax &amp; Sammons, New York ~ Palm Beach">
@@ -312,43 +328,57 @@
 
 <div class="wrap">
 
-  <div class="titleblock">
-    <p class="eyebrow">150 Worth Avenue &middot; Palm Beach, Florida</p>
-    <h1 class="serif" id="hTitle">Burlington Arcade</h1>
-    <p class="subtitle" id="hSub">Design Viewer</p>
-    <div class="rule"></div>
-    <div class="lede-row">
-      <p class="lede" id="lede"></p>
-      <button type="button" class="speak" id="speakLede" title="Read aloud">&#9835;</button>
-    </div>
+  <div class="titleblock hero">
+    <p class="eyebrow">150 Worth Avenue &middot; Palm Beach</p>
+    <h1 class="serif" id="hTitle">Hi, welcome to the 150 Worth Project Dashboard</h1>
+    <p class="subtitle" id="hSub">Tap a button to start.</p>
   </div>
 
-  <!-- ---------- latest pitch deck: replace the PDF in assets/ and update the date below ---------- -->
-  <a class="latest" href="assets/2026-10-19_Burlington_pitch_deck.pdf" target="_blank" rel="noopener">
-    <span>
-      <strong>Latest pitch deck, with plans</strong>
-      <small>Burlington pitch deck &middot; 19 October 2026 &middot; PDF</small>
-    </span>
-    <span class="arrow">Open &#8250;</span>
-  </a>
-  <a class="latest" style="margin-top:10px;border-color:var(--line)" href="assets/2026-10-13_Burlington_landscaping.pdf" target="_blank" rel="noopener">
-    <span>
-      <strong>Landscaping set</strong>
-      <small>13 October 2026 &middot; PDF, 42 pages</small>
-    </span>
-    <span class="arrow">Open &#8250;</span>
-  </a>
+  <div class="bigbtns">
+    <a class="big primary" href="https://svetlanawunnenberg.github.io/worth-avenue/scan/#s=Fasad__Scan_464__renovated&y=99.1&p=8.4&f=100">
+      <span class="big-t">Walk the 360 &middot; Renovated View</span>
+      <span class="big-s">Opens the building as it will look, in 360</span>
+    </a>
+    <div class="alert" role="note">
+      <b>Heads up:</b> only this spot can see all the stages. Walk to the other points to see the before.
+    </div>
+    <a class="big" href="assets/2026-10-19_Burlington_pitch_deck.pdf" target="_blank" rel="noopener">
+      <span class="big-t">Latest presentation</span>
+      <span class="big-s">Pitch deck, with plans &middot; 19 October 2026</span>
+    </a>
+    <button class="big" type="button" id="btnAllPres" aria-expanded="false" aria-controls="allPres">
+      <span class="big-t">All sent out presentations</span>
+      <span class="big-s">Every version we have sent</span>
+    </button>
+    <div class="allpres" id="allPres" hidden>
+      <a href="assets/2026-10-19_Burlington_pitch_deck.pdf" target="_blank" rel="noopener"><b>Pitch deck, with plans</b><small>19 October 2026 &middot; PDF</small></a>
+      <a href="assets/2026-10-13_Burlington_landscaping.pdf" target="_blank" rel="noopener"><b>Landscaping set</b><small>13 October 2026 &middot; PDF, 42 pages</small></a>
+    </div>
+    <a class="big" href="floorplan/">
+      <span class="big-t">Floorplan &amp; views</span>
+      <span class="big-s">Every rendering, placed on the plan</span>
+    </a>
+  </div>
 
-  <nav class="jump">
-    <a href="floorplan/">Floorplan &amp; Views</a>
-    <a href="scan/">360 Viewer</a>
-    <a href="esplanade/">Facade Editor</a>
-    <a href="#sec-views">All 17 Views</a>
-    <a href="#sec-files">Project Files</a>
-  </nav>
+  <div class="quick-label" id="sec-files">Project files</div>
+  <div class="links">
+    <a class="linkbtn" id="btnDrive" href="#" target="_blank" rel="noopener">
+      <span class="lb-title">Google Drive</span>
+      <span class="lb-sub">Worth Ave Esplanade folder</span>
+    </a>
+    <a class="linkbtn" id="btnDropbox" href="#" target="_blank" rel="noopener">
+      <span class="lb-title">Dropbox</span>
+      <span class="lb-sub">150 Worth Ave — published &amp; social</span>
+    </a>
+    <button class="linkbtn" id="btnPath" type="button">
+      <span class="lb-title">Drive Location</span>
+      <span class="lb-sub">Internal office server path</span>
+    </button>
+  </div>
 
-  <!-- ---------- 360 viewer, first thing on the page ---------- -->
-  <div class="section-label">360 Viewer</div>
+  <div class="more-divider"><span>More below</span></div>
+
+  <div class="section-label">360 by floor</div>
   <a class="card" href="scan/">
     <div class="card-media">
       <img src="assets/scan-second-floor.jpg" alt="360 degree scan of the second floor as it stands today">
@@ -463,22 +493,6 @@
 
   <div class="section-label">The Vocabulary</div>
   <div class="vocab" id="vocab"></div>
-
-  <div class="section-label" id="sec-files">Project Files</div>
-  <div class="links">
-    <a class="linkbtn" id="btnDrive" href="#" target="_blank" rel="noopener">
-      <span class="lb-title">Google Drive</span>
-      <span class="lb-sub">Worth Ave Esplanade folder</span>
-    </a>
-    <a class="linkbtn" id="btnDropbox" href="#" target="_blank" rel="noopener">
-      <span class="lb-title">Dropbox</span>
-      <span class="lb-sub">150 Worth Ave — published &amp; social</span>
-    </a>
-    <button class="linkbtn" id="btnPath" type="button">
-      <span class="lb-title">Drive Location</span>
-      <span class="lb-sub">Internal office server path</span>
-    </button>
-  </div>
 
   <footer>Internal reference — Fairfax &amp; Sammons Architecture. Not for public distribution.</footer>
 </div>
@@ -620,7 +634,6 @@ const VIEW_COUNT = 17;
    ===================================================================== */
 const byId = id => document.getElementById(id);
 
-byId('lede').textContent = TEXT.lede;
 byId('cardFloor').textContent = TEXT.floorplanCard;
 byId('btnDrive').href = DRIVE_LINK;
 byId('btnDropbox').href = DROPBOX_LINK;
@@ -766,7 +779,6 @@ function speak(text, btn){
   speakingBtn = btn;
   speechSynthesis.speak(u);
 }
-byId('speakLede').addEventListener('click', function(){ speak(byId('lede').textContent, this); });
 document.querySelectorAll('.speak[data-read]').forEach(btn => {
   btn.addEventListener('click', function(){
     const src = byId(this.dataset.read);
@@ -995,7 +1007,7 @@ byId('cgForm').addEventListener('submit', e => {
    ===================================================================== */
 const TOUR = [
   { sel:'.titleblock', title:'What this is',
-    text:'The Burlington Arcade set for 150 Worth Avenue. The paragraph here is the short version, and the speaker button reads it aloud.' },
+    text:'The Burlington Arcade set for 150 Worth Avenue. The big buttons at the top are the fastest way in.' },
   { sel:'#railViews', title:'All seventeen views',
     text:'Swipe, or use the arrows. Click any one to open it full size and step through the rest.' },
   { sel:'.card', title:'The plan',
@@ -1141,27 +1153,12 @@ window.addEventListener('beforeunload', tourStopTalking);
    To see it again yourself: open this page and add ?welcome to the end
    of the address, or clear the site's storage in the browser settings.
    ===================================================================== */
-(function welcomeGate(){
-  const KEY = 'fs-esplanade-welcomed';
-  const el = byId('welcome');
-  const forced = location.search.indexOf('welcome') > -1;
 
-  let seen = false;
-  try { seen = localStorage.getItem(KEY) === '1'; } catch(e) { seen = false; }
-
-  if(seen && !forced) return;          // straight in
-
-  document.body.style.overflow = 'hidden';
-  el.classList.add('on');
-
-  byId('welGo').addEventListener('click', () => {
-    try { localStorage.setItem(KEY, '1'); } catch(e) {}
-    el.classList.add('going');
-    document.body.style.overflow = '';
-    setTimeout(() => el.classList.remove('on','going'), 620);
-  });
-})();
-
+byId('btnAllPres').addEventListener('click', () => {
+  const p = byId('allPres'), open = p.hasAttribute('hidden');
+  if(open) p.removeAttribute('hidden'); else p.setAttribute('hidden','');
+  byId('btnAllPres').setAttribute('aria-expanded', open);
+});
 </script>
 </body>
 </html>
