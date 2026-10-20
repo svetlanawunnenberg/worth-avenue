@@ -286,6 +286,12 @@
   .welcome .wel-note{ font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
     color:var(--ink-soft); opacity:.5; margin-top:26px; }
 
+  /* ---------- jump menu ---------- */
+  .jump{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:22px 0 0; }
+  .jump a{ font-size:10px; letter-spacing:.16em; text-transform:uppercase; text-decoration:none; color:var(--ink);
+    border:1px solid var(--line); background:var(--white); padding:9px 14px; }
+  .jump a:hover{ background:var(--ink); color:var(--ivory); border-color:var(--ink); }
+  html{ scroll-behavior:smooth; }
 </style>
 </head>
 <body>
@@ -317,14 +323,29 @@
     </div>
   </div>
 
-  <!-- ---------- latest rendering: replace the PDF in assets/ and update the date below ---------- -->
-  <a class="latest" href="assets/2026-10-13_Burlington_landscaping.pdf" target="_blank" rel="noopener">
+  <!-- ---------- latest pitch deck: replace the PDF in assets/ and update the date below ---------- -->
+  <a class="latest" href="assets/2026-10-19_Burlington_pitch_deck.pdf" target="_blank" rel="noopener">
     <span>
-      <strong>Click here for most updated rendering</strong>
-      <small>Burlington landscaping set &middot; 13 October 2026 &middot; PDF, 42 pages</small>
+      <strong>Latest pitch deck, with plans</strong>
+      <small>Burlington pitch deck &middot; 19 October 2026 &middot; PDF</small>
     </span>
     <span class="arrow">Open &#8250;</span>
   </a>
+  <a class="latest" style="margin-top:10px;border-color:var(--line)" href="assets/2026-10-13_Burlington_landscaping.pdf" target="_blank" rel="noopener">
+    <span>
+      <strong>Landscaping set</strong>
+      <small>13 October 2026 &middot; PDF, 42 pages</small>
+    </span>
+    <span class="arrow">Open &#8250;</span>
+  </a>
+
+  <nav class="jump">
+    <a href="floorplan/">Floorplan &amp; Views</a>
+    <a href="scan/">360 Viewer</a>
+    <a href="esplanade/">Facade Editor</a>
+    <a href="#sec-views">All 17 Views</a>
+    <a href="#sec-files">Project Files</a>
+  </nav>
 
   <!-- ---------- 360 viewer, first thing on the page ---------- -->
   <div class="section-label">360 Viewer</div>
@@ -361,7 +382,7 @@
   </a>
 
   <!-- ---------- all seventeen views, swipeable ---------- -->
-  <div class="section-label">The Views</div>
+  <div class="section-label" id="sec-views">The Views</div>
   <div class="rail-wrap">
     <button class="rail-btn prev" type="button" data-rail="railViews">&#8249;</button>
     <div class="rail views" id="railViews"></div>
@@ -443,7 +464,7 @@
   <div class="section-label">The Vocabulary</div>
   <div class="vocab" id="vocab"></div>
 
-  <div class="section-label">Project Files</div>
+  <div class="section-label" id="sec-files">Project Files</div>
   <div class="links">
     <a class="linkbtn" id="btnDrive" href="#" target="_blank" rel="noopener">
       <span class="lb-title">Google Drive</span>
