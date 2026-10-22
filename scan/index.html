@@ -115,6 +115,8 @@
 <script src="angle-finder.js"></script>
 <script>
 // Scanner image geometry (from the .rcc header): 360° across, +89.8° down to -60.0° vertically.
+// bump this number whenever a picture in panos/ is replaced, so browsers drop their old copy
+const IMG_V = "2";
 const VAOV = 149.86, VOFFSET = 14.88;
 // Calibration between panorama yaw and the ReCap world frame.
 const YAW_OFFSET = 0, YAW_SIGN = -1;
@@ -204,7 +206,7 @@ for (const a of S) {
     pitch: -deg(Math.atan2(EYE, d))
   }));
   scenes[a.id] = {
-    type: "equirectangular", panorama: `panos/${a.id}.jpg`,
+    type: "equirectangular", panorama: `panos/${a.id}.jpg?v=${IMG_V}`,
     // December scans keep the scanner's 150-degree strip; v3 scans ("full") are padded to a full sphere
     haov: 360, vaov: a.full ? 180 : VAOV, vOffset: a.full ? 0 : VOFFSET, hfov: HFOV, minHfov: MIN_HFOV, maxHfov: MAX_HFOV,
     // pannellum keeps (yaw + northOffset) constant when walking, so this keeps the world heading
@@ -218,7 +220,7 @@ for (const a of S) {
   };
   // same view and walk arrows, different picture
   for (const lk of (LOOKS[a.id] || []).filter(l => l.file)) {
-    scenes[a.id + SEP + lk.key] = { ...scenes[a.id], panorama: `panos/${lk.file}` };
+    scenes[a.id + SEP + lk.key] = { ...scenes[a.id], panorama: `panos/${lk.file}?v=${IMG_V}` };
   }
 }
 
@@ -267,7 +269,7 @@ function preloadAround(id) {
   for (const l of links[id] || []) {
     if (preloaded.has(l.id)) continue;
     preloaded.add(l.id);
-    new Image().src = `panos/${l.id}.jpg`;
+    new Image().src = `panos/${l.id}.jpg?v=${IMG_V}`;
   }
 }
 
@@ -361,7 +363,7 @@ let coneRunning = false;
 viewer.on("load", () => {
   onScene(viewer.getScene());
   preloadAround(baseOf(viewer.getScene()));
-  for (const lk of LOOKS[baseOf(viewer.getScene())] || []) if (lk.file) new Image().src = `panos/${lk.file}`;
+  for (const lk of LOOKS[baseOf(viewer.getScene())] || []) if (lk.file) new Image().src = `panos/${lk.file}?v=${IMG_V}`;
   if (!coneRunning) { coneRunning = true; requestAnimationFrame(drawCone); }
 });
 
@@ -392,7 +394,7 @@ btnMotion.onclick = () => {
 let afBase = null;
 const afPanoFor = (id, lk) => {
   const a = byId[id];
-  return { url: `panos/${lk ? lk.file : id + ".jpg"}`, vaov: a.full ? 180 : VAOV, voff: a.full ? 0 : VOFFSET,
+  return { url: `panos/${lk ? lk.file : id + ".jpg"}?v=${IMG_V}`, vaov: a.full ? 180 : VAOV, voff: a.full ? 0 : VOFFSET,
            title: `${floorName(a.floor)} · ${id}${lk ? " · " + lk.label : ""}` };
 };
 function afNext(dir, yaw) {
@@ -434,7 +436,7 @@ document.getElementById("btnPlan").onclick = e => {
   const hint = document.getElementById("introHint");
   const base = baseOf(first);
   const view = { pitch: h.has("y") ? +h.get("p") || 0 : null, yaw: h.has("y") ? +h.get("y") : null, hfov: +h.get("f") || (base === START ? START_VIEW.hfov : HFOV) };
-  for (const lk of LOOKS[base] || []) if (lk.file) new Image().src = `panos/${lk.file}`;   // ready before anyone clicks
+  for (const lk of LOOKS[base] || []) if (lk.file) new Image().src = `panos/${lk.file}?v=${IMG_V}`;   // ready before anyone clicks
 
   function enter(target) {
     if (target !== viewer.getScene()) {
