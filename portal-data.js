@@ -43,7 +43,7 @@ window.PORTAL = {
   /* Cassandra > Latest Exports (every PDF we have sent, branded and unbranded). Newest first.
      Yael does not see this list; she gets only the unbranded deck, from "latest" below. */
   exports: [
-    { title:"Pitch deck, unbranded, with plans", file:"assets/2026-10-26_Burlington_pitch_deck_unbranded.pdf", date:"26 October 2026" },
+    { title:"Pitch deck, unbranded, with plans", file:"assets/2026-10-26_Burlington_pitch_deck_unbranded.pdf", view:"deck/", date:"26 October 2026" },
     { title:"Pitch deck, with plans", file:"assets/2026-10-19_Burlington_pitch_deck.pdf", date:"19 October 2026" },
     { title:"Landscaping set (42 pages)", file:"assets/2026-10-13_Burlington_landscaping.pdf", date:"13 October 2026" }
   ],
@@ -53,6 +53,14 @@ window.PORTAL = {
      An empty "file" shows the button as "Coming soon". */
   latest: [
     { key:"floorplan", label:"Latest floor plan", file:"", date:"" },
-    { key:"deck", label:"Pitch deck, unbranded, from the architects", note:"Pitch deck, unbranded", file:"assets/2026-10-26_Burlington_pitch_deck_unbranded.pdf", date:"26 October 2026" }
-  ]
+    { key:"deck", label:"Pitch deck, unbranded, from the architects", note:"Pitch deck, unbranded", file:"assets/2026-10-26_Burlington_pitch_deck_unbranded.pdf", view:"deck/", date:"26 October 2026" }
+  ],
+
+  /* The presentation viewer (deck/). It shows the slides as pictures in assets/deck/
+     (slide-01.jpg ...), made from the PDF below. For a new deck the slide pictures
+     have to be made again, so ask Claude; then change pdf, count and date here. */
+  presentation: {
+    title:"Pitch deck, unbranded", pdf:"assets/2026-10-26_Burlington_pitch_deck_unbranded.pdf",
+    slides:"assets/deck/", count:55, date:"26 October 2026"
+  }
 };

@@ -68,8 +68,8 @@
       return off;
     }
     var a = el('a', 'file', label);
-    a.href = BASE + f.file;
-    a.target = '_blank'; a.rel = 'noopener';
+    a.href = BASE + (f.view || f.file);   // "view" opens the presentation viewer instead of the bare PDF
+    if(!f.view){ a.target = '_blank'; a.rel = 'noopener'; }
     if(f.date) a.appendChild(el('small', '', f.date));
     return a;
   }
@@ -108,7 +108,8 @@
       var item = P.latest.filter(function(x){ return x.key === btns[b].getAttribute('data-latest'); })[0];
       var sub = btns[b].querySelector('.big-s');
       if(item && item.file){
-        btns[b].href = BASE + item.file; btns[b].target = '_blank'; btns[b].rel = 'noopener';
+        btns[b].href = BASE + (item.view || item.file);
+        if(!item.view){ btns[b].target = '_blank'; btns[b].rel = 'noopener'; }
         if(sub && item.date) sub.textContent = (item.note ? item.note + ' · ' : '') + item.date;
       } else {
         btns[b].classList.add('off'); btns[b].removeAttribute('href');
