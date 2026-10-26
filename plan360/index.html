@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>360 on the Plan &middot; Burlington Arcade &middot; Fairfax &amp; Sammons</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../portal.css">
+<link rel="stylesheet" href="../menu.css">
+
+<!-- =====================================================================
+     360 ON THE PLAN
+     The plan sheet is assets/plan-sheet.webp (1543 x 1054 pixels).
+     Each dot is one scan spot in the 360 viewer, placed on the plan by
+     its x and y in plan-sheet pixels. To add or swap a dot, add a line
+     to the SPOTS list in the script at the bottom of this file:
+       { n:11, id:"<spot name from scan/data.js>", x:600, y:400,
+         name:"Words shown", floor:"Level 1" }
+     ===================================================================== -->
+<style>
+  .wrap.wide{ max-width:1240px; }
+  .planbox{ margin-top:28px; border:1px solid var(--line); background:var(--white); overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .plan{ position:relative; min-width:1100px; line-height:0; }
+  .plan img{ width:100%; height:auto; display:block; }
+  .plan svg{ position:absolute; inset:0; width:100%; height:100%; }
+  .dot{ cursor:pointer; outline:none; }
+  .dot .ring{ fill:rgba(255,255,255,.9); stroke:var(--ink); stroke-width:3.5; transition:fill .15s ease, stroke .15s ease; }
+  .dot text{ font-family:'Inter',sans-serif; font-size:16px; font-weight:600; fill:var(--ink); text-anchor:middle; pointer-events:none; }
+  .dot:hover .ring,.dot:focus-visible .ring,.dot.on .ring{ fill:var(--brass); stroke:var(--brass); }
+  .dot:hover text,.dot:focus-visible text,.dot.on text{ fill:var(--white); }
+  .dot .hit{ fill:transparent; }
+
+  .pop{ position:absolute; z-index:5; width:230px; background:var(--white); border:1px solid var(--ink);
+    padding:14px 16px; line-height:1.45; box-shadow:0 10px 30px rgba(22,19,16,.22); display:none; }
+  .pop.show{ display:block; }
+  .pop .pf{ font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--brass); margin:0 0 4px; }
+  .pop .pn{ font-family:'EB Garamond',Georgia,serif; font-size:1.2rem; font-weight:600; margin:0 0 10px; }
+  .pop a{ display:inline-block; background:var(--ink); color:var(--ivory); text-decoration:none; padding:10px 14px;
+    font-size:10px; letter-spacing:.17em; text-transform:uppercase; }
+  .pop a:hover{ background:var(--brass); }
+  .pop .px{ position:absolute; top:4px; right:8px; border:none; background:none; font-size:18px; cursor:pointer; color:var(--ink-soft); line-height:1; }
+
+  .hint{ font-size:.85rem; color:var(--ink-soft); margin:12px 0 0; text-align:center; }
+  .spots{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:8px; }
+  .spots a{ display:flex; gap:12px; align-items:center; background:var(--white); border:1px solid var(--line);
+    padding:12px 16px; text-decoration:none; color:var(--ink); }
+  .spots a:hover{ border-color:var(--brass); }
+  .spots b{ flex:none; width:28px; height:28px; border:2px solid var(--ink); border-radius:50%; display:flex;
+    align-items:center; justify-content:center; font-size:12px; }
+  .spots small{ display:block; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--brass); }
+</style>
+</head>
+<body>
+
+<div class="header-band">
+  <img src="../assets/burlington-header.png" alt="Burlington Arcade, Fairfax &amp; Sammons, New York ~ Palm Beach">
+</div>
+
+<div class="wrap wide">
+  <div class="ptitle">
+    <p class="eyebrow">Cassandra &middot; Toolkit</p>
+    <h1>360 on the Plan</h1>
+    <p class="subtitle">Tap a numbered dot, then walk in.</p>
+    <a class="back" href="../cassandra/toolkit/">&larr; Toolkit</a>
+  </div>
+
+  <div class="planbox">
+    <div class="plan" id="plan">
+      <img src="../assets/plan-sheet.webp" width="1543" height="1054" alt="Elevation, proposed ground floor use plan and proposed second floor use plan">
+      <svg viewBox="0 0 1543 1054" id="dots" role="group" aria-label="Scan spots on the plan"></svg>
+      <div class="pop" id="pop" role="dialog" aria-live="polite">
+        <button class="px" type="button" id="popX" aria-label="Close">&times;</button>
+        <p class="pf" id="popF"></p>
+        <p class="pn" id="popN"></p>
+        <a id="popGo" href="#" target="_blank" rel="noopener">Open the 360 &#8599;</a>
+      </div>
+    </div>
+  </div>
+  <p class="hint">On a phone, slide the plan sideways to see all of it. Dot 1 stands across Worth Avenue, looking back at the arcade.</p>
+
+  <p class="section-label">Or pick from the list</p>
+  <ul class="spots" id="spots"></ul>
+</div>
+
+<script>
+/* x and y are plan-sheet pixels. Level 1 dots sit on the ground floor plan, Level 2 on the second floor plan. */
+var SPOTS = [
+  { n:1,  id:"Fasad__Scan_464__renovated", link:"#s=Fasad__Scan_464__renovated&y=99.1&p=8.4&f=100", x:1091, y:622, name:"Across Worth Avenue, renovated view", floor:"Exterior" },
+  { n:2,  id:"Galerry_1_st_Scan_188", x:594,  y:522, name:"Arcade entrance from Worth Avenue", floor:"Level 1" },
+  { n:3,  id:"Galerry_1_st_Scan_193", x:634,  y:339, name:"Arcade gallery, central",           floor:"Level 1" },
+  { n:4,  id:"Galerry_1_st_Scan_207", x:921,  y:385, name:"Arcade gallery, east bend",         floor:"Level 1" },
+  { n:5,  id:"Galerry_1_st_Scan_229", x:242,  y:397, name:"West court",                        floor:"Level 1" },
+  { n:6,  id:"Saks_dors_1_st_Scan_553", x:1299, y:465, name:"Former Saks space",               floor:"Level 1" },
+  { n:7,  id:"Galerry_2_nd_Scan_133", x:470,  y:810, name:"West gallery",                      floor:"Level 2" },
+  { n:8,  id:"Galerry_2_nd_Scan_121", x:708,  y:760, name:"Central gallery",                   floor:"Level 2" },
+  { n:9,  id:"Galerry_2_nd_Scan_108", x:950,  y:807, name:"East bend",                         floor:"Level 2" },
+  { n:10, id:"F2-071",                x:1320, y:888, name:"East suite",                        floor:"Level 2" }
+];
+var W = 1543, H = 1054, NS = "http://www.w3.org/2000/svg";
+var svg = document.getElementById("dots"), pop = document.getElementById("pop"), plan = document.getElementById("plan");
+var current = null;
+
+function url(s){ return "../scan/" + (s.link || "#s=" + s.id); }
+
+function closePop(){
+  pop.classList.remove("show");
+  if(current) current.classList.remove("on");
+  current = null;
+}
+function openPop(s, g){
+  if(current) current.classList.remove("on");
+  current = g; g.classList.add("on");
+  document.getElementById("popF").textContent = s.floor + " · Spot " + s.n;
+  document.getElementById("popN").textContent = s.name;
+  document.getElementById("popGo").href = url(s);
+  pop.classList.add("show");
+  // sit above the dot, or below it near the top; keep inside the plan sideways
+  var px = s.x / W * plan.clientWidth, py = s.y / H * plan.clientHeight, pw = pop.offsetWidth, ph = pop.offsetHeight;
+  var left = Math.max(6, Math.min(plan.clientWidth - pw - 6, px - pw / 2));
+  var top = py - ph - 22; if(top < 6) top = py + 22;
+  pop.style.left = left + "px"; pop.style.top = top + "px";
+}
+
+SPOTS.forEach(function(s){
+  var g = document.createElementNS(NS, "g");
+  g.setAttribute("class", "dot"); g.setAttribute("tabindex", "0"); g.setAttribute("role", "button");
+  g.setAttribute("aria-label", "Spot " + s.n + ", " + s.name + ", " + s.floor);
+  var hit = document.createElementNS(NS, "circle");
+  hit.setAttribute("class", "hit"); hit.setAttribute("cx", s.x); hit.setAttribute("cy", s.y); hit.setAttribute("r", 24);
+  var ring = document.createElementNS(NS, "circle");
+  ring.setAttribute("class", "ring"); ring.setAttribute("cx", s.x); ring.setAttribute("cy", s.y); ring.setAttribute("r", 15);
+  var t = document.createElementNS(NS, "text");
+  t.setAttribute("x", s.x); t.setAttribute("y", s.y + 6); t.textContent = s.n;
+  g.appendChild(hit); g.appendChild(ring); g.appendChild(t);
+  function act(e){ e.stopPropagation(); if(current === g) closePop(); else openPop(s, g); }
+  g.addEventListener("click", act);
+  g.addEventListener("keydown", function(e){ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); act(e); } });
+  svg.appendChild(g);
+
+  var li = document.createElement("li"), a = document.createElement("a");
+  a.href = url(s); a.target = "_blank"; a.rel = "noopener";
+  var b = document.createElement("b"); b.textContent = s.n;
+  var d = document.createElement("span"), sm = document.createElement("small");
+  sm.textContent = s.floor; d.appendChild(sm); d.appendChild(document.createTextNode(s.name));
+  a.appendChild(b); a.appendChild(d); li.appendChild(a);
+  document.getElementById("spots").appendChild(li);
+});
+
+document.getElementById("popX").addEventListener("click", closePop);
+document.addEventListener("click", function(e){ if(!pop.contains(e.target)) closePop(); });
+document.addEventListener("keydown", function(e){ if(e.key === "Escape") closePop(); });
+</script>
+<script src="../portal.js"></script>
+</body>
+</html>
