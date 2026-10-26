@@ -58,6 +58,9 @@
   .vb-close:hover{ background:var(--brass); border-color:var(--brass); }
   .vb iframe{ display:block; width:100%; height:min(72vh,680px); border:0; background:#0d0b09; }
 
+  .vb-link{ flex:none; height:40px; padding:0 14px; margin-right:8px; border:1px solid var(--ink); background:var(--white); color:var(--ink);
+    font:inherit; font-size:10px; letter-spacing:.17em; text-transform:uppercase; cursor:pointer; }
+  .vb-link:hover{ background:var(--brass); border-color:var(--brass); color:var(--white); }
   .hint{ font-size:.85rem; color:var(--ink-soft); margin:12px 0 0; text-align:center; }
   .spots{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:8px; }
   .spots a{ display:flex; gap:12px; align-items:center; background:var(--white); border:1px solid var(--line);
@@ -107,6 +110,7 @@ if(/[?&]embed=1/.test(location.search)) document.documentElement.classList.add("
   <div class="vb">
     <div class="vb-top">
       <div class="vb-title"><small id="vbF"></small><span id="vbN"></span></div>
+      <button class="vb-link" type="button" id="vbLink" title="Copy a link to exactly what you see">Share link</button>
       <button class="vb-close" type="button" id="vbX" aria-label="Close the 360">&times;</button>
     </div>
     <iframe id="vbFrame" title="360 view" allow="fullscreen; accelerometer; gyroscope; xr-spatial-tracking" allowfullscreen></iframe>
@@ -149,12 +153,21 @@ function closeView(){ box.classList.remove("show"); frame.src = "about:blank"; s
    #spot=3&s=...&y=..&p=..&f=..  = this spot open, at the exact place and
    direction you are looking. Copy the address and send it. */
 function setLink(h){ history.replaceState(null, "", location.pathname + location.search + (h ? "#" + h : "")); }
-setInterval(function(){
-  if(!shown) return;
+function viewHash(){   // "spot=3&s=...&y=..&p=..&f=.." for what is on screen now
   var inner = "";
   try { inner = frame.contentWindow.location.hash.slice(1).replace(/(^|&)skip=[^&]*/g, "").replace(/^&/, ""); } catch(e){}
-  setLink("spot=" + shown.n + (inner ? "&" + inner : ""));
+  return "spot=" + shown.n + (inner ? "&" + inner : "");
+}
+setInterval(function(){
+  if(!shown) return;
+  setLink(viewHash());
 }, 800);
+document.getElementById("vbLink").addEventListener("click", function(){
+  if(!shown) return;
+  var rel = "plan360/#" + viewHash();
+  if(window.FS) FS.copy(rel, "Link to spot " + shown.n + ", exactly as you see it, copied.");
+  else if(navigator.clipboard) navigator.clipboard.writeText(location.href);
+});
 document.getElementById("vbX").addEventListener("click", closeView);
 box.addEventListener("click", function(e){ if(e.target === box) closeView(); });
 

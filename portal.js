@@ -289,7 +289,10 @@
     document.body.appendChild(btn);
   }
 
-  function init(){ buildHeader(); buildMenu(); buildSearch(); lists(); }
+  function init(){
+    buildHeader(); buildMenu(); buildSearch(); lists();
+    if(!window.FS){ var sh = document.createElement('script'); sh.src = BASE + 'share.js'; document.head.appendChild(sh); }   // the "Share link" buttons
+  }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();

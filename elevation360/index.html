@@ -60,6 +60,9 @@
     border:1px solid transparent; background:transparent; color:var(--ink); cursor:pointer; text-decoration:none; }
   .win-btn:hover,.win-btn:focus-visible{ background:var(--ink); color:var(--ivory); }
   .win-btn svg{ width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .win-share{ flex:none; height:30px; padding:0 10px; border:1px solid var(--ink); background:var(--white); color:var(--ink); cursor:pointer;
+    font:inherit; font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; white-space:nowrap; }
+  .win-share:hover,.win-share:focus-visible{ background:var(--ink); color:var(--ivory); }
   .win iframe{ flex:1; min-height:0; width:100%; border:0; background:#0d0b09; display:block; }
   body.dragging .win iframe{ pointer-events:none; }
 
@@ -149,8 +152,15 @@ var ICON = {
   close: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>'
 };
 
-function hash(s, mode){
-  return "#s=" + s.id + "&y=" + s.yaw + "&p=" + PITCH + "&f=" + FOV + (mode ? "&skip=" + mode : "");
+/* v = { y, p, f } (turn, tilt, zoom) from a shared link; left out, the box starts facing the building */
+function hash(s, mode, v){
+  v = v || {};
+  return "#s=" + s.id + "&y=" + (v.y != null ? v.y : s.yaw) + "&p=" + (v.p != null ? v.p : PITCH) + "&f=" + (v.f != null ? v.f : FOV) + (mode ? "&skip=" + mode : "");
+}
+function boxHash(s, frame){   // "spot=4&y=89.8&p=6.0&f=85": this spot, looking exactly the way the box looks now
+  var y = s.yaw, p = PITCH, f = FOV;
+  try{ var v = frame.contentWindow.eval("viewer"); y = v.getYaw().toFixed(1); p = v.getPitch().toFixed(1); f = Math.round(v.getHfov()); }catch(e){}
+  return "spot=" + s.n + "&y=" + y + "&p=" + p + "&f=" + f;
 }
 function toast(msg){
   var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show");
@@ -170,7 +180,7 @@ function raise(w){
 }
 function phone(){ return window.matchMedia("(max-width:720px)").matches; }
 
-function openSpot(s){
+function openSpot(s, view){
   if(open[s.id]){ raise(open[s.id]); return; }
   var w = document.createElement("div");
   w.className = "win"; w.setAttribute("role", "dialog"); w.setAttribute("aria-label", "360 view, " + s.name);
@@ -180,17 +190,19 @@ function openSpot(s){
   var title = document.createElement("span"); title.className = "win-title"; title.textContent = s.n + " · " + s.name;
   bar.appendChild(title);
 
+  var share = document.createElement("button");
+  share.type = "button"; share.className = "win-share"; share.textContent = "Share link"; share.title = "Copy a link to exactly what you see";
   var tab = document.createElement("a");
   tab.className = "win-btn"; tab.innerHTML = ICON.tab; tab.title = "Open in a new tab"; tab.setAttribute("aria-label", "Open in a new tab");
-  tab.href = "../scan/" + hash(s, 2); tab.target = "_blank"; tab.rel = "noopener";
+  tab.href = "../scan/" + hash(s, 2, view); tab.target = "_blank"; tab.rel = "noopener";
   var save = document.createElement("button");
   save.type = "button"; save.className = "win-btn"; save.innerHTML = ICON.save; save.title = "Save a picture of this view"; save.setAttribute("aria-label", "Save a picture of this view");
   var close = document.createElement("button");
   close.type = "button"; close.className = "win-btn"; close.innerHTML = ICON.close; close.title = "Close"; close.setAttribute("aria-label", "Close");
-  bar.appendChild(tab); bar.appendChild(save); bar.appendChild(close);
+  bar.appendChild(share); bar.appendChild(tab); bar.appendChild(save); bar.appendChild(close);
 
   var frame = document.createElement("iframe");
-  frame.title = "360 view, " + s.name; frame.src = "../scan/" + hash(s, 1);
+  frame.title = "360 view, " + s.name; frame.src = "../scan/" + hash(s, 1, view);
   frame.setAttribute("allow", "fullscreen; accelerometer; gyroscope"); frame.setAttribute("allowfullscreen", "");
   w.appendChild(bar); w.appendChild(frame);
   document.body.appendChild(w);
@@ -216,6 +228,11 @@ function openSpot(s){
     var g2 = svg.querySelector('[data-id="' + s.id + '"]'); if(g2) g2.classList.remove("on");
   }
   close.addEventListener("click", shut);
+  share.addEventListener("click", function(){
+    var rel = "elevation360/#" + boxHash(s, frame);
+    if(window.FS) FS.copy(rel, "Link to " + s.name + ", exactly as you see it, copied.");
+    else if(navigator.clipboard) navigator.clipboard.writeText(location.origin + location.pathname + "#" + boxHash(s, frame));
+  });
   save.addEventListener("click", function(){
     try{
       var v = frame.contentWindow.eval("viewer");
@@ -269,13 +286,23 @@ SPOTS.forEach(function(s){
   li.appendChild(b); document.getElementById("spots").appendChild(li);
 });
 
+/* a shared link (#spot=4&y=..&p=..&f=..) opens that box, looking the same way */
+(function(){
+  var h = location.hash.slice(1), m = h.match(/(^|&)spot=([0-9]+)/);
+  if(!m) return;
+  var s = SPOTS.filter(function(x){ return x.n === +m[2]; })[0];
+  if(!s) return;
+  function num(k){ var q = h.match(new RegExp("(^|&)" + k + "=(-?[0-9.]+)")); return q ? q[2] : null; }
+  openSpot(s, { y:num("y"), p:num("p"), f:num("f") });
+})();
+
 /* ---------- the tour: only runs when someone taps Tour ---------- */
 var STEPS = [
   { text:"These six dots sit along Worth Avenue. Tap one to look around from that spot.", target:function(){ return document.getElementById("elevbox"); } },
   { text:"A box opens with the 360. Drag inside it to look around, or use the plus and minus to zoom.", before:function(){ if(!Object.keys(open).length) openSpot(SPOTS[3]); },
     target:function(){ return firstWin(); } },
   { text:"Drag the top bar to move the box. Pull its bottom corner to make it bigger or smaller.", target:function(){ var w = firstWin(); return w && w.querySelector(".win-bar"); } },
-  { text:"These symbols: open in a new tab, save a picture of what you see, and close.", target:function(){ var w = firstWin(); return w && w.querySelectorAll(".win-btn")[1]; } },
+  { text:"Share link copies a link to exactly what you see. The symbols: open in a new tab, save a picture, and close.", target:function(){ var w = firstWin(); return w && w.querySelector(".win-share"); } },
   { text:"You can open as many boxes as you like and set them side by side. Tap End when you are done.", target:function(){ return document.getElementById("spots"); } }
 ];
 var at = -1, ringed = null;
