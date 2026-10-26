@@ -10,6 +10,73 @@
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../portal.css">
 <link rel="stylesheet" href="../menu.css">
+
+<!-- =====================================================================
+     THE LOOPING PREVIEW OF "360 ON THE ELEVATION"
+     A made-up demonstration, not the real tool: a cursor taps dot 4, a 360
+     box opens, looks around, is moved, and closes. It loops by itself and
+     stops moving for anyone who has asked their device for less motion.
+     The picture in the box is assets/elevation-preview-452.jpg.
+     ===================================================================== -->
+<style>
+  .demo{ display:block; margin:30px 0 0; background:var(--white); border:1px solid var(--ink); text-decoration:none; color:var(--ink); overflow:hidden; }
+  .demo:hover,.demo:focus-visible{ border-color:var(--brass); }
+  .demo:focus-visible{ outline:3px solid var(--brass); outline-offset:3px; }
+  .d-stage{ position:relative; aspect-ratio:2/1; background:var(--ivory); overflow:hidden; }
+  .d-elev{ position:absolute; left:0; top:0; width:100%; background:#fff; line-height:0; }
+  .d-elev img{ display:block; width:100%; height:auto; }
+  .d-elev svg{ position:absolute; inset:0; width:100%; height:100%; }
+  .d-dot{ fill:#fff; stroke:var(--ink); stroke-width:3; }
+  .d-num{ font-family:'Inter',sans-serif; font-size:13px; font-weight:600; fill:var(--ink); text-anchor:middle; }
+  .d-hot{ animation:dhot 10s infinite; }
+  .d-hotnum{ animation:dhotnum 10s infinite; }
+  .d-ripple{ fill:none; stroke:var(--brass); stroke-width:3; opacity:0; transform-origin:486px 128px; animation:dripple 10s infinite; }
+  .d-win{ position:absolute; left:18%; top:29%; width:58%; height:68%; background:#fff; border:1px solid var(--ink);
+    box-shadow:0 10px 30px rgba(22,19,16,.3); transform-origin:35% -13%; opacity:0; animation:dwin 10s infinite; }
+  .d-bar{ position:absolute; left:0; right:0; top:0; height:22px; display:flex; align-items:center; gap:6px; padding:0 8px;
+    background:var(--ivory-deep); border-bottom:1px solid var(--line); font-family:'EB Garamond',Georgia,serif; font-size:12px; font-weight:600; white-space:nowrap; }
+  .d-bar i{ flex:1; font-style:normal; overflow:hidden; text-overflow:ellipsis; }
+  .d-bar svg{ width:11px; height:11px; fill:none; stroke:var(--ink); stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+  .d-pic{ position:absolute; left:0; right:0; top:22px; bottom:0; overflow:hidden; background:#0d0b09; }
+  .d-pic img{ display:block; height:100%; width:150%; max-width:none; object-fit:cover; animation:dpan 10s infinite; }
+  .d-cursor{ position:absolute; width:20px; height:20px; left:96%; top:92%; opacity:0; z-index:3; animation:dcur 10s infinite; filter:drop-shadow(0 1px 2px rgba(0,0,0,.4)); }
+  .d-body{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:16px 20px; border-top:1px solid var(--line); }
+  .d-body strong{ display:block; font-family:'EB Garamond',Georgia,serif; font-weight:600; font-size:1.35rem; line-height:1.2; }
+  .d-body span.sub{ display:block; font-size:.85rem; color:var(--ink-soft); margin-top:2px; }
+  .d-body .go{ font-size:10px; letter-spacing:.2em; text-transform:uppercase; white-space:nowrap; }
+
+  @keyframes dhot{ 0%,11%{ fill:#fff; stroke:#161310; } 13%,86%{ fill:#8A6D3B; stroke:#8A6D3B; } 92%,100%{ fill:#fff; stroke:#161310; } }
+  @keyframes dhotnum{ 0%,11%{ fill:#161310; } 13%,86%{ fill:#fff; } 92%,100%{ fill:#161310; } }
+  @keyframes dripple{ 0%,11.5%{ opacity:0; transform:scale(1); } 12%{ opacity:.7; } 20%{ opacity:0; transform:scale(3.2); } 100%{ opacity:0; transform:scale(3.2); } }
+  @keyframes dwin{
+    0%,12%{ opacity:0; transform:scale(.12); left:18%; }
+    19%{ opacity:1; transform:scale(1); left:18%; }
+    41%{ opacity:1; transform:scale(1); left:18%; }
+    55%,86%{ opacity:1; transform:scale(1); left:27%; }
+    92%,100%{ opacity:0; transform:scale(.92); left:27%; }
+  }
+  @keyframes dpan{ 0%,19%{ transform:translateX(-10%); } 38%{ transform:translateX(0); } 60%{ transform:translateX(0); } 80%,100%{ transform:translateX(-6%); } }
+  @keyframes dcur{
+    0%{ left:96%; top:92%; opacity:0; transform:scale(1); }
+    4%{ opacity:1; }
+    11%{ left:38.6%; top:21%; transform:scale(1); }
+    12.5%{ left:38.6%; top:21%; transform:scale(.78); }
+    14%{ left:38.6%; top:21%; transform:scale(1); }
+    30%{ left:38.6%; top:21%; }
+    38%{ left:45%; top:34.5%; transform:scale(1); }
+    41%{ left:45%; top:34.5%; transform:scale(.78); }
+    55%{ left:54%; top:34.5%; transform:scale(.78); }
+    57%{ left:54%; top:34.5%; transform:scale(1); }
+    80%{ left:54%; top:34.5%; opacity:1; }
+    90%,100%{ left:96%; top:92%; opacity:0; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .d-win,.d-hot,.d-hotnum,.d-ripple,.d-pic img{ animation:none; }
+    .d-win{ opacity:1; }
+    .d-hot{ fill:#8A6D3B; stroke:#8A6D3B; } .d-hotnum{ fill:#fff; }
+    .d-cursor{ display:none; }
+  }
+</style>
 </head>
 <body>
 
@@ -24,6 +91,42 @@
     <p class="subtitle">Tap a button to start.</p>
     <a class="back" href="../">&larr; Home</a>
   </div>
+
+  <a class="demo" href="../elevation360/" aria-label="360 on the Elevation: tap a dot along Worth Avenue and a 360 box opens">
+    <div class="d-stage" aria-hidden="true">
+      <div class="d-elev">
+        <img src="../assets/elevation-worth.jpg" alt="">
+        <svg viewBox="0 0 1269 152">
+          <g>
+            <circle class="d-dot" cx="1164" cy="128" r="11"/><text class="d-num" x="1164" y="132.5">1</text>
+            <circle class="d-dot" cx="937" cy="128" r="11"/><text class="d-num" x="937" y="132.5">2</text>
+            <circle class="d-dot" cx="705" cy="128" r="11"/><text class="d-num" x="705" y="132.5">3</text>
+            <circle class="d-dot d-hot" cx="486" cy="128" r="11"/><text class="d-num d-hotnum" x="486" y="132.5">4</text>
+            <circle class="d-dot" cx="339" cy="128" r="11"/><text class="d-num" x="339" y="132.5">5</text>
+            <circle class="d-dot" cx="199" cy="128" r="11"/><text class="d-num" x="199" y="132.5">6</text>
+            <circle class="d-ripple" cx="486" cy="128" r="11"/>
+          </g>
+        </svg>
+      </div>
+      <div class="d-win">
+        <div class="d-bar">
+          <i>4 &middot; The 150 Worth entrance</i>
+          <svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </div>
+        <div class="d-pic"><img src="../assets/elevation-preview-452.jpg" alt=""></div>
+      </div>
+      <svg class="d-cursor" viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.8L9.8 19z" fill="#161310" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="d-body">
+      <div>
+        <strong>360 on the Elevation</strong>
+        <span class="sub">Tap a dot along Worth Avenue and a 360 box opens. Move it, save a picture, or open it in a new tab.</span>
+      </div>
+      <span class="go">Try it &rarr;</span>
+    </div>
+  </a>
 
   <div class="bigbtns">
     <a class="big primary" href="toolkit/">

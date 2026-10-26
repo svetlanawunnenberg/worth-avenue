@@ -36,6 +36,7 @@
      ['Cassandra’s page', 'cassandra/', '360 toolkit, exports, full dashboard'],
      ['360 Toolkit', 'cassandra/toolkit/', 'Walk the building in 360'],
      ['360 on the Plan', 'plan360/', 'Pick a spot on the floor plan'],
+     ['360 on the Elevation', 'elevation360/', 'Pick a spot along Worth Avenue'],
      ['Exports', 'exports/', 'Every presentation we have sent']
     ].forEach(function(r, i){
       if(r.length === 1){ nav.appendChild(el('p', 'pmenu-label' + (i ? ' next' : ''), r[0])); return; }
