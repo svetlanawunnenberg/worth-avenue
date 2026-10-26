@@ -99,8 +99,16 @@ function show(i){
   document.getElementById("lbCount").textContent = (at + 1) + " of " + VIEWS.length;
   var s = document.getElementById("lbSave"); s.href = src(n); s.setAttribute("download", "Burlington-View-" + n + ".jpg");
   lb.classList.add("show");
+  setLink("view=" + n);
 }
-function hide(){ lb.classList.remove("show"); }
+function hide(){ lb.classList.remove("show"); setLink(""); }
+
+// the address always points at the open view (#view=7): copy it and send it
+function setLink(h){ history.replaceState(null, "", location.pathname + location.search + (h ? "#" + h : "")); }
+(function(){
+  var m = location.hash.match(/view=([0-9]+)/), i = m ? VIEWS.indexOf(+m[1]) : -1;
+  if(i > -1) show(i);
+})();
 document.getElementById("lbClose").addEventListener("click", hide);
 document.getElementById("lbPrev").addEventListener("click", function(){ show(at - 1); });
 document.getElementById("lbNext").addEventListener("click", function(){ show(at + 1); });

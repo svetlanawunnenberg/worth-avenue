@@ -1048,6 +1048,21 @@ function renderGallery(){
   });
 
   buildMapSheet();
+  syncLink();
+}
+
+/* ---------- the address always points at what is on screen ----------
+   #v=V3            one view pinned
+   #v=V3,V7,V12     several, in this order
+   &slide=2         the full-screen slide that is open
+   Copy the address and send it: it opens right there, no title page. */
+function syncLink(){
+  let h = '';
+  if(state.pinned.length){
+    h = '#v=' + state.pinned.join(',');
+    if(els.present.classList.contains('visible')) h += '&slide=' + (state.pres.i + 1);
+  }
+  history.replaceState(null, '', location.pathname + location.search + h);
 }
 
 function buildMapSheet(){
@@ -1077,6 +1092,7 @@ function closePresent(){
   saveStrokes();
   els.present.classList.remove('visible');
   if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+  syncLink();
 }
 function showSlide(){
   const id = state.pinned[state.pres.i];
@@ -1085,6 +1101,7 @@ function showSlide(){
   els.prLabel.textContent = v.label + ' · ' + (VIEW_FLOORS[id]||'First Floor');
   els.prCount.textContent = (state.pres.i+1) + ' / ' + state.pinned.length;
   els.prImg.src = IMAGE[id]; els.prImg.alt = v.label;
+  syncLink();
   const ready = () => { sizeCanvas(); restoreStrokes(); };
   els.prImg.onload = ready;
   if(els.prImg.complete) ready();
@@ -1349,6 +1366,17 @@ document.addEventListener('keydown', e => {
   else if(e.key === 'ArrowLeft'  && !els.present.classList.contains('visible')) walkStep(-1);
 });
 window.addEventListener('beforeunload', walkStopTalking);
+
+/* ---------- open a shared link: skip the title page, pin, open the slide ---------- */
+(function openFromLink(){
+  const h = new URLSearchParams(location.hash.slice(1));
+  const ids = (h.get('v') || '').split(',').filter(id => VIEWS.some(v => v.id === id));
+  if(!ids.length) return;
+  els.splash.click();
+  ids.forEach(id => togglePin(viewById(id)));
+  const s = parseInt(h.get('slide'), 10);
+  if(s > 0) openPresent(s - 1);
+})();
 
 </script>
 </body>

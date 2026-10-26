@@ -129,18 +129,29 @@ var svg = document.getElementById("dots"), pop = document.getElementById("pop"),
 var current = null, popSpot = null;
 
 // &skip=1 tells the viewer to go straight in, with no title page
-function url(s){ return "../scan/" + (s.link || "#s=" + s.id) + "&skip=1"; }
+function url(s, inner){ return "../scan/" + (inner ? "#" + inner : (s.link || "#s=" + s.id)) + "&skip=1"; }
 
 var box = document.getElementById("viewbox"), frame = document.getElementById("vbFrame"), shown = null;
-function openView(s){
+function openView(s, inner){
   closePop();
   document.getElementById("vbF").textContent = s.floor + " · Spot " + s.n;
   document.getElementById("vbN").textContent = s.name;
-  frame.src = url(s);
+  frame.src = url(s, inner);
   box.classList.add("show"); shown = s;
   document.getElementById("vbX").focus();
 }
-function closeView(){ box.classList.remove("show"); frame.src = "about:blank"; shown = null; }
+function closeView(){ box.classList.remove("show"); frame.src = "about:blank"; shown = null; setLink(""); }
+
+/* ---------- the address always points at what is on screen ----------
+   #spot=3&s=...&y=..&p=..&f=..  = this spot open, at the exact place and
+   direction you are looking. Copy the address and send it. */
+function setLink(h){ history.replaceState(null, "", location.pathname + location.search + (h ? "#" + h : "")); }
+setInterval(function(){
+  if(!shown) return;
+  var inner = "";
+  try { inner = frame.contentWindow.location.hash.slice(1).replace(/(^|&)skip=[^&]*/g, "").replace(/^&/, ""); } catch(e){}
+  setLink("spot=" + shown.n + (inner ? "&" + inner : ""));
+}, 800);
 document.getElementById("vbX").addEventListener("click", closeView);
 box.addEventListener("click", function(e){ if(e.target === box) closeView(); });
 
@@ -193,6 +204,16 @@ document.getElementById("popX").addEventListener("click", closePop);
 document.getElementById("popGo").addEventListener("click", function(e){ e.preventDefault(); if(popSpot) openView(popSpot); });
 document.addEventListener("click", function(e){ if(!pop.contains(e.target)) closePop(); });
 document.addEventListener("keydown", function(e){ if(e.key === "Escape"){ if(shown) closeView(); else closePop(); } });
+
+// open a shared link straight into its spot
+(function(){
+  var h = location.hash.slice(1), m = h.match(/(^|&)spot=([0-9]+)/);
+  if(!m) return;
+  var s = SPOTS.filter(function(x){ return x.n === +m[2]; })[0];
+  if(!s) return;
+  var inner = h.replace(/(^|&)spot=[0-9]+/, "").replace(/^&/, "");
+  openView(s, /(^|&)s=/.test(inner) ? inner : "");
+})();
 </script>
 <script src="../portal.js"></script>
 </body>
