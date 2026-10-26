@@ -82,9 +82,12 @@
     .win-bar{ cursor:default; } .win-grip{ display:none; }
     .coach{ bottom:calc(62vh + 16px); }
   }
+  /* ?embed=1: shown inside another page (navigation/), so no header or menu of its own */
+  html.embed .header-band, html.embed .pmenu-btn, html.embed .pmenu, html.embed .pmenu-shade{ display:none !important; }
 </style>
 </head>
 <body>
+<script>if (/[?&]embed=1\b/.test(location.search)) document.documentElement.classList.add('embed');</script>
 
 <div class="header-band">
   <img src="../assets/burlington-header.png" alt="Burlington Arcade, Fairfax &amp; Sammons, New York ~ Palm Beach">
