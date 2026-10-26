@@ -43,6 +43,21 @@
   .pop a:hover{ background:var(--brass); }
   .pop .px{ position:absolute; top:4px; right:8px; border:none; background:none; font-size:18px; cursor:pointer; color:var(--ink-soft); line-height:1; }
 
+  /* ---------- the 360 box ---------- */
+  .viewbox{ position:fixed; inset:0; z-index:300; background:rgba(22,19,16,.6); display:none;
+    align-items:center; justify-content:center; padding:20px; }
+  .viewbox.show{ display:flex; }
+  .vb{ background:var(--white); border:1px solid var(--ink); width:min(1100px,100%); display:flex; flex-direction:column;
+    box-shadow:0 20px 60px rgba(22,19,16,.4); }
+  .vb-top{ display:flex; align-items:center; gap:12px; padding:10px 14px; border-bottom:1px solid var(--line); }
+  .vb-title{ flex:1; min-width:0; line-height:1.3; }
+  .vb-title small{ display:block; font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--brass); }
+  .vb-title span{ font-family:'EB Garamond',Georgia,serif; font-size:1.2rem; font-weight:600; }
+  .vb-close{ flex:none; width:40px; height:40px; border:1px solid var(--ink); background:var(--ink); color:var(--ivory);
+    font-size:22px; line-height:1; cursor:pointer; }
+  .vb-close:hover{ background:var(--brass); border-color:var(--brass); }
+  .vb iframe{ display:block; width:100%; height:min(72vh,680px); border:0; background:#0d0b09; }
+
   .hint{ font-size:.85rem; color:var(--ink-soft); margin:12px 0 0; text-align:center; }
   .spots{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:8px; }
   .spots a{ display:flex; gap:12px; align-items:center; background:var(--white); border:1px solid var(--line);
@@ -75,7 +90,7 @@
         <button class="px" type="button" id="popX" aria-label="Close">&times;</button>
         <p class="pf" id="popF"></p>
         <p class="pn" id="popN"></p>
-        <a id="popGo" href="#" target="_blank" rel="noopener">Open the 360 &#8599;</a>
+        <a id="popGo" href="#">View in 360</a>
       </div>
     </div>
   </div>
@@ -83,6 +98,16 @@
 
   <p class="section-label">Or pick from the list</p>
   <ul class="spots" id="spots"></ul>
+</div>
+
+<div class="viewbox" id="viewbox" role="dialog" aria-modal="true" aria-label="360 view">
+  <div class="vb">
+    <div class="vb-top">
+      <div class="vb-title"><small id="vbF"></small><span id="vbN"></span></div>
+      <button class="vb-close" type="button" id="vbX" aria-label="Close the 360">&times;</button>
+    </div>
+    <iframe id="vbFrame" title="360 view" allow="fullscreen; accelerometer; gyroscope; xr-spatial-tracking" allowfullscreen></iframe>
+  </div>
 </div>
 
 <script>
@@ -101,9 +126,23 @@ var SPOTS = [
 ];
 var W = 1543, H = 1054, NS = "http://www.w3.org/2000/svg";
 var svg = document.getElementById("dots"), pop = document.getElementById("pop"), plan = document.getElementById("plan");
-var current = null;
+var current = null, popSpot = null;
 
-function url(s){ return "../scan/" + (s.link || "#s=" + s.id); }
+// &skip=1 tells the viewer to go straight in, with no title page
+function url(s){ return "../scan/" + (s.link || "#s=" + s.id) + "&skip=1"; }
+
+var box = document.getElementById("viewbox"), frame = document.getElementById("vbFrame"), shown = null;
+function openView(s){
+  closePop();
+  document.getElementById("vbF").textContent = s.floor + " · Spot " + s.n;
+  document.getElementById("vbN").textContent = s.name;
+  frame.src = url(s);
+  box.classList.add("show"); shown = s;
+  document.getElementById("vbX").focus();
+}
+function closeView(){ box.classList.remove("show"); frame.src = "about:blank"; shown = null; }
+document.getElementById("vbX").addEventListener("click", closeView);
+box.addEventListener("click", function(e){ if(e.target === box) closeView(); });
 
 function closePop(){
   pop.classList.remove("show");
@@ -115,7 +154,7 @@ function openPop(s, g){
   current = g; g.classList.add("on");
   document.getElementById("popF").textContent = s.floor + " · Spot " + s.n;
   document.getElementById("popN").textContent = s.name;
-  document.getElementById("popGo").href = url(s);
+  popSpot = s;
   pop.classList.add("show");
   // sit above the dot, or below it near the top; keep inside the plan sideways
   var px = s.x / W * plan.clientWidth, py = s.y / H * plan.clientHeight, pw = pop.offsetWidth, ph = pop.offsetHeight;
@@ -141,7 +180,8 @@ SPOTS.forEach(function(s){
   svg.appendChild(g);
 
   var li = document.createElement("li"), a = document.createElement("a");
-  a.href = url(s); a.target = "_blank"; a.rel = "noopener";
+  a.href = "#";
+  a.addEventListener("click", function(e){ e.preventDefault(); openView(s); });
   var b = document.createElement("b"); b.textContent = s.n;
   var d = document.createElement("span"), sm = document.createElement("small");
   sm.textContent = s.floor; d.appendChild(sm); d.appendChild(document.createTextNode(s.name));
@@ -150,8 +190,9 @@ SPOTS.forEach(function(s){
 });
 
 document.getElementById("popX").addEventListener("click", closePop);
+document.getElementById("popGo").addEventListener("click", function(e){ e.preventDefault(); if(popSpot) openView(popSpot); });
 document.addEventListener("click", function(e){ if(!pop.contains(e.target)) closePop(); });
-document.addEventListener("keydown", function(e){ if(e.key === "Escape") closePop(); });
+document.addEventListener("keydown", function(e){ if(e.key === "Escape"){ if(shown) closeView(); else closePop(); } });
 </script>
 <script src="../portal.js"></script>
 </body>

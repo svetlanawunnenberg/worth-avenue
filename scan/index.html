@@ -546,6 +546,8 @@ document.getElementById("btnPlan").onclick = e => {
   const place = document.getElementById("introPlace");
   const choose = document.getElementById("introChoose");
   const hint = document.getElementById("introHint");
+  // a link ending in &skip=1 goes straight into the view, with no title page (used by the pop-up on the plan page)
+  if (h.has("skip")) { intro.style.display = "none"; intro.hidden = true; return; }
   const base = baseOf(first);
   const view = { pitch: h.has("y") ? +h.get("p") || 0 : null, yaw: h.has("y") ? +h.get("y") : null, hfov: +h.get("f") || (base === START ? START_VIEW.hfov : HFOV) };
   for (const lk of LOOKS[base] || []) if (lk.file) new Image().src = `panos/${lk.file}?v=${IMG_V}`;   // ready before anyone clicks
