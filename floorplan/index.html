@@ -349,7 +349,7 @@
         <div class="addr">150 Worth Ave &middot; Palm Beach, FL</div>
       </div>
       <div class="toolrow">
-        <a href="../">&larr; Dashboard</a>
+        <a href="../" id="backDash">&larr; Dashboard</a>
         <a href="#" id="interiorEditorLink" target="_blank" rel="noopener">Interior Editor</a>
         <a href="#" id="exteriorEditorLink" target="_blank" rel="noopener">Exterior Editor</a>
         <button type="button" id="btnPanels">Panels</button>
@@ -1366,6 +1366,12 @@ document.addEventListener('keydown', e => {
   else if(e.key === 'ArrowLeft'  && !els.present.classList.contains('visible')) walkStep(-1);
 });
 window.addEventListener('beforeunload', walkStopTalking);
+
+/* ---------- ?embed=1: shown inside another page, so no title page and no Dashboard link ---------- */
+if(/[?&]embed=1/.test(location.search)){
+  byId('backDash').style.display = 'none';
+  els.splash.click();
+}
 
 /* ---------- open a shared link: skip the title page, pin, open the slide ---------- */
 (function openFromLink(){

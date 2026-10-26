@@ -43,6 +43,9 @@
 </style>
 </head>
 <body>
+<script>/* ?embed=1: shown inside another page, so no header band and no menu */
+if(/[?&]embed=1/.test(location.search)) document.documentElement.classList.add("embed");</script>
+<style>.embed .header-band,.embed .pmenu-btn,.embed .pmenu,.embed .pmenu-shade{ display:none !important; }</style>
 
 <div class="header-band">
   <img src="../../assets/burlington-header.png" alt="Burlington Arcade, Fairfax &amp; Sammons, New York ~ Palm Beach">
