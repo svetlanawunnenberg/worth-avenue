@@ -35,11 +35,14 @@ window.PORTAL = {
       files:[] },
     { slug:"miu-miu", name:"Miu Miu",
       sent:["October 2026: rendering in parcel 3"],
-      files:[] }
+      files:[
+        { title:"Miu Miu", file:"assets/clients/miu-miu/2026-10-26_miu-miu.pdf", date:"26 October 2026" }
+      ] }
   ],
 
   /* Yael > Exports, and Cassandra > Latest Exports. Newest first. */
   exports: [
+    { title:"Pitch deck, unbranded, with plans", file:"assets/2026-10-26_Burlington_pitch_deck_unbranded.pdf", date:"26 October 2026" },
     { title:"Pitch deck, with plans", file:"assets/2026-10-19_Burlington_pitch_deck.pdf", date:"19 October 2026" },
     { title:"Landscaping set (42 pages)", file:"assets/2026-10-13_Burlington_landscaping.pdf", date:"13 October 2026" }
   ],
@@ -47,6 +50,6 @@ window.PORTAL = {
   /* Yael > Latest. Fill "file" when the PDF is in assets/. */
   latest: [
     { label:"Latest floor plan", file:"", date:"" },
-    { label:"Pitch deck, unbranded, from the architects", file:"", date:"" }
+    { label:"Pitch deck, unbranded, from the architects", file:"assets/2026-10-26_Burlington_pitch_deck_unbranded.pdf", date:"26 October 2026" }
   ]
 };
