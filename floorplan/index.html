@@ -478,7 +478,6 @@
       <button type="button" id="prErase">Eraser</button>
       <button type="button" id="prClear">Clear</button>
       <button type="button" id="prSave">Save</button>
-      <button type="button" id="prFull">Full Screen</button>
       <button type="button" id="prClose">Close</button>
     </div>
     <div class="pr-stage" id="prStage">
@@ -562,7 +561,7 @@ const els = {};
  "panelMap","headMap","mCrop","mCropInner","cIn","cOut","cFit","cCentre","btnDock",
  "speakIntro","speakView","speakSlide","galleryCards","galleryEmpty",
  "interiorEditorLink","exteriorEditorLink","btnPanels","btnClearPins","btnPresent","btnPdf",
- "present","prLabel","prDraw","prErase","prClear","prSave","prFull","prClose","prStage",
+ "present","prLabel","prDraw","prErase","prClear","prSave","prClose","prStage",
  "prPrev","prNext","prHolder","prImg","prCanvas","prCount"]
  .forEach(k => els[k] = byId(k));
 
@@ -1117,10 +1116,6 @@ els.prPrev.addEventListener('click', ()=>step(-1));
 els.prNext.addEventListener('click', ()=>step(1));
 els.prClose.addEventListener('click', closePresent);
 els.btnPresent.addEventListener('click', ()=>openPresent(0));
-els.prFull.addEventListener('click', () => {
-  if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
-  else els.present.requestFullscreen().catch(()=>flash('Full screen was blocked'));
-});
 document.addEventListener('keydown', e => {
   if(!els.present.classList.contains('visible')) return;
   if(e.key==='ArrowRight') step(1);
