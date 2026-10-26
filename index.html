@@ -41,6 +41,88 @@
   .tile.main{ background:#161310; color:#F4EFE4; border-color:#161310; }
   .tile.main .s{ color:#d8cfbd; }
 
+  /* ---------- tiles with a short looping preview of what is inside ---------- */
+  .ptiles{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+  .ptile{ display:flex; flex-direction:column; background:#fff; border:1px solid #C9BFA6; color:#161310; text-decoration:none;
+          transition:border-color .15s, transform .15s, box-shadow .15s; }
+  .ptile:hover, .ptile:focus-visible{ border-color:#161310; transform:translateY(-2px); box-shadow:0 10px 26px rgba(22,19,16,.12); }
+  .ptile:focus-visible{ outline:2px solid #8A6D3B; outline-offset:2px; }
+  .ptile.wide{ grid-column:1 / -1; }
+  .pt{ padding:14px 16px 16px; display:flex; flex-direction:column; gap:4px; }
+  .pt .t{ font-family:'EB Garamond',Georgia,serif; font-size:1.32rem; font-weight:500; line-height:1.15; }
+  .pt .t::after{ content:' \2192'; font-size:.9em; color:#8A6D3B; }
+  .pt .s{ font-size:.84rem; color:#3A342C; }
+  .pv{ position:relative; aspect-ratio:16/9; overflow:hidden; background:#ECE4D2; border-bottom:1px solid #C9BFA6; }
+  .wide .pv{ aspect-ratio:21/8; }
+  .pv *{ position:absolute; }
+  .tag{ font:500 10px/1 'Inter',sans-serif; letter-spacing:.14em; text-transform:uppercase; background:#161310; color:#fff;
+        padding:6px 8px; left:12px; bottom:12px; }
+
+  /* 360: the panorama drifts as if someone is dragging it, Before fades to Designed */
+  .pv-360 .pano{ inset:0; background-size:auto 100%; background-repeat:repeat-x; animation:pan360 7s linear infinite; }
+  .pv-360 .a{ background-image:url(assets/previews/pano-before.jpg); }
+  .pv-360 .b{ background-image:url(assets/previews/pano-designed.jpg); animation:pan360 7s linear infinite, fadeB 7s ease-in-out infinite; }
+  .pv-360 .t1{ animation:tagA 7s infinite; }
+  .pv-360 .t2{ animation:tagB 7s infinite; }
+  .hand{ width:26px; height:26px; border-radius:50%; background:rgba(255,255,255,.85); border:2px solid #161310; top:55%; left:62%;
+         animation:hand 7s ease-in-out infinite; }
+  @keyframes pan360{ from{ background-position:0 0; } to{ background-position:-60% 0; } }
+  @keyframes fadeB{ 0%,40%{ opacity:0; } 55%,90%{ opacity:1; } 100%{ opacity:0; } }
+  @keyframes tagA{ 0%,42%{ opacity:1; } 50%,95%{ opacity:0; } 100%{ opacity:1; } }
+  @keyframes tagB{ 0%,45%{ opacity:0; } 55%,90%{ opacity:1; } 100%{ opacity:0; } }
+  @keyframes hand{ 0%{ transform:translateX(0); opacity:0; } 10%{ opacity:1; } 40%{ transform:translateX(-90px); opacity:1; } 50%,100%{ opacity:0; transform:translateX(-90px); } }
+
+  /* plan with a tapped spot that opens a view */
+  .pv .plan{ inset:-10%; background:#fff url(assets/previews/plan.jpg) center/cover no-repeat; animation:planzoom 6.5s ease-in-out infinite; }
+  .pv .dot{ width:14px; height:14px; border-radius:50%; background:#8A6D3B; border:2px solid #fff; left:46%; top:48%; box-shadow:0 0 0 1px #8A6D3B;
+            animation:dot 6.5s infinite; }
+  .pv .ring{ width:14px; height:14px; border-radius:50%; border:2px solid #8A6D3B; left:46%; top:48%; animation:ring 6.5s infinite; }
+  @keyframes planzoom{ 0%{ transform:scale(1); } 30%{ transform:scale(1.25); } 100%{ transform:scale(1.25); } }
+  @keyframes dot{ 0%,12%{ opacity:0; transform:scale(.4); } 18%,90%{ opacity:1; transform:scale(1); } 100%{ opacity:0; } }
+  @keyframes ring{ 0%,22%{ opacity:0; transform:scale(1); } 26%{ opacity:1; } 40%,100%{ opacity:0; transform:scale(4); } }
+  .pv-nav360 .bubble{ left:46%; top:48%; width:64%; aspect-ratio:16/9; border:3px solid #fff; box-shadow:0 10px 30px rgba(0,0,0,.35);
+                      transform-origin:0 0; animation:pop 6.5s ease-out infinite; overflow:hidden; background:#000; }
+  .pv-nav360 .bubble .pano{ inset:0; background:url(assets/previews/pano-before.jpg) 0 0/auto 100% repeat-x; animation:pan360 6.5s linear infinite; }
+  .pv-navrend .card{ left:46%; top:48%; width:62%; border:3px solid #fff; box-shadow:0 10px 30px rgba(0,0,0,.35); transform-origin:0 0; animation:pop 6.5s ease-out infinite; }
+  .pv-navrend .card img{ position:static; display:block; width:100%; height:auto; }
+  @keyframes pop{ 0%,34%{ opacity:0; transform:translate(-50%,-50%) scale(.05); } 46%,88%{ opacity:1; transform:translate(-50%,-50%) scale(1); } 100%{ opacity:0; transform:translate(-50%,-50%) scale(1); } }
+
+  /* presentations: a small deck of slides shuffling */
+  .pv-deck{ background:#ECE4D2; }
+  .pv-deck .c{ width:58%; left:21%; top:12%; border:3px solid #fff; box-shadow:0 8px 22px rgba(0,0,0,.25); }
+  .pv-deck .c1{ animation:deck1 6s ease-in-out infinite; } .pv-deck .c2{ animation:deck2 6s ease-in-out infinite; } .pv-deck .c3{ animation:deck3 6s ease-in-out infinite; }
+  @keyframes deck1{ 0%,30%{ transform:rotate(-6deg) translate(-14%,4%); z-index:1; } 33%,63%{ transform:rotate(0) translate(0,0); z-index:3; } 66%,100%{ transform:rotate(6deg) translate(14%,4%); z-index:2; } }
+  @keyframes deck2{ 0%,30%{ transform:rotate(0) translate(0,0); z-index:3; } 33%,63%{ transform:rotate(6deg) translate(14%,4%); z-index:2; } 66%,100%{ transform:rotate(-6deg) translate(-14%,4%); z-index:1; } }
+  @keyframes deck3{ 0%,30%{ transform:rotate(6deg) translate(14%,4%); z-index:2; } 33%,63%{ transform:rotate(-6deg) translate(-14%,4%); z-index:1; } 66%,100%{ transform:rotate(0) translate(0,0); z-index:3; } }
+
+  /* current site: slow drift with a camera frame (the Angle Finder) */
+  .pv-site .ph{ inset:-8%; background:url(assets/previews/site.jpg) center/cover; animation:drift 7s ease-in-out infinite alternate; }
+  .pv-site .frame{ inset:18% 22%; border:2px solid #fff; box-shadow:0 0 0 999px rgba(0,0,0,.28); animation:frame 7s ease-in-out infinite; }
+  @keyframes drift{ from{ transform:scale(1) translateX(0); } to{ transform:scale(1.12) translateX(-4%); } }
+  @keyframes frame{ 0%,20%{ opacity:0; } 35%,85%{ opacity:1; } 100%{ opacity:0; } }
+
+  @media (prefers-reduced-motion:reduce){ .pv *, .pv{ animation:none !important; } .pv-nav360 .bubble, .pv-navrend .card{ opacity:1; transform:translate(-50%,-50%); } }
+  .both{ margin:12px 2px 0; font-size:.85rem; }
+  .both a{ color:#161310; }
+
+  /* open the 360: shadow box or new tab */
+  .chooser{ position:fixed; inset:0; z-index:900; background:rgba(22,19,16,.55); display:flex; align-items:center; justify-content:center; padding:16px; }
+  .chooser[hidden], .sbox[hidden]{ display:none; }
+  .ch-card{ position:relative; background:#F4EFE4; border:1px solid #161310; padding:26px 22px 22px; width:min(440px,100%); text-align:center; }
+  .ch-eyebrow{ font-size:10px; letter-spacing:.3em; text-transform:uppercase; color:#8A6D3B; margin:0 0 6px; }
+  .ch-card h2{ font-family:'EB Garamond',Georgia,serif; font-weight:500; font-size:1.8rem; margin:0 0 18px; }
+  .ch-btns{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .ch-btns button{ font:inherit; cursor:pointer; padding:16px 10px; background:#fff; border:1px solid #161310; color:#161310; }
+  .ch-btns button:hover, .ch-btns button:focus-visible{ background:#161310; color:#fff; }
+  .ch-btns b{ display:block; font-family:'EB Garamond',Georgia,serif; font-weight:500; font-size:1.2rem; }
+  .ch-btns small{ display:block; font-size:.75rem; opacity:.75; margin-top:2px; }
+  .ch-x{ position:absolute; top:6px; right:8px; border:0; background:none; font-size:24px; cursor:pointer; color:#161310; }
+  .sbox{ position:fixed; inset:0; z-index:950; background:rgba(10,10,10,.85); padding:calc(48px + env(safe-area-inset-top)) 14px 14px; }
+  .sbox iframe{ width:100%; height:100%; border:0; background:#111; box-shadow:0 20px 60px rgba(0,0,0,.5); }
+  .sbox-x{ position:absolute; top:calc(10px + env(safe-area-inset-top)); right:14px; font:500 11px/1 'Inter',sans-serif; letter-spacing:.14em;
+           text-transform:uppercase; padding:9px 12px; background:#fff; border:1px solid #161310; cursor:pointer; }
+  @media (max-width:760px){ .ptiles{ grid-template-columns:1fr; } .wide .pv{ aspect-ratio:16/9; } .sbox{ padding:calc(44px + env(safe-area-inset-top)) 0 0; } }
+
   /* map */
   .mapbox{ position:relative; border:1px solid #C9BFA6; background:#ECE4D2; }
   #map{ height:min(56vh,440px); }
@@ -51,6 +133,19 @@
   .maptabs button.on{ background:#161310; color:#fff; }
   .mapnote{ font-size:.78rem; color:#3A342C; margin:8px 2px 0; }
   .leaflet-container{ font-family:'Inter',sans-serif; }
+
+  /* history */
+  .hist{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .hist article{ background:#fff; border:1px solid #C9BFA6; padding:0 0 16px; }
+  .hist .strip{ display:flex; gap:2px; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; }
+  .hist .strip::-webkit-scrollbar{ display:none; }
+  .hist figure{ margin:0; flex:0 0 72%; scroll-snap-align:start; position:relative; }
+  .hist figure img{ display:block; width:100%; height:190px; object-fit:cover; }
+  .hist figcaption{ position:absolute; left:8px; bottom:8px; font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; background:rgba(22,19,16,.75); color:#fff; padding:4px 6px; }
+  .hist .kick{ font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:#8A6D3B; margin:14px 16px 4px; }
+  .hist h3{ font-family:'EB Garamond',Georgia,serif; font-weight:500; font-size:1.35rem; margin:0 16px 8px; line-height:1.15; }
+  .hist article > p:not(.kick){ font-family:'EB Garamond',Georgia,serif; font-size:1.02rem; line-height:1.6; color:#3A342C; margin:0 16px 8px; }
+  @media (max-width:760px){ .hist{ grid-template-columns:1fr; } }
 
   /* partners */
   .partners{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
@@ -90,13 +185,61 @@
   </div>
 
   <div class="dlabel">Fairfax Team</div>
-  <div class="tiles">
-    <a class="tile main" href="scan/#skip=1"><span class="t">360 Viewer</span><span class="s">Walk the building, every floor</span><span class="go">Open</span></a>
-    <a class="tile" href="floorplan/"><span class="t">Floorplan &amp; Views</span><span class="s">Every rendering tied to the plan</span><span class="go">Open</span></a>
-    <a class="tile" href="plan360/"><span class="t">360 on the Plan</span><span class="s">Pick a spot on the floor plan</span><span class="go">Open</span></a>
-    <a class="tile" href="elevation360/"><span class="t">360 on the Elevation</span><span class="s">Pick a spot along Worth Avenue</span><span class="go">Open</span></a>
-    <a class="tile" href="exports/"><span class="t">Exports</span><span class="s">Every presentation sent</span><span class="go">Open</span></a>
-    <a class="tile" href="cassandra/toolkit/"><span class="t">360 Toolkit</span><span class="s">Angle finder and scan tools</span><span class="go">Open</span></a>
+  <div class="ptiles">
+    <a class="ptile wide" href="scan/#skip=1" data-choose="scan/#skip=1" data-title="360 Viewer">
+      <div class="pv pv-360" aria-hidden="true">
+        <div class="pano a"></div><div class="pano b"></div>
+        <span class="tag t1">Before</span><span class="tag t2">Designed</span>
+        <span class="hand"></span>
+      </div>
+      <div class="pt"><span class="t">360 Viewer</span><span class="s">Walk the building on every floor. Drag to look around, switch Before and Designed.</span></div>
+    </a>
+
+    <a class="ptile" href="navigation/#floorplan-360">
+      <div class="pv pv-nav360" aria-hidden="true">
+        <div class="plan"></div><span class="dot"></span><span class="ring"></span>
+        <div class="bubble"><div class="pano"></div></div>
+      </div>
+      <div class="pt"><span class="t">Navigation from Floorplan + 360</span><span class="s">Pick a spot on the plan or along Worth Avenue and step into the 360.</span></div>
+    </a>
+
+    <a class="ptile" href="navigation/#floorplan-renderings">
+      <div class="pv pv-navrend" aria-hidden="true">
+        <div class="plan"></div><span class="dot"></span><span class="ring"></span>
+        <div class="card"><img src="assets/views/v3.jpg" alt=""></div>
+      </div>
+      <div class="pt"><span class="t">Navigation from Floorplan + Renderings</span><span class="s">Every rendering placed where it was drawn from. Hover, pin, open.</span></div>
+    </a>
+
+    <a class="ptile" href="exports/">
+      <div class="pv pv-deck" aria-hidden="true">
+        <img class="c c1" src="assets/views/v12.jpg" alt=""><img class="c c2" src="assets/views/v5.jpg" alt=""><img class="c c3" src="assets/views/v17.jpg" alt="">
+      </div>
+      <div class="pt"><span class="t">Presentations</span><span class="s">Every presentation we have sent.</span></div>
+    </a>
+
+    <a class="ptile" href="cassandra/toolkit/">
+      <div class="pv pv-site" aria-hidden="true"><div class="ph"></div><span class="frame"></span></div>
+      <div class="pt"><span class="t">Current Site</span><span class="s">The building as it stands today, with the Angle Finder for stills.</span></div>
+    </a>
+  </div>
+  <p class="both"><a href="navigation/">See both navigations together on one page &rarr;</a></p>
+
+  <!-- how to open the 360 viewer -->
+  <div class="chooser" id="chooser" hidden role="dialog" aria-modal="true" aria-labelledby="chooserTitle">
+    <div class="ch-card">
+      <p class="ch-eyebrow">Open</p>
+      <h2 id="chooserTitle">360 Viewer</h2>
+      <div class="ch-btns">
+        <button type="button" id="chBox"><b>Shadow box</b><small>Opens over this page</small></button>
+        <button type="button" id="chTab"><b>New tab</b><small>Its own window</small></button>
+      </div>
+      <button type="button" class="ch-x" id="chClose" aria-label="Close">&times;</button>
+    </div>
+  </div>
+  <div class="sbox" id="sbox" hidden role="dialog" aria-modal="true" aria-label="360 Viewer">
+    <button type="button" class="sbox-x" id="sboxClose" aria-label="Close">Close &times;</button>
+    <iframe id="sboxFrame" title="360 Viewer" allow="fullscreen; accelerometer; gyroscope; clipboard-write" allowfullscreen></iframe>
   </div>
 
   <div class="dlabel">Map</div>
@@ -109,6 +252,33 @@
   </div>
   <p class="mapnote">Drag to move, pinch or scroll to zoom. The pin marks 150 Worth Avenue.</p>
 
+  <div class="dlabel">Worth Avenue &amp; History</div>
+  <div class="hist">
+    <article>
+      <div class="strip">
+        <figure><img src="assets/worth-add-2.jpg" alt="Looking down Worth Avenue in the 1940s" loading="lazy"><figcaption>Worth Avenue, 1940s</figcaption></figure>
+        <figure><img src="assets/worth-mizner.jpg" alt="Mizner arcading and balcony" loading="lazy"><figcaption>Mizner arcading</figcaption></figure>
+        <figure><img src="assets/worth-entrance.jpg" alt="Worth Avenue today" loading="lazy"><figcaption>The Avenue today</figcaption></figure>
+      </div>
+      <p class="kick">Palm Beach &middot; 1918 to today</p>
+      <h3>Where Palm Beach Learned to Build</h3>
+      <p>Addison Mizner arrived in 1918 at the invitation of Paris Singer, and the Everglades Club opened in February 1919. In 1923 he cut Via Mizner through the block behind it: a lane of shopfronts, courtyards and balconies, terracotta over white stucco.</p>
+      <p>Worth Avenue works because it is not one frontage but a sequence of intimate passages cut through depth. That is the move the Burlington Arcade makes at 150 Worth.</p>
+    </article>
+    <article>
+      <div class="strip">
+        <figure><img src="assets/arcade-1819.jpg" alt="The Piccadilly entrance of Burlington Arcade, engraved around 1828" loading="lazy"><figcaption>Piccadilly entrance, c.1828</figcaption></figure>
+        <figure><img src="assets/arcade-add-3.jpg" alt="The Burlington Gardens end of the arcade" loading="lazy"><figcaption>Bowed vitrines</figcaption></figure>
+        <figure><img src="assets/arcade-add-2.jpg" alt="A beadle on duty in the arcade" loading="lazy"><figcaption>A beadle on duty</figcaption></figure>
+      </div>
+      <p class="kick">Piccadilly, London &middot; opened 1819</p>
+      <h3>Burlington Arcade, London</h3>
+      <p>Lord George Cavendish had Samuel Ware roof a narrow lane beside Burlington House and line it with shops. It became one of Britain's first covered shopping arcades, still kept by its own beadles in frock coats.</p>
+      <p>That is the lineage 150 Worth draws on: a covered street of small shopfronts, daylit from above, held to a standard of finish no department store floor plate can give.</p>
+    </article>
+  </div>
+  <p class="both"><a href="cassandra/dashboard/">The full story, vocabulary and every gallery &rarr;</a></p>
+
   <div class="dlabel">Partners</div>
   <div class="partners">
     <a class="tile" href="yael/"><span class="t">Yael</span><span class="s">Latest presentation, views and clients</span><span class="go">Open</span></a>
@@ -116,12 +286,35 @@
   </div>
 </main>
 
+<script>
+/* 360 Viewer tile: ask Shadow box (over this page) or New tab */
+(function(){
+  var ch = document.getElementById('chooser'), sb = document.getElementById('sbox'), fr = document.getElementById('sboxFrame');
+  var url = '';
+  function close(){ ch.hidden = true; }
+  document.querySelectorAll('[data-choose]').forEach(function(a){
+    a.addEventListener('click', function(e){
+      if (e.metaKey || e.ctrlKey || e.shiftKey) return;     // ctrl-click still opens a tab the normal way
+      e.preventDefault(); url = a.dataset.choose; ch.hidden = false; document.getElementById('chBox').focus();
+    });
+  });
+  document.getElementById('chBox').onclick = function(){
+    close(); fr.src = url; sb.hidden = false; document.documentElement.style.overflow = 'hidden';
+  };
+  document.getElementById('chTab').onclick = function(){ close(); window.open(url, '_blank', 'noopener'); };
+  document.getElementById('chClose').onclick = close;
+  ch.addEventListener('click', function(e){ if (e.target === ch) close(); });
+  function closeBox(){ sb.hidden = true; fr.src = 'about:blank'; document.documentElement.style.overflow = ''; }
+  document.getElementById('sboxClose').onclick = closeBox;
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ if (!sb.hidden) closeBox(); else close(); } });
+})();
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 /* Map of the site. PIN = where the marker sits; drag the map to move around. */
 (function(){
   if (!window.L) { document.getElementById('map').innerHTML = '<p style="padding:20px">The map could not load.</p>'; return; }
-  var PIN = [26.70226, -80.03678];   // 150 Worth Avenue (the Esplanade), Palm Beach
+  var PIN = [26.70050, -80.03522];   // The Esplanade, 150 Worth Avenue (OpenStreetMap)
   var map = L.map('map', { scrollWheelZoom: false, tap: true }).setView(PIN, 18);
   var layers = {
     street: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
