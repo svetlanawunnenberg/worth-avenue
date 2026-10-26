@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>150 Worth Scan Viewer</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pannellum/2.5.6/pannellum.css">
@@ -71,15 +71,61 @@
   #intro .hint { margin:22px 0 0; color:var(--mute); font-size:11px; letter-spacing:.14em; text-transform:uppercase; }
   .pnlm-container { background:var(--ink); }
   .pnlm-orientation-button { display:none !important; }   /* replaced by the Motion button in the header */
-  @media (max-width:640px) {
-    header { gap:8px; }
-    header h1 { font-size:16px; }
-    header .where { display:none; }
-    #plan { left:16px; right:16px; width:auto; }
-    #floors button { padding:7px 8px; font-size:10px; }
-    #looks { bottom:auto; top:112px; }
+  #tools { display:flex; gap:8px; }
+  #btnMenu, #menu { display:none; }
+  button { touch-action:manipulation; }
+  /* control size (menu): scales the overlays, not the picture */
+  body { --ui:1; }
+  body[data-ui="s"] { --ui:.82; }
+  body[data-ui="l"] { --ui:1.2; }
+  #looks, #plan, #menu, #btnShow { zoom:var(--ui); }
+  /* hide all controls: just the picture, with one small button to bring them back */
+  body.bare header, body.bare #floors, body.bare #plan, body.bare #looks, body.bare #menu,
+  body.bare .pnlm-controls-container { display:none !important; }
+  body.bare #pano { inset:0; }
+  #btnShow { position:fixed; top:calc(8px + env(safe-area-inset-top)); right:calc(8px + env(safe-area-inset-right)); z-index:40;
+             padding:7px 10px; font-size:10px; opacity:.85; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+  #btnShow[hidden] { display:none; }
+
+  /* ---------- phone ---------- */
+  @media (max-width:760px) {
+    header { height:calc(44px + env(safe-area-inset-top)); padding:env(safe-area-inset-top) 10px 0; gap:8px; }
+    header h1 { font-size:15px; letter-spacing:.04em; }
+    header .where, header #tools { display:none; }
+    header .back { font-size:26px; }
+    #btnMenu { display:block; padding:6px 11px; font-size:18px; letter-spacing:0; }
+    #pano { inset:calc(44px + env(safe-area-inset-top)) 0 0 0; }
+    /* menu sheet */
+    #menu { position:fixed; top:calc(44px + env(safe-area-inset-top)); right:0; z-index:30; width:min(300px, 100vw);
+            max-height:calc(100dvh - 44px - env(safe-area-inset-top)); overflow:auto; background:var(--paper);
+            border-left:1px solid var(--ink); border-bottom:1px solid var(--ink); padding:12px; flex-direction:column; gap:14px;
+            box-shadow:-6px 8px 24px rgba(0,0,0,.25); }
+    #menu:not([hidden]) { display:flex; }
+    #menu .mlab { font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--mute); margin-bottom:6px; }
+    #menu #floors { position:static; display:flex; flex-direction:column; border:1px solid var(--line); }
+    #menu #floors button { border:0; border-bottom:1px solid var(--line); padding:10px 12px; font-size:12px; }
+    #menu #floors button:last-child { border-bottom:0; }
+    #menu #tools { display:flex; flex-direction:column; gap:6px; }
+    #menu #tools button { text-align:left; padding:11px 12px; }
+    #menu #tools button[hidden] { display:none; }
+    #menu .seg { display:flex; }
+    #menu .seg button { flex:1; padding:9px 4px; font-size:11px; }
+    #menu .seg button + button { border-left:0; }
+    #btnHide { padding:11px 12px; text-align:left; }
+    /* small corner map, starts hidden */
+    #plan { left:auto; right:8px; bottom:auto; top:calc(52px + env(safe-area-inset-top)); width:44vw; max-width:220px; }
+    #plan svg { max-height:32vh; }
+    /* render options: one slim row along the bottom, scrolls sideways if it does not fit */
+    #looks { left:8px; right:8px; top:auto; bottom:calc(10px + env(safe-area-inset-bottom)); gap:6px;
+             overflow-x:auto; flex-wrap:nowrap; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+    #looks::-webkit-scrollbar { display:none; }
+    #looks button { flex:0 0 auto; padding:8px 11px; font-size:11px; letter-spacing:.08em; white-space:nowrap; }
+    #looks button.small { padding:6px 8px; font-size:9.5px; }
+    /* pinch zooms on a phone, so the +/- and fullscreen buttons only take space */
+    .pnlm-controls-container { display:none; }
+    .walk { width:30px; height:30px; }
     #intro .place { font-size:12px; letter-spacing:.14em; padding:16px 18px; }
-    #intro .choose button { min-width:0; flex:1 1 0; padding:14px 6px; font-size:12px; letter-spacing:.08em; white-space:nowrap; }
+    #intro .choose button { min-width:0; flex:1 1 40%; padding:14px 6px; font-size:12px; letter-spacing:.08em; white-space:nowrap; }
   }
 </style>
 </head>
@@ -89,11 +135,23 @@
   <h1>150 Worth Avenue</h1>
   <div class="where" id="where"></div>
   <div class="sp"></div>
-  <button id="btnMotion" type="button" hidden>Motion</button>
-  <button id="btnAngle" type="button" title="Frame a still view: wide lenses, straight verticals, capture">Angle finder</button>
-  <button id="btnPlan" class="on" type="button">Plan</button>
-  <button id="btnLink" type="button">Copy link</button>
+  <div id="tools">
+    <button id="btnMotion" type="button" hidden>Motion</button>
+    <button id="btnAngle" type="button" title="Frame a still view: wide lenses, straight verticals, capture">Angle finder</button>
+    <button id="btnPlan" class="on" type="button">Plan</button>
+    <button id="btnLink" type="button">Copy link</button>
+  </div>
+  <button id="btnMenu" type="button" aria-expanded="false" aria-controls="menu" title="Menu">&#9776;</button>
 </header>
+<!-- phone menu: floors and tools move in here on small screens -->
+<div id="menu" hidden>
+  <div class="msec"><div class="mlab">Floor</div><div id="menuFloors"></div></div>
+  <div class="msec"><div class="mlab">Tools</div><div id="menuTools"></div></div>
+  <div class="msec"><div class="mlab">Control size</div>
+    <div class="seg" id="uiSize"><button type="button" data-s="s">Small</button><button type="button" data-s="m">Medium</button><button type="button" data-s="l">Large</button></div></div>
+  <button id="btnHide" type="button">Hide all controls</button>
+</div>
+<button id="btnShow" type="button" hidden>Show controls</button>
 <div id="pano"></div>
 <nav id="floors" aria-label="Floors"></nav>
 <div id="plan"><svg id="map"></svg></div>
@@ -426,6 +484,60 @@ document.getElementById("btnPlan").onclick = e => {
   document.getElementById("plan").classList.toggle("hidden");
   e.currentTarget.classList.toggle("on");
 };
+
+// ---------- phone layout: floors and tools live in the ☰ menu; controls can be resized or hidden ----------
+(() => {
+  const $ = id => document.getElementById(id);
+  const phone = matchMedia("(max-width:760px)");
+  const menu = $("menu"), btnMenu = $("btnMenu"), floorsEl = $("floors"), tools = $("tools");
+  const nudge = () => setTimeout(() => window.dispatchEvent(new Event("resize")), 30);   // pannellum re-measures on resize
+  const store = (k, v) => { try { v === undefined ? (v = localStorage.getItem(k)) : localStorage.setItem(k, v); } catch (e) { v = null; } return v; };
+
+  function openMenu(open) {
+    menu.hidden = !open;
+    btnMenu.setAttribute("aria-expanded", open);
+    btnMenu.classList.toggle("on", open);
+  }
+  function place() {
+    if (phone.matches) {
+      $("menuFloors").appendChild(floorsEl);
+      $("menuTools").appendChild(tools);
+    } else {
+      document.querySelector("header").insertBefore(tools, btnMenu);
+      document.body.insertBefore(floorsEl, $("plan"));
+      openMenu(false);
+    }
+    nudge();
+  }
+  phone.addEventListener("change", place);
+  place();
+  // the map covers too much of a phone screen to start open
+  if (phone.matches) { $("plan").classList.add("hidden"); $("btnPlan").classList.remove("on"); }
+
+  btnMenu.onclick = () => openMenu(menu.hidden);
+  // picking a floor or a tool closes the menu so the view is clear again
+  menu.addEventListener("click", e => { if (e.target.closest("#floors button, #tools button")) openMenu(false); });
+  document.addEventListener("pointerdown", e => { if (!menu.hidden && !e.target.closest("#menu, #btnMenu")) openMenu(false); });
+
+  // control size, remembered on this device
+  const setSize = s => {
+    document.body.dataset.ui = s;
+    document.querySelectorAll("#uiSize button").forEach(b => b.classList.toggle("on", b.dataset.s === s));
+    store("scanUiSize", s);
+  };
+  document.querySelectorAll("#uiSize button").forEach(b => b.onclick = () => setSize(b.dataset.s));
+  setSize(store("scanUiSize") || "m");
+
+  // hide everything but the picture
+  const bare = on => {
+    document.body.classList.toggle("bare", on);
+    $("btnShow").hidden = !on;
+    openMenu(false);
+    nudge();
+  };
+  $("btnHide").onclick = () => bare(true);
+  $("btnShow").onclick = () => bare(false);
+})();
 
 // Title page: Fairfax & Sammons 360 Viewer -> 150 Worth Ave -> Before / Render me / Designed.
 // Every link opens here; the choice decides which picture the shared view starts on.
