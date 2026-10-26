@@ -500,7 +500,7 @@ const INTERIOR_EDITOR_LINK = "../esplanade/";
 const EXTERIOR_EDITOR_LINK = "";
 
 const INTRO_TEXT =
-  "The Burlington Arcade Viewer. Seventeen renderings of the arcade at one hundred fifty Worth Avenue, " +
+  "The Burlington Arcade Viewer. Sixteen renderings of the arcade at one hundred fifty Worth Avenue, " +
   "Palm Beach, each tied to its position on the floor plan. Click a marker to pin that view. " +
   "Every marker you pin keeps its sightline on the plan, so the drawing builds up as you go.";
 
@@ -508,12 +508,12 @@ const VIEW_FLOORS = {
   V1:"First Floor",  V2:"First Floor",  V3:"First Floor",  V4:"First Floor",
   V5:"Second Floor", V6:"Second Floor", V7:"First Floor",  V8:"First Floor",
   V9:"First Floor",  V10:"First Floor", V11:"First Floor", V12:"First Floor",
-  V13:"First Floor", V14:"First Floor", V15:"First Floor", V16:"First Floor",
+  V13:"First Floor", V14:"First Floor", V15:"First Floor",
   V17:"First Floor"
 };
 const VIEW_EDITOR_LINKS = {
   V1:"", V2:"", V3:"", V4:"", V5:"", V6:"", V7:"", V8:"", V9:"",
-  V10:"", V11:"", V12:"", V13:"", V14:"", V15:"", V16:"", V17:""
+  V10:"", V11:"", V12:"", V13:"", V14:"", V15:"", V17:""
 };
 
 const BASE = "m/base.jpg";
@@ -521,15 +521,15 @@ const dotSrc = id => "m/dot-" + id + ".png";
 const triSrc = id => "m/tri-" + id + ".png";
 
 const IMAGE = {
-  V1:"VIEWS-OF-BURLINGTON_0050_VIEW-1-IMAGE.jpg?v=20261020",  V2:"VIEWS-OF-BURLINGTON_0049_VIEW-2-IMAGE.jpg?v=20261020",
-  V3:"VIEWS-OF-BURLINGTON_0048_VIEW-3-IMAGE.jpg?v=20261020",  V4:"VIEWS-OF-BURLINGTON_0047_VIEW-4-IMAGE.jpg?v=20261020",
-  V5:"VIEWS-OF-BURLINGTON_0046_VIEW-5-IMAGE.jpg?v=20261020",  V6:"VIEWS-OF-BURLINGTON_0045_VIEW-6-IMAGE.jpg?v=20261020",
-  V7:"VIEWS-OF-BURLINGTON_0044_VIEW-7-IMAGE.jpg?v=20261020",  V8:"VIEWS-OF-BURLINGTON_0043_VIEW-8-IMAGE.jpg?v=20261020",
-  V9:"VIEWS-OF-BURLINGTON_0042_VIEW-9-IMAGE.jpg?v=20261020",  V10:"VIEWS-OF-BURLINGTON_0041_VIEW-10-IMAGE.jpg?v=20261020",
-  V11:"VIEWS-OF-BURLINGTON_0040_VIEW-11-IMAGE.jpg?v=20261020",V12:"VIEWS-OF-BURLINGTON_0039_VIEW-12-IMAGE.jpg?v=20261020",
-  V13:"VIEWS-OF-BURLINGTON_0038_VIEW-13-IMAGE.jpg?v=20261020",V14:"VIEWS-OF-BURLINGTON_0037_VIEW-14-IMAGE.jpg?v=20261020",
-  V15:"VIEWS-OF-BURLINGTON_0036_VIEW-15-IMAGE.jpg?v=20261020",V16:"VIEWS-OF-BURLINGTON_0035_VIEW-16-IMAGE.jpg?v=20261020",
-  V17:"VIEWS-OF-BURLINGTON_0034_VIEW-17-IMAGE.jpg?v=20261020"
+  V1:"VIEWS-OF-BURLINGTON_0050_VIEW-1-IMAGE.jpg?v=20261026",  V2:"VIEWS-OF-BURLINGTON_0049_VIEW-2-IMAGE.jpg?v=20261026",
+  V3:"VIEWS-OF-BURLINGTON_0048_VIEW-3-IMAGE.jpg?v=20261026",  V4:"VIEWS-OF-BURLINGTON_0047_VIEW-4-IMAGE.jpg?v=20261026",
+  V5:"VIEWS-OF-BURLINGTON_0046_VIEW-5-IMAGE.jpg?v=20261026",  V6:"VIEWS-OF-BURLINGTON_0045_VIEW-6-IMAGE.jpg?v=20261026",
+  V7:"VIEWS-OF-BURLINGTON_0044_VIEW-7-IMAGE.jpg?v=20261026",  V8:"VIEWS-OF-BURLINGTON_0043_VIEW-8-IMAGE.jpg?v=20261026",
+  V9:"VIEWS-OF-BURLINGTON_0042_VIEW-9-IMAGE.jpg?v=20261026",  V10:"VIEWS-OF-BURLINGTON_0041_VIEW-10-IMAGE.jpg?v=20261026",
+  V11:"VIEWS-OF-BURLINGTON_0040_VIEW-11-IMAGE.jpg?v=20261026",V12:"VIEWS-OF-BURLINGTON_0039_VIEW-12-IMAGE.jpg?v=20261026",
+  V13:"VIEWS-OF-BURLINGTON_0038_VIEW-13-IMAGE.jpg?v=20261026",V14:"VIEWS-OF-BURLINGTON_0037_VIEW-14-IMAGE.jpg?v=20261026",
+  V15:"VIEWS-OF-BURLINGTON_0036_VIEW-15-IMAGE.jpg?v=20261026",
+  V17:"VIEWS-OF-BURLINGTON_0034_VIEW-17-IMAGE.jpg?v=20261026"
 };
 
 /* Marker positions measured from the PNGs. */
@@ -541,7 +541,7 @@ const VIEWS = [
   {n:9,id:"V9",label:"VIEW 9",x:29.8,y:20.6},   {n:10,id:"V10",label:"VIEW 10",x:33.2,y:74.2},
   {n:11,id:"V11",label:"VIEW 11",x:34.5,y:77.3},{n:12,id:"V12",label:"VIEW 12",x:33.5,y:25.1},
   {n:13,id:"V13",label:"VIEW 13",x:39.8,y:25.4},{n:14,id:"V14",label:"VIEW 14",x:36.0,y:73.2},
-  {n:15,id:"V15",label:"VIEW 15",x:59.2,y:31.0},{n:16,id:"V16",label:"VIEW 16",x:61.2,y:35.3},
+  {n:15,id:"V15",label:"VIEW 15",x:59.2,y:31.0},
   {n:17,id:"V17",label:"VIEW 17",x:61.2,y:50.7}
 ];
 
@@ -1218,7 +1218,7 @@ applyCrop();
    ===================================================================== */
 const WALK_ALL = [
   { sel:'#planViewport', desk:true, phone:true, title:'The plan',
-    text:'Seventeen markers, each sitting where its rendering was taken from. On a computer the plan stays put — it does not zoom or slide about under you.' },
+    text:'Sixteen markers, each sitting where its rendering was taken from. On a computer the plan stays put — it does not zoom or slide about under you.' },
 
   { sel:'#planViewport', desk:false, phone:true, title:'Getting closer',
     text:'Tap any quarter of the plan to zoom into it, or pinch with two fingers. Drag to move around, and press Fit to come back out.' },

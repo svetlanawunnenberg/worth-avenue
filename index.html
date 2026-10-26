@@ -414,7 +414,7 @@
     <span class="badge live">Live</span>
   </a>
 
-  <!-- ---------- all seventeen views, swipeable ---------- -->
+  <!-- ---------- all sixteen views, swipeable ---------- -->
   <div class="section-label" id="sec-views">The Views</div>
   <div class="rail-wrap">
     <button class="rail-btn prev" type="button" data-rail="railViews">&#8249;</button>
@@ -713,7 +713,7 @@ function buildRail(railId, items, setName){
 }
 
 const viewItems = [];
-for(let i=1; i<=VIEW_COUNT; i++) viewItems.push({ src:'assets/views/v'+i+'.jpg?v=20261020', cap:'View '+i });
+for(let i=1; i<=VIEW_COUNT; i++) if(i !== 16) viewItems.push({ src:'assets/views/v'+i+'.jpg?v=20261026', cap:'View '+i });   // view 16 was taken out
 buildRail("railViews",  viewItems,      "views");
 buildRail("railWorth",  GALLERY.worth,  "worth");
 buildRail("railArcade", GALLERY.arcade, "arcade");
@@ -908,8 +908,8 @@ const KB = [
   { k:["mizner","everglades","via","1918","1923","mediterranean","worth ave history"],
     a:"Addison Mizner arrived in 1918 at Paris Singer's invitation; the Everglades Club opened February 1919, and Via Mizner was cut through the block behind it in 1923. Those Vias are the direct precedent for what the arcade does at 150 Worth. See <b>Worth Avenue</b>." },
 
-  { k:["floorplan","plan","map","marker","dot","viewer","seventeen"],
-    a:"Open <b>Floorplan &amp; Renderings</b>. Seventeen markers sit on the plan where each rendering was taken from. Hover one to preview, click to pin. Every pin keeps its sightline on the plan, so your selection builds up as you go." },
+  { k:["floorplan","plan","map","marker","dot","viewer","seventeen","sixteen"],
+    a:"Open <b>Floorplan &amp; Renderings</b>. Sixteen markers sit on the plan where each rendering was taken from. Hover one to preview, click to pin. Every pin keeps its sightline on the plan, so your selection builds up as you go." },
 
   { k:["pin","pinned","select","choose","curate"],
     a:"Click a marker to pin that view. Pinned markers stay lit with their sightlines showing, so you can pin three or four and read all of them on the plan at once. Pinned views collect underneath, where you can reorder them or unpin." },
@@ -1011,7 +1011,7 @@ byId('cgForm').addEventListener('submit', e => {
 const TOUR = [
   { sel:'.titleblock', title:'What this is',
     text:'The Burlington Arcade set for 150 Worth Avenue. The big buttons at the top are the fastest way in.' },
-  { sel:'#railViews', title:'All seventeen views',
+  { sel:'#railViews', title:'All sixteen views',
     text:'Swipe, or use the arrows. Click any one to open it full size and step through the rest.' },
   { sel:'.card', title:'The plan',
     text:'This is the working tool. Markers sit where each rendering was taken from. Hover to preview, click to pin, and pinned views keep their sightlines on the plan.' },
