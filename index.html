@@ -82,7 +82,9 @@
   @keyframes ring{ 0%,22%{ opacity:0; transform:scale(1); } 26%{ opacity:1; } 40%,100%{ opacity:0; transform:scale(4); } }
   .pv-nav360 .bubble{ left:46%; top:48%; width:64%; aspect-ratio:16/9; border:3px solid #fff; box-shadow:0 10px 30px rgba(0,0,0,.35);
                       transform-origin:0 0; animation:pop 6.5s ease-out infinite; overflow:hidden; background:#000; }
-  .pv-nav360 .bubble .pano{ inset:0; background:url(assets/previews/pano-before.jpg) 0 0/auto 100% repeat-x; animation:pan360 6.5s linear infinite; }
+  /* the Designed view on Worth Avenue (scan 464, facing 94.8), drifting slightly as if someone is looking around */
+  .pv-nav360 .bubble .pano{ inset:-6%; background:url(assets/previews/designed-464.jpg) center/cover no-repeat; animation:nudge 6.5s ease-in-out infinite alternate; }
+  @keyframes nudge{ from{ transform:translateX(-3%) scale(1.02); } to{ transform:translateX(3%) scale(1.06); } }
   .pv-navrend .card{ left:46%; top:48%; width:62%; border:3px solid #fff; box-shadow:0 10px 30px rgba(0,0,0,.35); transform-origin:0 0; animation:pop 6.5s ease-out infinite; }
   .pv-navrend .card img{ position:static; display:block; width:100%; height:auto; }
   @keyframes pop{ 0%,34%{ opacity:0; transform:translate(-50%,-50%) scale(.05); } 46%,88%{ opacity:1; transform:translate(-50%,-50%) scale(1); } 100%{ opacity:0; transform:translate(-50%,-50%) scale(1); } }
@@ -132,6 +134,10 @@
   .maptabs button + button{ border-left:1px solid #161310; }
   .maptabs button.on{ background:#161310; color:#fff; }
   .mapnote{ font-size:.78rem; color:#3A342C; margin:8px 2px 0; }
+  .mapout{ display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 0; }
+  .mapout a{ font:500 10.5px/1 'Inter',sans-serif; letter-spacing:.12em; text-transform:uppercase; text-decoration:none;
+             padding:11px 14px; background:#fff; color:#161310; border:1px solid #161310; }
+  .mapout a:hover, .mapout a:focus-visible{ background:#161310; color:#fff; }
   .leaflet-container{ font-family:'Inter',sans-serif; }
 
   /* history */
@@ -251,6 +257,10 @@
     </div>
   </div>
   <p class="mapnote">Drag to move, pinch or scroll to zoom. The pin marks 150 Worth Avenue.</p>
+  <div class="mapout">
+    <a href="https://www.google.com/maps/search/?api=1&amp;query=150+Worth+Ave%2C+Palm+Beach%2C+FL+33480" target="_blank" rel="noopener">Open in Google Maps &#8599;</a>
+    <a href="https://earth.google.com/web/@26.70050,-80.03522,6a,350d,35y,0h,60t,0r" target="_blank" rel="noopener">Open in Google Earth &#8599;</a>
+  </div>
 
   <div class="dlabel">Worth Avenue &amp; History</div>
   <div class="hist">
