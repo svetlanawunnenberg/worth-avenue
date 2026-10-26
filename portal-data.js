@@ -29,7 +29,9 @@ window.PORTAL = {
       files:[] },
     { slug:"david-webb", name:"David Webb",
       sent:["October 2026: two-floor rendering in the townhouse"],
-      files:[] },
+      files:[
+        { title:"Pitch deck with David Webb storefronts", file:"assets/clients/david-webb/2026-10-26_david-webb.pdf", date:"26 October 2026" }
+      ] },
     { slug:"revolve", name:"Revolve",
       sent:["October 2026: rendering in the townhouse"],
       files:[] },
