@@ -28,13 +28,15 @@
     var here = location.href.split('#')[0].split('?')[0].replace(/index\.html$/, '');
     [['Menu'],
      ['Home', '', 'The project dashboard'],
-     ['360 Viewer', 'scan/', 'Walk the building in 360'],
+     ['Yael'],
+     ['Yael’s page', 'yael/', 'Latest presentation, views, clients'],
+     ['Views', 'yael/views/', 'Every rendering, unbranded'],
+     ['Clients', 'yael/clients/', 'What was delivered for each client'],
+     ['Cassandra'],
+     ['Cassandra’s page', 'cassandra/', '360 toolkit, exports, full dashboard'],
+     ['360 Toolkit', 'cassandra/toolkit/', 'Walk the building in 360'],
      ['360 on the Plan', 'plan360/', 'Pick a spot on the floor plan'],
-     ['Floorplan & Views', 'floorplan/', 'The renderings on the plan'],
-     ['Exports', 'exports/', 'Every PDF we have sent'],
-     ['People'],
-     ['Yael', 'yael/', 'Clients, exports, latest'],
-     ['Cassandra', 'cassandra/', 'Latest and toolkit']
+     ['Exports', 'exports/', 'Every presentation we have sent']
     ].forEach(function(r, i){
       if(r.length === 1){ nav.appendChild(el('p', 'pmenu-label' + (i ? ' next' : ''), r[0])); return; }
       var a = el('a', BASE + r[1] === here ? 'here' : '', r[0]);
@@ -97,6 +99,20 @@
 
     box = document.querySelector('[data-list="latest"]');
     if(box) P.latest.forEach(function(f){ box.appendChild(fileRow(f, f.label)); });
+
+    /* big buttons on Yael's page that open the newest file: <a data-latest="deck">; a missing file stays "coming soon" */
+    var btns = document.querySelectorAll('[data-latest]');
+    for(var b = 0; b < btns.length; b++){
+      var item = P.latest.filter(function(x){ return x.key === btns[b].getAttribute('data-latest'); })[0];
+      var sub = btns[b].querySelector('.big-s');
+      if(item && item.file){
+        btns[b].href = BASE + item.file; btns[b].target = '_blank'; btns[b].rel = 'noopener';
+        if(sub && item.date) sub.textContent = (item.note ? item.note + ' · ' : '') + item.date;
+      } else {
+        btns[b].classList.add('off'); btns[b].removeAttribute('href');
+        if(sub) sub.textContent = 'Coming soon';
+      }
+    }
 
     box = document.querySelector('[data-list="client"]');
     if(box){

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Views &middot; Burlington Arcade &middot; Fairfax &amp; Sammons</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../portal.css">
+<link rel="stylesheet" href="../../menu.css">
+
+<!-- =====================================================================
+     VIEWS: every rendering, with no logo or branding on it.
+     The pictures are assets/views/v1.jpg, v2.jpg and so on (the same ones
+     the rest of the site uses). To add or remove a view, change the VIEWS
+     list in the script at the bottom of this file.
+     ===================================================================== -->
+<style>
+  .wrap.wide{ max-width:1240px; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; margin-top:30px; }
+  .tile{ margin:0; padding:0; border:1px solid var(--line); background:var(--white); cursor:pointer; text-align:left; font:inherit; color:inherit; }
+  .tile:hover,.tile:focus-visible{ border-color:var(--brass); }
+  .tile:focus-visible{ outline:3px solid var(--brass); outline-offset:2px; }
+  .tile img{ display:block; width:100%; aspect-ratio:3/2; object-fit:cover; background:var(--ivory-deep); }
+  .tile span{ display:block; padding:10px 14px; font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-soft); }
+
+  .lb{ position:fixed; inset:0; z-index:300; background:#0d0b09; display:none; flex-direction:column; color:var(--ivory); }
+  .lb.show{ display:flex; }
+  .lb-top{ display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid rgba(244,239,228,.16); flex:none; }
+  .lb-top .lbl{ flex:1; font-family:'EB Garamond',Georgia,serif; font-size:1.1rem; }
+  .lb-top a,.lb-top button{ border:1px solid rgba(244,239,228,.4); background:transparent; color:var(--ivory); text-decoration:none;
+    padding:9px 13px; font:inherit; font-size:10px; letter-spacing:.14em; text-transform:uppercase; cursor:pointer; }
+  .lb-top a:hover,.lb-top button:hover{ background:var(--ivory); color:var(--ink); }
+  .lb-stage{ flex:1; min-height:0; display:flex; align-items:center; justify-content:center; padding:14px; position:relative; }
+  .lb-stage img{ max-width:100%; max-height:100%; width:auto; height:auto; display:block; }
+  .lb-arrow{ position:absolute; top:50%; transform:translateY(-50%); width:48px; height:48px; border:1px solid rgba(244,239,228,.4);
+    background:rgba(13,11,9,.55); color:var(--ivory); font-size:19px; cursor:pointer; }
+  .lb-arrow:hover{ background:var(--ivory); color:var(--ink); }
+  .lb-arrow.prev{ left:12px; } .lb-arrow.next{ right:12px; }
+  .lb-count{ flex:none; text-align:center; padding:9px; font-size:10px; letter-spacing:.18em; opacity:.7; }
+</style>
+</head>
+<body>
+
+<div class="header-band">
+  <img src="../../assets/burlington-header.png" alt="Burlington Arcade, Fairfax &amp; Sammons, New York ~ Palm Beach">
+</div>
+
+<div class="wrap wide">
+  <div class="ptitle">
+    <p class="eyebrow">Yael</p>
+    <h1>Views</h1>
+    <p class="subtitle">Tap a picture to see it large.</p>
+    <a class="back" href="../">&larr; Yael</a>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="View">
+  <div class="lb-top">
+    <span class="lbl" id="lbLabel"></span>
+    <a id="lbSave" href="#" download>Save</a>
+    <button type="button" id="lbClose">Close</button>
+  </div>
+  <div class="lb-stage">
+    <button class="lb-arrow prev" type="button" id="lbPrev" aria-label="Previous view">&#8249;</button>
+    <img id="lbImg" alt="">
+    <button class="lb-arrow next" type="button" id="lbNext" aria-label="Next view">&#8250;</button>
+  </div>
+  <div class="lb-count" id="lbCount"></div>
+</div>
+
+<script>
+var VIEWS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17];   // view 16 was taken out
+var V = "20261026";                                       // change this when a picture is replaced, so browsers load the new one
+var grid = document.getElementById("grid"), lb = document.getElementById("lb"), at = 0;
+function src(n){ return "../../assets/views/v" + n + ".jpg?v=" + V; }
+
+VIEWS.forEach(function(n, i){
+  var b = document.createElement("button");
+  b.type = "button"; b.className = "tile";
+  var im = document.createElement("img");
+  im.src = src(n); im.alt = "View " + n; im.loading = "lazy";
+  var cap = document.createElement("span"); cap.textContent = "View " + n;
+  b.appendChild(im); b.appendChild(cap);
+  b.addEventListener("click", function(){ show(i); });
+  grid.appendChild(b);
+});
+
+function show(i){
+  at = (i + VIEWS.length) % VIEWS.length;
+  var n = VIEWS[at];
+  document.getElementById("lbImg").src = src(n);
+  document.getElementById("lbImg").alt = "View " + n;
+  document.getElementById("lbLabel").textContent = "View " + n;
+  document.getElementById("lbCount").textContent = (at + 1) + " of " + VIEWS.length;
+  var s = document.getElementById("lbSave"); s.href = src(n); s.setAttribute("download", "Burlington-View-" + n + ".jpg");
+  lb.classList.add("show");
+}
+function hide(){ lb.classList.remove("show"); }
+document.getElementById("lbClose").addEventListener("click", hide);
+document.getElementById("lbPrev").addEventListener("click", function(){ show(at - 1); });
+document.getElementById("lbNext").addEventListener("click", function(){ show(at + 1); });
+document.addEventListener("keydown", function(e){
+  if(!lb.classList.contains("show")) return;
+  if(e.key === "Escape") hide();
+  if(e.key === "ArrowLeft") show(at - 1);
+  if(e.key === "ArrowRight") show(at + 1);
+});
+</script>
+<script src="../../portal.js"></script>
+</body>
+</html>

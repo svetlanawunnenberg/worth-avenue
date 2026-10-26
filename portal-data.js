@@ -40,16 +40,19 @@ window.PORTAL = {
       ] }
   ],
 
-  /* Yael > Exports, and Cassandra > Latest Exports. Newest first. */
+  /* Cassandra > Latest Exports (every PDF we have sent, branded and unbranded). Newest first.
+     Yael does not see this list; she gets only the unbranded deck, from "latest" below. */
   exports: [
     { title:"Pitch deck, unbranded, with plans", file:"assets/2026-10-26_Burlington_pitch_deck_unbranded.pdf", date:"26 October 2026" },
     { title:"Pitch deck, with plans", file:"assets/2026-10-19_Burlington_pitch_deck.pdf", date:"19 October 2026" },
     { title:"Landscaping set (42 pages)", file:"assets/2026-10-13_Burlington_landscaping.pdf", date:"13 October 2026" }
   ],
 
-  /* Yael > Latest. Fill "file" when the PDF is in assets/. */
+  /* Yael's two big buttons ("deck" and "floorplan"). Only unbranded files go here.
+     When there is a new deck or a floor plan, put the PDF in assets/ and change "file" and "date".
+     An empty "file" shows the button as "Coming soon". */
   latest: [
-    { label:"Latest floor plan", file:"", date:"" },
-    { label:"Pitch deck, unbranded, from the architects", file:"assets/2026-10-26_Burlington_pitch_deck_unbranded.pdf", date:"26 October 2026" }
+    { key:"floorplan", label:"Latest floor plan", file:"", date:"" },
+    { key:"deck", label:"Pitch deck, unbranded, from the architects", note:"Pitch deck, unbranded", file:"assets/2026-10-26_Burlington_pitch_deck_unbranded.pdf", date:"26 October 2026" }
   ]
 };
