@@ -1,0 +1,27 @@
+/* =====================================================================
+   BURLINGTON ARCADE — HAMBURGER MENU (used on every page, home included)
+   ===================================================================== */
+:root{ --ivory:#F4EFE4; --ink:#161310; --line:#C9BFA6; --brass:#8A6D3B; --white:#FFFFFF; }
+
+/* ---------- hamburger ---------- */
+.pmenu-btn{ position:fixed; top:12px; left:12px; z-index:260; width:44px; height:44px; padding:0;
+  background:var(--ink); border:1px solid var(--ink); cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; }
+.pmenu-btn span{ display:block; width:20px; height:2px; background:var(--ivory); transition:transform .2s ease, opacity .2s ease; }
+.pmenu-btn:hover{ background:var(--brass); border-color:var(--brass); }
+.pmenu-btn:focus-visible{ outline:3px solid var(--brass); outline-offset:3px; }
+.pmenu-btn[aria-expanded="true"] span:nth-child(1){ transform:translateY(7px) rotate(45deg); }
+.pmenu-btn[aria-expanded="true"] span:nth-child(2){ opacity:0; }
+.pmenu-btn[aria-expanded="true"] span:nth-child(3){ transform:translateY(-7px) rotate(-45deg); }
+
+.pmenu-shade{ position:fixed; inset:0; z-index:255; background:rgba(22,19,16,.45);
+  opacity:0; visibility:hidden; transition:opacity .2s ease, visibility .2s ease; }
+.pmenu-shade.on{ opacity:1; visibility:visible; }
+.pmenu{ position:fixed; top:0; left:0; bottom:0; z-index:258; width:min(320px,86vw); background:var(--ivory);
+  border-right:1px solid var(--line); padding:78px 22px 22px; transform:translateX(-102%); transition:transform .24s ease; }
+.pmenu.on{ transform:none; }
+.pmenu-label{ font-size:10px; letter-spacing:.24em; text-transform:uppercase; color:var(--brass); margin:0 0 12px; }
+.pmenu a{ display:block; background:var(--white); border:1px solid var(--ink); color:var(--ink); text-decoration:none;
+  padding:18px 20px; margin-bottom:10px; font-family:'EB Garamond',Georgia,serif; font-size:1.35rem; font-weight:600; }
+.pmenu a:hover,.pmenu a:focus-visible{ background:var(--ink); color:var(--ivory); }
+.pmenu a.home{ border-color:var(--line); font-size:1.05rem; font-weight:500; }

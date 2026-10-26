@@ -1,0 +1,61 @@
+/* =====================================================================
+   BURLINGTON ARCADE — YAEL / CASSANDRA PAGES + HAMBURGER MENU
+   Same colours and fonts as the home page (index.html).
+   ===================================================================== */
+:root{
+  --ivory:#F4EFE4; --ivory-deep:#ECE4D2; --ink:#161310; --ink-soft:#3A342C;
+  --line:#C9BFA6; --brass:#8A6D3B; --white:#FFFFFF;
+}
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--ivory); color:var(--ink); line-height:1.6;
+  font-family:'Inter',-apple-system,'Segoe UI',sans-serif; -webkit-font-smoothing:antialiased; }
+.serif{ font-family:'EB Garamond',Georgia,serif; }
+.wrap{ max-width:720px; margin:0 auto; padding:0 24px 80px; }
+
+.header-band{ background:var(--white); border-bottom:1px solid var(--line); padding:14px 24px 12px; text-align:center; }
+.header-band img{ display:block; width:100%; max-width:360px; height:auto; margin:0 auto; }
+
+/* ---------- page title ---------- */
+.ptitle{ text-align:center; padding:40px 0 0; }
+.eyebrow{ font-size:10px; letter-spacing:.3em; text-transform:uppercase; color:var(--brass); margin:0 0 16px; }
+h1{ font-family:'EB Garamond',Georgia,serif; font-weight:500; font-size:clamp(2rem,6vw,3rem);
+    letter-spacing:.02em; line-height:1.12; margin:0; }
+.subtitle{ font-family:'EB Garamond',Georgia,serif; font-style:italic; font-size:1.06rem; color:var(--ink-soft); margin:9px 0 0; }
+.back{ display:inline-block; margin:26px 0 0; font-size:10px; letter-spacing:.17em; text-transform:uppercase;
+  color:var(--ink); text-decoration:none; border-bottom:1px solid var(--line); padding-bottom:3px; }
+.back:hover{ color:var(--brass); border-color:var(--brass); }
+
+/* ---------- big buttons ---------- */
+.bigbtns{ display:flex; flex-direction:column; gap:12px; margin:30px 0 0; }
+.big{ display:flex; flex-direction:column; gap:4px; text-align:left; text-decoration:none; width:100%;
+  background:var(--white); color:var(--ink); border:1px solid var(--ink); padding:22px 24px; font:inherit; cursor:pointer;
+  min-height:76px; justify-content:center; transition:background .16s ease, color .16s ease; }
+.big:hover,.big:focus-visible{ background:var(--ink); color:var(--ivory); }
+.big:focus-visible{ outline:3px solid var(--brass); outline-offset:3px; }
+.big-t{ font-family:'EB Garamond',Georgia,serif; font-size:1.45rem; font-weight:600; line-height:1.15; }
+.big-s{ font-size:.85rem; opacity:.75; }
+.big.primary{ background:var(--ink); color:var(--ivory); }
+.big.primary:hover{ background:var(--brass); border-color:var(--brass); }
+.big.off{ opacity:.55; pointer-events:none; }
+
+.section-label{ display:flex; align-items:center; gap:14px; margin:44px 0 14px;
+  font-size:10px; letter-spacing:.24em; text-transform:uppercase; color:var(--brass); }
+.section-label::after{ content:''; flex:1; height:1px; background:var(--line); }
+
+/* ---------- file lists ---------- */
+.files{ display:flex; flex-direction:column; gap:8px; }
+.file{ display:block; background:var(--white); border:1px solid var(--line); padding:14px 18px;
+  text-decoration:none; color:var(--ink); }
+a.file:hover{ border-color:var(--brass); }
+.file small{ display:block; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--brass); margin-top:2px; }
+.file.empty{ color:var(--ink-soft); font-style:italic; border-style:dashed; }
+.notes{ margin:0; padding:0; list-style:none; }
+.notes li{ padding:9px 0; border-bottom:1px dotted var(--line); font-size:.95rem; color:var(--ink-soft); }
+.notes li:last-child{ border-bottom:none; }
+
+footer{ margin-top:66px; padding-top:24px; border-top:1px solid var(--line); text-align:center;
+  font-size:.79rem; color:var(--ink-soft); }
+
+@media (max-width:760px){
+  .wrap{ padding:0 16px 60px; }
+}
