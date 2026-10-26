@@ -27,17 +27,19 @@
     /* [label, path, small line]; a row with no path starts a new section */
     var here = location.href.split('#')[0].split('?')[0].replace(/index\.html$/, '');
     [['Menu'],
-     ['Home', '', 'The project dashboard'],
-     ['Yael'],
-     ['Yael’s page', 'yael/', 'Latest presentation, views, clients'],
-     ['Views', 'yael/views/', 'Every rendering, unbranded'],
-     ['Clients', 'yael/clients/', 'What was delivered for each client'],
-     ['Cassandra'],
-     ['Cassandra’s page', 'cassandra/', '360 toolkit, exports, full dashboard'],
-     ['360 Toolkit', 'cassandra/toolkit/', 'Walk the building in 360'],
+     ['Dashboard', '', 'Overview, tools and map'],
+     ['Fairfax Team'],
+     ['360 Viewer', 'scan/#skip=1', 'Walk the building, every floor'],
+     ['Floorplan & Views', 'floorplan/', 'Every rendering tied to the plan'],
      ['360 on the Plan', 'plan360/', 'Pick a spot on the floor plan'],
      ['360 on the Elevation', 'elevation360/', 'Pick a spot along Worth Avenue'],
-     ['Exports', 'exports/', 'Every presentation we have sent']
+     ['360 Toolkit', 'cassandra/toolkit/', 'Angle finder and scan tools'],
+     ['Exports', 'exports/', 'Every presentation we have sent'],
+     ['Partners'],
+     ['Yael', 'yael/', 'Latest presentation, views, clients'],
+     ['Yael · Views', 'yael/views/', 'Every rendering, unbranded'],
+     ['Yael · Clients', 'yael/clients/', 'What was delivered for each client'],
+     ['Cassandra', 'cassandra/', '360 toolkit, exports, full dashboard']
     ].forEach(function(r, i){
       if(r.length === 1){ nav.appendChild(el('p', 'pmenu-label' + (i ? ' next' : ''), r[0])); return; }
       var a = el('a', BASE + r[1] === here ? 'here' : '', r[0]);

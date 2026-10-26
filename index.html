@@ -2,14 +2,71 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>Burlington Arcade &middot; 150 Worth Avenue &middot; Fairfax &amp; Sammons</title>
+<title>150 Worth Avenue &middot; Project Dashboard &middot; Fairfax &amp; Sammons</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="portal.css">
 <link rel="stylesheet" href="menu.css">
+<style>
+  /* ---------- dashboard (home) ---------- */
+  .dash{ max-width:1080px; margin:0 auto; padding:0 20px 64px; }
+  .dash-head{ text-align:center; padding:34px 0 6px; }
+  .dash-head .eyebrow{ font-size:10px; letter-spacing:.3em; text-transform:uppercase; color:#8A6D3B; margin:0 0 12px; }
+  .dash-head h1{ font-family:'EB Garamond',Georgia,serif; font-weight:500; font-size:clamp(1.8rem,4.6vw,2.7rem); line-height:1.1; margin:0; }
+  .dash-head p{ font-family:'EB Garamond',Georgia,serif; font-style:italic; color:#3A342C; margin:8px 0 0; }
+  .dlabel{ display:flex; align-items:center; gap:12px; margin:36px 0 14px; font-size:10px; letter-spacing:.24em; text-transform:uppercase; color:#8A6D3B; }
+  .dlabel::after{ content:''; flex:1; height:1px; background:#C9BFA6; }
+
+  /* overview facts */
+  .facts{ display:grid; grid-template-columns:repeat(4,1fr); border:1px solid #C9BFA6; background:#fff; }
+  .facts div{ padding:14px 16px; border-right:1px solid #C9BFA6; }
+  .facts div:last-child{ border-right:0; }
+  .facts b{ display:block; font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:#8A6D3B; font-weight:500; margin-bottom:4px; }
+  .facts span{ font-family:'EB Garamond',Georgia,serif; font-size:1.08rem; }
+
+  /* tiles */
+  .tiles{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .tile{ display:flex; flex-direction:column; gap:4px; padding:18px 18px 16px; background:#fff; border:1px solid #C9BFA6;
+         color:#161310; text-decoration:none; transition:border-color .15s, transform .15s, background .15s; min-height:96px; }
+  .tile:hover, .tile:focus-visible{ border-color:#161310; transform:translateY(-1px); }
+  .tile:focus-visible{ outline:2px solid #8A6D3B; outline-offset:2px; }
+  .tile .t{ font-family:'EB Garamond',Georgia,serif; font-size:1.3rem; font-weight:500; line-height:1.15; }
+  .tile .s{ font-size:.82rem; color:#3A342C; }
+  .tile .go{ margin-top:auto; padding-top:8px; font-size:10px; letter-spacing:.18em; text-transform:uppercase; }
+  .tile .go::after{ content:' \2192'; }
+  .tile.main{ background:#161310; color:#F4EFE4; border-color:#161310; }
+  .tile.main .s{ color:#d8cfbd; }
+
+  /* map */
+  .mapbox{ position:relative; border:1px solid #C9BFA6; background:#ECE4D2; }
+  #map{ height:min(56vh,440px); }
+  .maptabs{ position:absolute; z-index:500; top:10px; right:10px; display:flex; background:#fff; border:1px solid #161310; }
+  .maptabs button{ font:500 10.5px/1 'Inter',sans-serif; letter-spacing:.12em; text-transform:uppercase; padding:8px 10px;
+                   border:0; background:#fff; color:#161310; cursor:pointer; }
+  .maptabs button + button{ border-left:1px solid #161310; }
+  .maptabs button.on{ background:#161310; color:#fff; }
+  .mapnote{ font-size:.78rem; color:#3A342C; margin:8px 2px 0; }
+  .leaflet-container{ font-family:'Inter',sans-serif; }
+
+  /* partners */
+  .partners{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  @media (max-width:760px){
+    .facts{ grid-template-columns:1fr 1fr; }
+    .facts div:nth-child(2){ border-right:0; }
+    .facts div:nth-child(-n+2){ border-bottom:1px solid #C9BFA6; }
+    .tiles{ grid-template-columns:1fr 1fr; gap:10px; }
+    .tile{ padding:14px; min-height:84px; }
+    .tile .t{ font-size:1.12rem; }
+    .tile .s{ display:none; }
+    #map{ height:52vh; }
+  }
+  @media (max-width:420px){ .partners{ grid-template-columns:1fr; } }
+</style>
 </head>
 <body>
 
@@ -17,25 +74,74 @@
   <img src="assets/burlington-header.png" alt="Burlington Arcade, Fairfax &amp; Sammons, New York ~ Palm Beach">
 </div>
 
-<div class="wrap">
-  <div class="ptitle">
+<main class="dash">
+  <div class="dash-head">
     <p class="eyebrow">150 Worth Avenue &middot; Palm Beach</p>
-    <h1>Hi, welcome to the 150 Worth Project Dashboard</h1>
-    <p class="subtitle">Tap a name to start.</p>
+    <h1>Project Dashboard</h1>
+    <p>Everything for the Burlington Arcade in one place.</p>
   </div>
 
-  <div class="bigbtns">
-    <a class="big primary" href="yael/">
-      <span class="big-t">Yael</span>
-      <span class="big-s">Latest presentation, views and clients</span>
-    </a>
-    <a class="big" href="cassandra/">
-      <span class="big-t">Cassandra</span>
-      <span class="big-s">360 toolkit, exports and the full dashboard</span>
-    </a>
+  <div class="dlabel">Overview</div>
+  <div class="facts">
+    <div><b>Project</b><span>Burlington Arcade</span></div>
+    <div><b>Address</b><span>150 Worth Avenue, Palm Beach</span></div>
+    <div><b>Architect</b><span>Fairfax &amp; Sammons</span></div>
+    <div><b>360 scan</b><span>Level 1, Exterior, Basement, Level 2</span></div>
   </div>
-</div>
 
+  <div class="dlabel">Fairfax Team</div>
+  <div class="tiles">
+    <a class="tile main" href="scan/#skip=1"><span class="t">360 Viewer</span><span class="s">Walk the building, every floor</span><span class="go">Open</span></a>
+    <a class="tile" href="floorplan/"><span class="t">Floorplan &amp; Views</span><span class="s">Every rendering tied to the plan</span><span class="go">Open</span></a>
+    <a class="tile" href="plan360/"><span class="t">360 on the Plan</span><span class="s">Pick a spot on the floor plan</span><span class="go">Open</span></a>
+    <a class="tile" href="elevation360/"><span class="t">360 on the Elevation</span><span class="s">Pick a spot along Worth Avenue</span><span class="go">Open</span></a>
+    <a class="tile" href="exports/"><span class="t">Exports</span><span class="s">Every presentation sent</span><span class="go">Open</span></a>
+    <a class="tile" href="cassandra/toolkit/"><span class="t">360 Toolkit</span><span class="s">Angle finder and scan tools</span><span class="go">Open</span></a>
+  </div>
+
+  <div class="dlabel">Map</div>
+  <div class="mapbox">
+    <div id="map" role="region" aria-label="Map of 150 Worth Avenue"></div>
+    <div class="maptabs" role="group" aria-label="Map style">
+      <button type="button" data-layer="street" class="on">Street</button>
+      <button type="button" data-layer="photo">Aerial</button>
+    </div>
+  </div>
+  <p class="mapnote">Drag to move, pinch or scroll to zoom. The pin marks 150 Worth Avenue.</p>
+
+  <div class="dlabel">Partners</div>
+  <div class="partners">
+    <a class="tile" href="yael/"><span class="t">Yael</span><span class="s">Latest presentation, views and clients</span><span class="go">Open</span></a>
+    <a class="tile" href="cassandra/"><span class="t">Cassandra</span><span class="s">360 toolkit, exports and the full dashboard</span><span class="go">Open</span></a>
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* Map of the site. PIN = where the marker sits; drag the map to move around. */
+(function(){
+  if (!window.L) { document.getElementById('map').innerHTML = '<p style="padding:20px">The map could not load.</p>'; return; }
+  var PIN = [26.70226, -80.03678];   // 150 Worth Avenue (the Esplanade), Palm Beach
+  var map = L.map('map', { scrollWheelZoom: false, tap: true }).setView(PIN, 18);
+  var layers = {
+    street: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }),
+    photo: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      { maxZoom: 19, attribution: 'Imagery &copy; Esri' })
+  };
+  var current = layers.street.addTo(map);
+  L.marker(PIN).addTo(map).bindPopup('<b>150 Worth Avenue</b><br>Burlington Arcade');
+  // scroll-zoom only after a click, so the page still scrolls past the map
+  map.on('click', function(){ map.scrollWheelZoom.enable(); });
+  map.on('mouseout', function(){ map.scrollWheelZoom.disable(); });
+  document.querySelectorAll('.maptabs button').forEach(function(b){
+    b.addEventListener('click', function(){
+      map.removeLayer(current); current = layers[b.dataset.layer].addTo(map);
+      document.querySelectorAll('.maptabs button').forEach(function(x){ x.classList.toggle('on', x === b); });
+    });
+  });
+})();
+</script>
 <script src="portal-data.js"></script>
 <script src="portal.js"></script>
 </body>
