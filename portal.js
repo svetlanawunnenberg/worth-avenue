@@ -24,10 +24,22 @@
     var shade = el('div', 'pmenu-shade');
     var nav = el('nav', 'pmenu');
     nav.setAttribute('aria-label', 'Menu');
-    nav.appendChild(el('p', 'pmenu-label', 'Menu'));
-    [['Home', '', 'home'], ['Yael', 'yael/', ''], ['Cassandra', 'cassandra/', '']].forEach(function(r){
-      var a = el('a', r[2], r[0]);
+    /* [label, path, small line]; a row with no path starts a new section */
+    var here = location.href.split('#')[0].split('?')[0].replace(/index\.html$/, '');
+    [['Menu'],
+     ['Home', '', 'The project dashboard'],
+     ['360 Viewer', 'scan/', 'Walk the building in 360'],
+     ['360 on the Plan', 'plan360/', 'Pick a spot on the floor plan'],
+     ['Floorplan & Views', 'floorplan/', 'The renderings on the plan'],
+     ['Exports', 'exports/', 'Every PDF we have sent'],
+     ['People'],
+     ['Yael', 'yael/', 'Clients, exports, latest'],
+     ['Cassandra', 'cassandra/', 'Latest and toolkit']
+    ].forEach(function(r, i){
+      if(r.length === 1){ nav.appendChild(el('p', 'pmenu-label' + (i ? ' next' : ''), r[0])); return; }
+      var a = el('a', BASE + r[1] === here ? 'here' : '', r[0]);
       a.href = BASE + r[1];
+      a.appendChild(el('small', '', r[2]));
       nav.appendChild(a);
     });
 
@@ -103,7 +115,28 @@
     }
   }
 
-  function init(){ buildMenu(); lists(); }
+  /* ---------- header: the same on every page, change it here ---------- */
+  function buildHeader(){
+    var band = document.querySelector('.header-band');
+    if(!band) return;
+    band.className = 'header-band site-head';
+    band.innerHTML = '';
+    var home = el('a', 'sh-logo');
+    home.href = BASE;
+    home.setAttribute('aria-label', 'Home');
+    var logo = el('img');
+    logo.src = BASE + 'assets/header-logo.jpg';
+    logo.alt = 'Fairfax & Sammons, New York ~ Palm Beach';
+    home.appendChild(logo);
+    var elev = el('img', 'sh-elev');
+    elev.src = BASE + 'assets/header-elevation.jpg';
+    elev.alt = 'The Worth Avenue street elevation of 150 Worth Avenue';
+    band.appendChild(home);
+    band.appendChild(elev);
+    band.appendChild(el('p', 'sh-title', '150 Worth Avenue'));
+  }
+
+  function init(){ buildHeader(); buildMenu(); lists(); }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();
