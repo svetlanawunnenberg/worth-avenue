@@ -64,3 +64,28 @@
 .psearch-list a small{ display:block; font:400 .76rem/1.4 'Inter',-apple-system,'Segoe UI',sans-serif; color:var(--brass); margin-top:2px; }
 .psearch-hint{ margin:8px 12px; font-size:.86rem; color:var(--ink-soft,#3A342C); }
 .embed .psearch-btn,.embed .psearch{ display:none !important; }
+
+/* ---------- gentle snap: when scrolling stops near a section, the page eases onto it ----------
+   "proximity" only pulls when you stop close to a section, so you can still stop anywhere.
+   The top padding keeps a snapped heading clear of the menu and search buttons. */
+html{ scroll-snap-type:y proximity; scroll-padding-top:68px; }
+.header-band, .section-label, .dlabel, .nsec-title, .tool, .hist > *, .elevbox, .planbox{ scroll-snap-align:start; }   /* the header keeps the top of the page a resting place */
+@media (prefers-reduced-motion:reduce){ html{ scroll-snap-type:none; } }
+html:has(body.has-win), html:has(.win){ scroll-snap-type:none; }   /* 360 boxes open: the page places them itself, so no pulling */
+
+/* ---------- one title per page ----------
+   The small line above each title repeated the "back" link (or the header's 150 Worth Avenue),
+   so it is gone everywhere. On a phone the page is just: header, back link, title, content. */
+.ptitle .eyebrow, .dash-head .eyebrow, .nav-head .eyebrow{ display:none; }
+@media (max-width:760px){
+  .site-head .sh-title{ display:none; }
+  .header-band.site-head{ padding:12px 0 10px; }
+  .site-head .sh-logo img{ width:96px; }
+  .ptitle{ display:flex; flex-direction:column; align-items:center; padding:16px 0 0; }
+  .ptitle .back{ order:-1; margin:0 0 6px; }
+  .ptitle h1, .dash-head h1, .nav-head h1{ font-size:1.8rem; }
+  .ptitle .subtitle, .dash-head p{ display:none; }
+  .dash-head, .nav-head{ padding-top:16px; }
+  .section-label, .dlabel{ margin-top:30px; }
+  .bigbtns{ margin-top:20px; }
+}
