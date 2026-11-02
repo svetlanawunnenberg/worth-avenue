@@ -72,8 +72,48 @@
   .pnlm-container { background:var(--ink); }
   .pnlm-orientation-button { display:none !important; }   /* replaced by the Motion button in the header */
   #tools { display:flex; gap:8px; }
-  #btnMenu, #menu { display:none; }
   button { touch-action:manipulation; }
+  /* ---------- the one menu (☰): search on top, then sections that open and close ----------
+     laptop: a panel on the right under the header. phone: a sheet from the bottom, swipe it down to close. */
+  #btnMenu { padding:6px 11px; font-size:18px; letter-spacing:0; }
+  #menu { position:fixed; z-index:30; top:52px; right:0; width:min(360px, 100vw); max-height:calc(100dvh - 52px);
+          display:flex; flex-direction:column; background:var(--paper); border-left:1px solid var(--ink); border-bottom:1px solid var(--ink);
+          box-shadow:-6px 8px 24px rgba(0,0,0,.25); transform:translateX(102%); visibility:hidden;
+          transition:transform .24s ease, visibility .24s; }
+  #menu.open { transform:none; visibility:visible; }
+  #menu.drag { transition:none; }
+  #menu .grab { display:none; }
+  #menu .mhead { flex:none; padding:12px; border-bottom:1px solid var(--line); }
+  #msearch { width:100%; font:400 16px/1.3 Inter, sans-serif; padding:11px 12px; border:1px solid var(--ink); border-radius:0;
+             background:var(--paper); color:var(--ink); -webkit-appearance:none; appearance:none; outline:none; }
+  #msearch:focus { box-shadow:0 0 0 2px var(--ink); }
+  #mbody, #mresults { overflow:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+  #mbody { padding:0 12px 12px; }
+  #mresults { padding:10px 12px 14px; display:flex; flex-direction:column; gap:6px; }
+  #mbody[hidden], #mresults[hidden] { display:none; }
+  #menu details { border-bottom:1px solid var(--line); }
+  #menu summary { list-style:none; display:flex; align-items:center; gap:10px; padding:15px 2px; cursor:pointer;
+                  font:500 12px/1 Inter, sans-serif; letter-spacing:.14em; text-transform:uppercase; user-select:none; }
+  #menu summary::-webkit-details-marker { display:none; }
+  #menu summary small { margin-left:auto; color:var(--mute); font-size:11px; letter-spacing:.04em; text-transform:none;
+                        white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:60%; }
+  #menu summary::after { content:"+"; flex:none; width:14px; text-align:center; font-size:18px; font-weight:400; letter-spacing:0; }
+  #menu details[open] summary::after { content:"\2212"; }
+  #menu .mpanel { display:flex; flex-direction:column; gap:6px; padding:0 0 14px; }
+  #menu .mpanel button, #mresults button { text-align:left; padding:11px 12px; line-height:1.3; text-transform:none; letter-spacing:.02em; font-size:13px; }
+  #menu .mpanel button small, #mresults button small { display:block; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; opacity:.6; margin-top:3px; }
+  #menu .mnote { margin:2px 0 4px; color:var(--mute); font-size:12px; }
+  #menu .mlab { font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--mute); margin:8px 0 2px; }
+  #menu #floors { position:static; display:flex; flex-direction:column; border:1px solid var(--line); }
+  #menu #floors button { border:0; border-bottom:1px solid var(--line); padding:11px 12px; font-size:12px; }
+  #menu #floors button:last-child { border-bottom:0; }
+  #menu #tools { flex-direction:column; gap:6px; }
+  #menu #tools button[hidden] { display:none; }
+  #menu .seg { display:flex; }
+  #menu .seg button { flex:1; padding:9px 4px; font-size:11px; text-align:center; }
+  #menu .seg button + button { border-left:0; }
+  /* on a laptop the floor bar stays under the header, so the menu does not repeat it */
+  @media (min-width:761px) { #menu details[data-k="floor"] { display:none; } }
   /* control size (menu): scales the overlays, not the picture */
   body { --ui:1; }
   body[data-ui="s"] { --ui:.82; }
@@ -94,27 +134,14 @@
   @media (max-width:760px) {
     header { height:calc(44px + env(safe-area-inset-top)); padding:env(safe-area-inset-top) 10px 0; gap:8px; }
     header h1 { font-size:15px; letter-spacing:.04em; }
-    header .where, header #tools { display:none; }
+    header .where { display:none; }
     header .back { font-size:26px; }
-    #btnMenu { display:block; padding:6px 11px; font-size:18px; letter-spacing:0; }
     #pano { inset:calc(44px + env(safe-area-inset-top)) 0 0 0; }
-    /* menu sheet */
-    #menu { position:fixed; top:calc(44px + env(safe-area-inset-top)); right:0; z-index:30; width:min(300px, 100vw);
-            max-height:calc(100dvh - 44px - env(safe-area-inset-top)); overflow:auto; background:var(--paper);
-            border-left:1px solid var(--ink); border-bottom:1px solid var(--ink); padding:12px; flex-direction:column; gap:14px;
-            box-shadow:-6px 8px 24px rgba(0,0,0,.25); }
-    #menu:not([hidden]) { display:flex; }
-    #menu .mlab { font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--mute); margin-bottom:6px; }
-    #menu #floors { position:static; display:flex; flex-direction:column; border:1px solid var(--line); }
-    #menu #floors button { border:0; border-bottom:1px solid var(--line); padding:10px 12px; font-size:12px; }
-    #menu #floors button:last-child { border-bottom:0; }
-    #menu #tools { display:flex; flex-direction:column; gap:6px; }
-    #menu #tools button { text-align:left; padding:11px 12px; }
-    #menu #tools button[hidden] { display:none; }
-    #menu .seg { display:flex; }
-    #menu .seg button { flex:1; padding:9px 4px; font-size:11px; }
-    #menu .seg button + button { border-left:0; }
-    #btnHide { padding:11px 12px; text-align:left; }
+    /* the menu becomes a sheet from the bottom with a grab bar; swipe it down to close */
+    #menu { top:auto; bottom:0; left:0; right:0; width:100%; max-height:min(82dvh, 680px); border:0; border-top:1px solid var(--ink);
+            box-shadow:0 -10px 30px rgba(0,0,0,.3); transform:translateY(102%); padding-bottom:env(safe-area-inset-bottom); }
+    #menu .grab { display:block; flex:none; width:44px; height:5px; border-radius:3px; background:var(--line); margin:9px auto 0; }
+    #menu .mhead { padding-top:10px; }
     /* small corner map, starts hidden */
     #plan { left:auto; right:8px; bottom:auto; top:calc(52px + env(safe-area-inset-top)); width:44vw; max-width:220px; }
     #plan svg { max-height:32vh; }
@@ -147,13 +174,22 @@
   </div>
   <button id="btnMenu" type="button" aria-expanded="false" aria-controls="menu" title="Menu">&#9776;</button>
 </header>
-<!-- phone menu: floors and tools move in here on small screens -->
-<div id="menu" hidden>
-  <div class="msec"><div class="mlab">Floor</div><div id="menuFloors"></div></div>
-  <div class="msec"><div class="mlab">Tools</div><div id="menuTools"></div></div>
-  <div class="msec"><div class="mlab">Control size</div>
-    <div class="seg" id="uiSize"><button type="button" data-s="s">Small</button><button type="button" data-s="m">Medium</button><button type="button" data-s="l">Large</button></div></div>
-  <button id="btnHide" type="button">Hide all controls</button>
+<!-- the one menu: search, then Floor / Version / Places / Tools, one section open at a time -->
+<div id="menu" role="dialog" aria-label="Menu" aria-hidden="true">
+  <div class="grab" aria-hidden="true"></div>
+  <div class="mhead"><input id="msearch" type="search" placeholder="Search: entrance, Level 2, designed" autocomplete="off" enterkeyhint="go" aria-label="Search the 360"></div>
+  <div id="mresults" hidden></div>
+  <div id="mbody">
+    <details data-k="floor"><summary>Floor <small id="sumFloor"></small></summary><div class="mpanel" id="menuFloors"></div></details>
+    <details data-k="look"><summary>Version <small id="sumLook"></small></summary><div class="mpanel" id="menuLooks"></div></details>
+    <details data-k="places"><summary>Places <small id="sumPlace"></small></summary><div class="mpanel" id="menuPlaces"></div></details>
+    <details data-k="tools"><summary>Tools</summary><div class="mpanel">
+      <div id="menuTools"></div>
+      <div class="mlab">Control size</div>
+      <div class="seg" id="uiSize"><button type="button" data-s="s">Small</button><button type="button" data-s="m">Medium</button><button type="button" data-s="l">Large</button></div>
+      <button id="btnHide" type="button">Hide all controls</button>
+    </div></details>
+  </div>
 </div>
 <button id="btnShow" type="button" hidden>Show controls</button>
 <div id="pano"></div>
@@ -212,6 +248,26 @@ const LOOKS = {
     { key: "decor",  label: "Designed",  file: "F2-040-decor.jpg" }
   ]
 };
+// Named spots for the menu's Places list and its search (same names as 360 on the Plan and 360 on the Elevation).
+// look = which version opens; y / p / f = the way it first looks. To add one: { id:"<spot from data.js>", name:"Words shown" }
+const PLACES = [
+  { id: "Fasad__Scan_464", look: "renovated", y: 99.1, p: 8.4, f: 100, name: "Across Worth Avenue", k: "exterior street facade outside" },
+  { id: "Fasad__Scan_471", y: 90.1, name: "Worth Avenue, far right", k: "exterior street facade" },
+  { id: "Fasad__Scan_465", y: 90.1, name: "Worth Avenue, where the arches start", k: "exterior street facade arches" },
+  { id: "Fasad__Scan_458", y: 89.7, name: "Worth Avenue, where the arches stop", k: "exterior street facade arches" },
+  { id: "Fasad__Scan_452", y: 89.8, name: "The 150 Worth entrance", k: "exterior street door front" },
+  { id: "Fasad__Scan_448", y: 87.7, name: "The five bays", k: "exterior street facade" },
+  { id: "Fasad__Scan_443", y: 88.5, name: "The garages", k: "exterior street garage parking" },
+  { id: "Galerry_1_st_Scan_188", name: "Arcade entrance from Worth Avenue", k: "gallery door front" },
+  { id: "Galerry_1_st_Scan_193", name: "Arcade gallery, central", k: "gallery via" },
+  { id: "Galerry_1_st_Scan_207", name: "Arcade gallery, east bend", k: "gallery via" },
+  { id: "Galerry_1_st_Scan_229", name: "West court", k: "courtyard" },
+  { id: "Saks_dors_1_st_Scan_553", name: "Former Saks space", k: "store shop" },
+  { id: "Galerry_2_nd_Scan_133", name: "Level 2, west gallery", k: "upstairs second" },
+  { id: "Galerry_2_nd_Scan_121", name: "Level 2, central gallery", k: "upstairs second" },
+  { id: "Galerry_2_nd_Scan_108", name: "Level 2, east bend", k: "upstairs second" },
+  { id: "F2-071", name: "Level 2, east suite", k: "upstairs second office" }
+];
 const START = "Fasad__Scan_464";   // the spot the viewer opens on when there is no share link (exterior, Worth Avenue)
 const SEP = "__";            // scene id for a look: "F2-040__render"
 // Only a known look counts as a suffix (scan names like "Fasad__Scan_438" contain "__" too).
@@ -417,7 +473,8 @@ function onScene(id) {
   Object.values(dots).forEach(d => d.classList.remove("cur"));
   dots[base].classList.add("cur");
   dots[base].parentNode.appendChild(dots[base]);   // bring to front
-  document.getElementById("where").textContent = `${floorName(s.floor)} · ${base}${lk ? " · " + lk.label : ""}`;
+  const pl = PLACES.find(p => p.id === base);
+  document.getElementById("where").textContent = `${floorName(s.floor)} · ${pl ? pl.name : base}${lk ? " · " + lk.label : ""}`;
   showLooks(id);
 }
 viewer.on("scenechange", onScene);
@@ -489,28 +546,31 @@ document.getElementById("btnPlan").onclick = e => {
   e.currentTarget.classList.toggle("on");
 };
 
-// ---------- phone layout: floors and tools live in the ☰ menu; controls can be resized or hidden ----------
+// ---------- the one menu (☰): search, Floor, Version, Places, Tools; controls can be resized or hidden ----------
 (() => {
   const $ = id => document.getElementById(id);
   const phone = matchMedia("(max-width:760px)");
   const menu = $("menu"), btnMenu = $("btnMenu"), floorsEl = $("floors"), tools = $("tools");
+  const search = $("msearch"), results = $("mresults"), body = $("mbody");
+  const secs = [...menu.querySelectorAll("details")];
   const nudge = () => setTimeout(() => window.dispatchEvent(new Event("resize")), 30);   // pannellum re-measures on resize
   const store = (k, v) => { try { v === undefined ? (v = localStorage.getItem(k)) : localStorage.setItem(k, v); } catch (e) { v = null; } return v; };
+  const isOpen = () => menu.classList.contains("open");
 
   function openMenu(open) {
-    menu.hidden = !open;
+    menu.classList.toggle("open", open);
+    menu.style.transform = "";
+    menu.setAttribute("aria-hidden", !open);
     btnMenu.setAttribute("aria-expanded", open);
     btnMenu.classList.toggle("on", open);
+    if (open) { sync(); if (!phone.matches) setTimeout(() => search.focus(), 60); }   // no keyboard popping up on a phone
+    else { search.blur(); if (search.value) { search.value = ""; find(""); } }
   }
+  // tools always live in the menu; the floors sit in it only on a phone (a laptop keeps the floor bar)
   function place() {
-    if (phone.matches) {
-      $("menuFloors").appendChild(floorsEl);
-      $("menuTools").appendChild(tools);
-    } else {
-      document.querySelector("header").insertBefore(tools, btnMenu);
-      document.body.insertBefore(floorsEl, $("plan"));
-      openMenu(false);
-    }
+    $("menuTools").appendChild(tools);
+    if (phone.matches) $("menuFloors").appendChild(floorsEl);
+    else document.body.insertBefore(floorsEl, $("plan"));
     nudge();
   }
   phone.addEventListener("change", place);
@@ -518,10 +578,122 @@ document.getElementById("btnPlan").onclick = e => {
   // the map covers too much of a phone screen to start open
   if (phone.matches) { $("plan").classList.add("hidden"); $("btnPlan").classList.remove("on"); }
 
-  btnMenu.onclick = () => openMenu(menu.hidden);
-  // picking a floor or a tool closes the menu so the view is clear again
-  menu.addEventListener("click", e => { if (e.target.closest("#floors button, #tools button")) openMenu(false); });
-  document.addEventListener("pointerdown", e => { if (!menu.hidden && !e.target.closest("#menu, #btnMenu")) openMenu(false); });
+  btnMenu.onclick = () => openMenu(!isOpen());
+  // picking anything closes the menu so the view is clear again (the size buttons and section headings stay open)
+  menu.addEventListener("click", e => { if (e.target.closest("#floors button, #tools button, .mpanel button[data-go], #mresults button")) openMenu(false); });
+  document.addEventListener("pointerdown", e => { if (isOpen() && !e.target.closest("#menu, #btnMenu")) openMenu(false); });
+  document.addEventListener("keydown", e => {
+    const typing = /INPUT|TEXTAREA/.test(document.activeElement.tagName);
+    if (e.key === "Escape" && isOpen()) { openMenu(false); btnMenu.focus(); }
+    else if (!typing && !e.ctrlKey && !e.metaKey && (e.key === "/" || e.key === "m")) { e.preventDefault(); openMenu(true); setTimeout(() => search.focus(), 60); }
+  });
+
+  // one section open at a time, and the last one opened is remembered on this device
+  secs.forEach(d => d.addEventListener("toggle", () => {
+    if (!d.open) return;
+    secs.forEach(o => { if (o !== d) o.open = false; });
+    store("scanMenuOpen", d.dataset.k);
+  }));
+  // on a laptop the Floor section is hidden (the floor bar does that job), so Version opens instead
+  function openDefault() {
+    let k = store("scanMenuOpen") || (phone.matches ? "floor" : "look");
+    if (k === "floor" && !phone.matches) k = "look";
+    secs.forEach(d => { d.open = d.dataset.k === k; });
+  }
+  openDefault();
+  phone.addEventListener("change", openDefault);
+
+  // ---------- what each section holds (rebuilt when the menu opens) ----------
+  const btn = (label, sub, go, on) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.dataset.go = "1";
+    b.innerHTML = `${label}${sub ? `<small>${sub}</small>` : ""}`;
+    if (on) b.classList.add("on");
+    b.onclick = go;
+    return b;
+  };
+  const placeName = base => (PLACES.find(p => p.id === base) || {}).name;
+  const goLook = (base, key) => viewer.loadScene(key ? base + SEP + key : base, viewer.getPitch(), viewer.getYaw(), viewer.getHfov());
+  const goPlace = p => {
+    const id = p.look && scenes[p.id + SEP + p.look] ? p.id + SEP + p.look : p.id;
+    if (p.y !== undefined) viewer.loadScene(id, p.p || 0, p.y, p.f || HFOV); else viewer.loadScene(id);
+  };
+  function sync() {
+    const id = viewer.getScene(), base = baseOf(id), cur = lookOf(id), s = byId[base];
+    $("sumFloor").textContent = floorName(s.floor);
+    const opts = lookChoices(base), curLook = opts.find(l => l.key === cur);
+    $("sumLook").textContent = curLook ? curLook.label : "";
+    $("sumPlace").textContent = placeName(base) || "";
+
+    const looks = $("menuLooks"); looks.innerHTML = "";
+    if (opts.length) opts.forEach(l => looks.appendChild(btn(l.label, "", () => goLook(base, l.key), l.key === cur)));
+    else looks.insertAdjacentHTML("beforeend", '<p class="mnote">This spot has one version. These have more:</p>');
+    for (const b of Object.keys(LOOKS)) {
+      if (b === base || !byId[b]) continue;
+      const first = LOOKS[b].find(l => l.file && !l.small);
+      if (first) looks.appendChild(btn(placeName(b) || `${floorName(byId[b].floor)} · ${b}`,
+        LOOKS[b].filter(l => !l.small).map(l => l.label).join(" · "), () => viewer.loadScene(b + SEP + first.key)));
+    }
+
+    const places = $("menuPlaces"); places.innerHTML = "";
+    PLACES.filter(p => byId[p.id]).forEach(p => places.appendChild(btn(p.name, floorName(byId[p.id].floor), () => goPlace(p), p.id === base)));
+  }
+  viewer.on("scenechange", () => { if (isOpen()) sync(); });
+
+  // ---------- search: places, floors, versions and tools; a scan code like F2-040 works too ----------
+  function items() {
+    const list = [];
+    PLACES.filter(p => byId[p.id]).forEach(p => list.push({ t: p.name, s: floorName(byId[p.id].floor), k: `${p.k || ""} ${floorName(byId[p.id].floor)} place spot`, go: () => goPlace(p) }));
+    const fk = { F1: "ground first level 1 one exterior outside street", B: "basement parking garage lower", F2: "second level 2 two upstairs" };
+    FLOORS.filter(f => onFloor(f.key).length).forEach(f => list.push({ t: f.name, s: "Floor", k: fk[f.key] || "", go: () => viewer.loadScene(startOf(f.key)) }));
+    for (const b of Object.keys(LOOKS)) {
+      if (!byId[b]) continue;
+      lookChoices(b).forEach(l => list.push({ t: `${l.label}`, s: `Version · ${placeName(b) || b}`, k: "version render look", go: () => viewer.loadScene(l.key ? b + SEP + l.key : b) }));
+    }
+    [["Plan map", "btnPlan", "map floor plan"], ["Angle finder", "btnAngle", "still photo frame camera"], ["Copy link", "btnLink", "share url"],
+     ["Motion", "btnMotion", "gyro turn phone"], ["Hide all controls", "btnHide", "clean picture"]]
+      .filter(([, idb]) => !$(idb).hidden)
+      .forEach(([t, idb, k]) => list.push({ t, s: "Tool", k, go: () => $(idb).click() }));
+    return list;
+  }
+  function find(q) {
+    q = q.trim().toLowerCase();
+    results.hidden = !q; body.hidden = !!q;
+    results.innerHTML = "";
+    if (!q) return;
+    const words = q.split(/\s+/);
+    let hits = items().filter(i => words.every(w => `${i.t} ${i.s} ${i.k}`.toLowerCase().includes(w)))
+      .map(i => Object.assign(i, { r: (i.t.toLowerCase() === q ? 2 : 0) + (i.t.toLowerCase().startsWith(q) ? 1 : 0) }))
+      .sort((a, b) => b.r - a.r);   // exact name first, then names that start with what was typed
+    if (!hits.length && q.length >= 3) {
+      hits = S.filter(s => s.id.toLowerCase().includes(q)).slice(0, 8)
+        .map(s => ({ t: s.id, s: floorName(s.floor), go: () => viewer.loadScene(s.id) }));
+    }
+    if (!hits.length) { results.innerHTML = '<p class="mnote">Nothing by that name. Try "entrance", "Level 2" or "designed".</p>'; return; }
+    hits.slice(0, 14).forEach(i => results.appendChild(btn(i.t, i.s, i.go)));
+  }
+  search.addEventListener("input", () => find(search.value));
+  search.addEventListener("keydown", e => { if (e.key === "Enter") { const b = results.querySelector("button"); if (b) b.click(); } });
+
+  // ---------- phone: drag the sheet down to close it ----------
+  let y0 = null, dy = 0;
+  menu.addEventListener("touchstart", e => {
+    if (!phone.matches || e.touches.length > 1) return;
+    const inList = e.target.closest("#mbody, #mresults");
+    if (inList && inList.scrollTop > 0) return;   // a list scrolled down scrolls back up first
+    y0 = e.touches[0].clientY; dy = 0;
+  }, { passive: true });
+  menu.addEventListener("touchmove", e => {
+    if (y0 === null) return;
+    dy = Math.max(0, e.touches[0].clientY - y0);
+    if (dy > 6) { menu.classList.add("drag"); menu.style.transform = `translateY(${dy}px)`; }
+  }, { passive: true });
+  menu.addEventListener("touchend", () => {
+    if (y0 === null) return;
+    menu.classList.remove("drag");
+    if (dy > 90) openMenu(false); else menu.style.transform = "";
+    y0 = null;
+  });
 
   // control size, remembered on this device
   const setSize = s => {
