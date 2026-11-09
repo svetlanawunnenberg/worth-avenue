@@ -153,8 +153,18 @@
   .hist article > p:not(.kick){ font-family:'EB Garamond',Georgia,serif; font-size:1.02rem; line-height:1.6; color:#3A342C; margin:0 16px 8px; }
   @media (max-width:760px){ .hist{ grid-template-columns:1fr; } }
 
-  /* partners */
-  .partners{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  /* the big button that opens the presentation */
+  .open-deck{ display:flex; align-items:stretch; margin:22px 0 4px; background:#161310; color:#F4EFE4; text-decoration:none;
+              border:1px solid #161310; transition:transform .15s, box-shadow .15s; }
+  .open-deck:hover, .open-deck:focus-visible{ transform:translateY(-2px); box-shadow:0 12px 30px rgba(22,19,16,.22); }
+  .open-deck:focus-visible{ outline:2px solid #8A6D3B; outline-offset:3px; }
+  .open-deck img{ display:block; width:38%; height:auto; object-fit:cover; flex:none; }
+  .od-text{ display:flex; flex-direction:column; justify-content:center; gap:6px; padding:18px 24px; }
+  .od-eyebrow{ font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:#C9A86A; }
+  .od-t{ font-family:'EB Garamond',Georgia,serif; font-size:clamp(1.6rem,4.4vw,2.4rem); font-weight:500; line-height:1.1; }
+  .od-t::after{ content:' \2192'; color:#C9A86A; }
+  .od-s{ font-size:.9rem; color:#d8cfbd; }
+  @media (max-width:560px){ .open-deck{ flex-direction:column; } .open-deck img{ width:100%; } .od-text{ padding:16px 18px 20px; } }
 
   @media (max-width:760px){
     .facts{ grid-template-columns:1fr 1fr; }
@@ -181,6 +191,15 @@
     <h1>Project Dashboard</h1>
     <p>Everything for the Burlington Arcade in one place.</p>
   </div>
+
+  <a class="open-deck" href="deck/">
+    <img src="assets/deck-2026-11-11/thumbs/slide-01.jpg" alt="" width="480" height="270">
+    <span class="od-text">
+      <span class="od-eyebrow">11 November 2026</span>
+      <span class="od-t">Open the presentation</span>
+      <span class="od-s">150 Worth Avenue, slide by slide. One tap to start.</span>
+    </span>
+  </a>
 
   <div class="dlabel">Overview</div>
   <div class="facts">
@@ -217,11 +236,11 @@
       <div class="pt"><span class="t">Navigation from Floorplan + Renderings</span><span class="s">Every rendering placed where it was drawn from. Hover, pin, open.</span></div>
     </a>
 
-    <a class="ptile" href="exports/">
+    <a class="ptile" href="deck/">
       <div class="pv pv-deck" aria-hidden="true">
         <img class="c c1" src="assets/views/v12.jpg" alt=""><img class="c c2" src="assets/views/v5.jpg" alt=""><img class="c c3" src="assets/views/v17.jpg" alt="">
       </div>
-      <div class="pt"><span class="t">Presentations</span><span class="s">Every presentation we have sent.</span></div>
+      <div class="pt"><span class="t">Presentation</span><span class="s">The 11 November 2026 presentation, slide by slide.</span></div>
     </a>
 
     <a class="ptile" href="cassandra/toolkit/">
@@ -288,12 +307,6 @@
     </article>
   </div>
   <p class="both"><a href="cassandra/dashboard/">The full story, vocabulary and every gallery &rarr;</a></p>
-
-  <div class="dlabel">Partners</div>
-  <div class="partners">
-    <a class="tile" href="yael/"><span class="t">Yael</span><span class="s">Latest presentation, views and clients</span><span class="go">Open</span></a>
-    <a class="tile" href="cassandra/"><span class="t">Cassandra</span><span class="s">360 toolkit, exports and the full dashboard</span><span class="go">Open</span></a>
-  </div>
 </main>
 
 <script>

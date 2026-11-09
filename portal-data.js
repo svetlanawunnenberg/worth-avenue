@@ -45,6 +45,7 @@ window.PORTAL = {
   /* Cassandra > Latest Exports (every PDF we have sent, branded and unbranded). Newest first.
      Yael does not see this list; she gets only the unbranded deck, from "latest" below. */
   exports: [
+    { title:"Presentation, 11 November 2026", file:"assets/150-worth-avenue-presentation-2026-11-11.pdf", view:"deck/", date:"11 November 2026" },
     { title:"Pitch deck, unbranded, with plans", file:"assets/2026-10-26_Burlington_pitch_deck_unbranded.pdf", view:"deck/", date:"26 October 2026" },
     { title:"Pitch deck, with plans", file:"assets/2026-10-19_Burlington_pitch_deck.pdf", date:"19 October 2026" },
     { title:"Landscaping set (42 pages)", file:"assets/2026-10-13_Burlington_landscaping.pdf", date:"13 October 2026" }
@@ -62,7 +63,7 @@ window.PORTAL = {
      (slide-01.jpg ...), made from the PDF below. For a new deck the slide pictures
      have to be made again, so ask Claude; then change pdf, count and date here. */
   presentation: {
-    title:"Pitch deck, unbranded", pdf:"assets/2026-10-26_Burlington_pitch_deck_unbranded.pdf",
-    slides:"assets/deck/", count:55, date:"26 October 2026"
+    title:"Presentation, 11 November 2026", pdf:"assets/150-worth-avenue-presentation-2026-11-11.pdf",
+    slides:"assets/deck-2026-11-11/", count:60, date:"11 November 2026"
   }
 };

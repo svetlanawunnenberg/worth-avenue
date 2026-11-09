@@ -32,13 +32,8 @@
      ['360 Viewer', 'scan/#skip=1', 'Walk the building, every floor'],
      ['Navigation from Floorplan + 360', 'navigation/#floorplan-360', '360 on the plan and on the Worth Avenue elevation'],
      ['Navigation from Floorplan + Renderings', 'navigation/#floorplan-renderings', 'Every rendering placed on the plan'],
-     ['Presentations', 'exports/', 'Every presentation we have sent'],
-     ['Current Site', 'cassandra/toolkit/', 'The building today, Angle Finder for stills'],
-     ['Partners'],
-     ['Yael', 'yael/', 'Latest presentation, views, clients'],
-     ['Yael · Views', 'yael/views/', 'Every rendering, unbranded'],
-     ['Yael · Clients', 'yael/clients/', 'What was delivered for each client'],
-     ['Cassandra', 'cassandra/', '360 toolkit, exports, full dashboard']
+     ['Presentation', 'deck/', 'The 11 November 2026 presentation'],
+     ['Current Site', 'cassandra/toolkit/', 'The building today, Angle Finder for stills']
     ].forEach(function(r, i){
       if(r.length === 1){ nav.appendChild(el('p', 'pmenu-label' + (i ? ' next' : ''), r[0])); return; }
       var a = el('a', BASE + r[1] === here ? 'here' : '', r[0]);
@@ -171,16 +166,11 @@
     ['360 on the Plan', 'Ten spots on the floor plan', 'plan360/', 'plan spots dots'],
     ['360 on the Elevation', 'Six spots along Worth Avenue', 'elevation360/', 'elevation street facade'],
     ['Floorplan & Views', 'Every rendering on the plan', 'floorplan/', 'plan renderings views pin present walkthrough pdf'],
-    ['Presentations', 'Every presentation we have sent', 'exports/', 'exports pdf deck pitch', 'team'],
+    ['Presentation', 'The 11 November 2026 presentation', 'deck/', 'presentation slides deck pdf pitch hearing'],
     ['Current Site', 'The building today, Angle Finder for stills', 'cassandra/toolkit/', 'toolkit angle finder site today existing'],
     ['Google Maps', '150 Worth Avenue, Palm Beach', 'https://www.google.com/maps/search/?api=1&query=150+Worth+Ave%2C+Palm+Beach%2C+FL+33480', 'map location directions'],
     ['Google Earth', '150 Worth Avenue, Palm Beach, in 3D', 'https://earth.google.com/web/@26.70050,-80.03522,6a,350d,35y,0h,60t,0r', 'map 3d earth aerial'],
-    ['Yael', 'Partner page', 'yael/', 'partner'],
-    ['Yael · Views', 'Every rendering, unbranded', 'yael/views/', 'renderings pictures gallery'],
-    ['Yael · Clients', 'What was delivered for each client', 'yael/clients/', 'tenants brands retailers'],
-    ['Yael · Latest', 'Latest floor plan and deck', 'yael/latest/', 'latest newest'],
-    ['Cassandra', 'Partner page', 'cassandra/', 'partner'],
-    ['Full dashboard', 'Cassandra', 'cassandra/dashboard/', 'dashboard everything'],
+    ['Full story and galleries', 'Worth Avenue history, vocabulary, every gallery', 'cassandra/dashboard/', 'dashboard everything history'],
     ['Spot 1 · Arcade entrance from the Esplanade', '360 on the Plan, Level 1', 'plan360/#spot=1', ''],
     ['Spot 2 · Arcade entrance from Worth Avenue', '360 on the Plan, Level 1', 'plan360/#spot=2', ''],
     ['Spot 3 · Arcade gallery, central', '360 on the Plan, Level 1', 'plan360/#spot=3', ''],
@@ -209,22 +199,12 @@
       items.push({ t:r[0], s:r[1], u:ext ? r[2] : BASE + r[2], k:r[3], tab:ext });
     });
     VIEW_NOS.forEach(function(n){
-      items.push({ t:'View ' + n, s:'Rendering', u:BASE + 'yael/views/#view=' + n, k:'rendering picture image v' + n });
       items.push({ t:'View ' + n + ' on the plan', s:'Floorplan & Views', u:BASE + 'floorplan/#v=V' + n, k:'rendering plan pin v' + n });
     });
     var P = window.PORTAL;
     if(P){
-      if(!partner) (P.exports || []).forEach(function(f){
+      if(!partner) (P.exports || []).slice(0, 1).forEach(function(f){   // only the newest presentation
         if(f.file) items.push({ t:f.title, s:'Presentation · ' + f.date, u:BASE + f.file, k:'pdf deck presentation', tab:true });
-      });
-      (P.latest || []).forEach(function(f){
-        if(f.file) items.push({ t:f.label, s:'Latest · ' + f.date, u:BASE + f.file, k:'pdf latest', tab:true });
-      });
-      (P.clients || []).forEach(function(c){
-        items.push({ t:c.name, s:'Client', u:BASE + 'yael/client/#' + c.slug, k:'client tenant brand ' + c.sent.join(' ') });
-        c.files.forEach(function(f){
-          items.push({ t:c.name + ' · ' + f.title, s:'Client file · ' + f.date, u:BASE + f.file, k:'pdf client', tab:true });
-        });
       });
     }
     return items;
@@ -244,7 +224,7 @@
     box.setAttribute('aria-label', 'Search');
     var input = el('input');
     input.type = 'search';
-    input.placeholder = 'Search views, 360 spots, presentations, clients';
+    input.placeholder = 'Search views, 360 spots, the presentation';
     input.setAttribute('aria-label', 'Search');
     var list = el('div', 'psearch-list');
     box.appendChild(input); box.appendChild(list);
