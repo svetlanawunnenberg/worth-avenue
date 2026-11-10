@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>150 Worth Avenue &middot; Project Dashboard &middot; Fairfax &amp; Sammons</title>
+<title>150 Worth Avenue &middot; Fairfax &amp; Sammons</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -89,14 +89,6 @@
   .pv-navrend .card img{ position:static; display:block; width:100%; height:auto; }
   @keyframes pop{ 0%,34%{ opacity:0; transform:translate(-50%,-50%) scale(.05); } 46%,88%{ opacity:1; transform:translate(-50%,-50%) scale(1); } 100%{ opacity:0; transform:translate(-50%,-50%) scale(1); } }
 
-  /* presentations: a small deck of slides shuffling */
-  .pv-deck{ background:#ECE4D2; }
-  .pv-deck .c{ width:58%; left:21%; top:12%; border:3px solid #fff; box-shadow:0 8px 22px rgba(0,0,0,.25); }
-  .pv-deck .c1{ animation:deck1 6s ease-in-out infinite; } .pv-deck .c2{ animation:deck2 6s ease-in-out infinite; } .pv-deck .c3{ animation:deck3 6s ease-in-out infinite; }
-  @keyframes deck1{ 0%,30%{ transform:rotate(-6deg) translate(-14%,4%); z-index:1; } 33%,63%{ transform:rotate(0) translate(0,0); z-index:3; } 66%,100%{ transform:rotate(6deg) translate(14%,4%); z-index:2; } }
-  @keyframes deck2{ 0%,30%{ transform:rotate(0) translate(0,0); z-index:3; } 33%,63%{ transform:rotate(6deg) translate(14%,4%); z-index:2; } 66%,100%{ transform:rotate(-6deg) translate(-14%,4%); z-index:1; } }
-  @keyframes deck3{ 0%,30%{ transform:rotate(6deg) translate(14%,4%); z-index:2; } 33%,63%{ transform:rotate(-6deg) translate(-14%,4%); z-index:1; } 66%,100%{ transform:rotate(0) translate(0,0); z-index:3; } }
-
   /* current site: slow drift with a camera frame (the Angle Finder) */
   .pv-site .ph{ inset:-8%; background:url(assets/previews/site.jpg) center/cover; animation:drift 7s ease-in-out infinite alternate; }
   .pv-site .frame{ inset:18% 22%; border:2px solid #fff; box-shadow:0 0 0 999px rgba(0,0,0,.28); animation:frame 7s ease-in-out infinite; }
@@ -107,23 +99,51 @@
   .both{ margin:12px 2px 0; font-size:.85rem; }
   .both a{ color:#161310; }
 
-  /* open the 360: shadow box or new tab */
-  .chooser{ position:fixed; inset:0; z-index:900; background:rgba(22,19,16,.55); display:flex; align-items:center; justify-content:center; padding:16px; }
-  .chooser[hidden], .sbox[hidden]{ display:none; }
-  .ch-card{ position:relative; background:#F4EFE4; border:1px solid #161310; padding:26px 22px 22px; width:min(440px,100%); text-align:center; }
-  .ch-eyebrow{ font-size:10px; letter-spacing:.3em; text-transform:uppercase; color:#8A6D3B; margin:0 0 6px; }
-  .ch-card h2{ font-family:'EB Garamond',Georgia,serif; font-weight:500; font-size:1.8rem; margin:0 0 18px; }
-  .ch-btns{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .ch-btns button{ font:inherit; cursor:pointer; padding:16px 10px; background:#fff; border:1px solid #161310; color:#161310; }
-  .ch-btns button:hover, .ch-btns button:focus-visible{ background:#161310; color:#fff; }
-  .ch-btns b{ display:block; font-family:'EB Garamond',Georgia,serif; font-weight:500; font-size:1.2rem; }
-  .ch-btns small{ display:block; font-size:.75rem; opacity:.75; margin-top:2px; }
-  .ch-x{ position:absolute; top:6px; right:8px; border:0; background:none; font-size:24px; cursor:pointer; color:#161310; }
-  .sbox{ position:fixed; inset:0; z-index:950; background:rgba(10,10,10,.85); padding:calc(48px + env(safe-area-inset-top)) 14px 14px; }
-  .sbox iframe{ width:100%; height:100%; border:0; background:#111; box-shadow:0 20px 60px rgba(0,0,0,.5); }
-  .sbox-x{ position:absolute; top:calc(10px + env(safe-area-inset-top)); right:14px; font:500 11px/1 'Inter',sans-serif; letter-spacing:.14em;
-           text-transform:uppercase; padding:9px 12px; background:#fff; border:1px solid #161310; cursor:pointer; }
-  @media (max-width:760px){ .ptiles{ grid-template-columns:1fr; } .wide .pv{ aspect-ratio:16/9; } .sbox{ padding:calc(44px + env(safe-area-inset-top)) 0 0; } }
+  /* ---------- the simple home page: header, one big button, four tiles, one "More" ---------- */
+  .sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  body.home .header-band.site-head{ padding:12px 0 10px; }
+  body.home .site-head .sh-logo img{ width:120px; }
+  body.home .site-head .sh-elev{ margin-top:10px; max-width:1080px; }
+  body.home .site-head .sh-title{ margin-top:8px; font-size:clamp(1.3rem,3vw,1.9rem); }
+  body.home .open-deck{ margin:18px 0 14px; }
+  body.home .open-deck img{ width:30%; }
+  body.home .ptiles{ grid-template-columns:repeat(4,1fr); gap:12px; }
+  .pv-rend img{ inset:0; width:100%; height:100%; object-fit:cover; }   /* the Renderings tile shows a rendering */
+  body.home .pt{ padding:12px 14px 14px; }
+  body.home .pt .t{ font-size:1.25rem; }
+  @media (max-width:900px){
+    body.home .ptiles{ gap:10px; }
+    body.home .pt{ padding:10px 10px 12px; }
+    body.home .pt .t{ font-size:1.1rem; }
+    body.home .pt .s{ font-size:.78rem; line-height:1.35; }
+    body.home .tag{ font-size:8px; padding:4px 5px; left:6px; bottom:6px; }
+  }
+  @media (max-width:700px){ body.home .ptiles{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:760px){ body.home .site-head .sh-logo img{ width:96px; } }
+  @media (max-width:560px){
+    body.home .dash{ padding-left:14px; padding-right:14px; }
+    body.home .open-deck{ margin:12px 0 10px; }
+    body.home .open-deck img{ width:100%; }
+    body.home .od-text{ padding:11px 16px 14px; gap:3px; }
+    body.home .od-s{ display:none; }
+    body.home .ptiles{ gap:10px; }
+    body.home .pt{ padding:10px 10px 12px; }
+    body.home .pt .t{ font-size:1.08rem; }
+    body.home .pt .s{ font-size:.76rem; line-height:1.35; }
+    body.home .tag{ font-size:8px; padding:4px 5px; left:6px; bottom:6px; }
+  }
+
+  /* "More about the project": closed until tapped */
+  .more{ margin-top:18px; }
+  .more > summary{ list-style:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; text-align:center;
+                   padding:14px 16px; background:#fff; border:1px solid #C9BFA6; color:#161310; }
+  .more > summary::-webkit-details-marker{ display:none; }
+  .more > summary:hover, .more > summary:focus-visible{ border-color:#161310; }
+  .more > summary:focus-visible{ outline:2px solid #8A6D3B; outline-offset:2px; }
+  .m-t{ font-family:'EB Garamond',Georgia,serif; font-size:1.2rem; font-weight:500; }
+  .m-t::after{ content:' +'; color:#8A6D3B; }
+  .more[open] .m-t::after{ content:' \2212'; }
+  .m-s{ font-size:.8rem; color:#3A342C; }
 
   /* map */
   .mapbox{ position:relative; border:1px solid #C9BFA6; background:#ECE4D2; }
@@ -179,18 +199,14 @@
   @media (max-width:420px){ .partners{ grid-template-columns:1fr; } }
 </style>
 </head>
-<body>
+<body class="home">
 
 <div class="header-band">
   <img src="assets/burlington-header.png" alt="Burlington Arcade, Fairfax &amp; Sammons, New York ~ Palm Beach">
 </div>
 
 <main class="dash">
-  <div class="dash-head">
-    <p class="eyebrow">150 Worth Avenue &middot; Palm Beach</p>
-    <h1>Project Dashboard</h1>
-    <p>Everything for the Burlington Arcade in one place.</p>
-  </div>
+  <h1 class="sr">150 Worth Avenue, Palm Beach</h1>
 
   <a class="open-deck" href="deck/">
     <img src="assets/deck-2026-11-11/thumbs/slide-01.jpg" alt="" width="480" height="270">
@@ -201,23 +217,20 @@
     </span>
   </a>
 
-  <div class="dlabel">Overview</div>
-  <div class="facts">
-    <div><b>Project</b><span>Burlington Arcade</span></div>
-    <div><b>Address</b><span>150 Worth Avenue, Palm Beach</span></div>
-    <div><b>Architect</b><span>Fairfax &amp; Sammons</span></div>
-    <div><b>360 scan</b><span>Level 1, Exterior, Basement, Level 2</span></div>
-  </div>
-
-  <div class="dlabel">Fairfax Team</div>
+  <!-- the four tools: plain names, one tap each -->
   <div class="ptiles">
-    <a class="ptile wide" href="scan/#skip=1" data-choose="scan/#skip=1" data-title="360 Viewer">
+    <a class="ptile" href="navigation/#floorplan-renderings">
+      <div class="pv pv-rend" aria-hidden="true"><img src="assets/views/v12.jpg" alt=""></div>
+      <div class="pt"><span class="t">Renderings</span><span class="s">Every view, placed on the plan.</span></div>
+    </a>
+
+    <a class="ptile" href="scan/#skip=1">
       <div class="pv pv-360" aria-hidden="true">
         <div class="pano a"></div><div class="pano b"></div>
         <span class="tag t1">Before</span><span class="tag t2">Designed</span>
         <span class="hand"></span>
       </div>
-      <div class="pt"><span class="t">360 Viewer</span><span class="s">Walk the building on every floor. Drag to look around, switch Before and Designed.</span></div>
+      <div class="pt"><span class="t">360 Tour</span><span class="s">Walk the building, before and designed.</span></div>
     </a>
 
     <a class="ptile" href="navigation/#floorplan-360">
@@ -225,46 +238,25 @@
         <div class="plan"></div><span class="dot"></span><span class="ring"></span>
         <div class="bubble"><div class="pano"></div></div>
       </div>
-      <div class="pt"><span class="t">Navigation from Floorplan + 360</span><span class="s">Pick a spot on the plan or along Worth Avenue and step into the 360.</span></div>
-    </a>
-
-    <a class="ptile" href="navigation/#floorplan-renderings">
-      <div class="pv pv-navrend" aria-hidden="true">
-        <div class="plan"></div><span class="dot"></span><span class="ring"></span>
-        <div class="card"><img src="assets/views/v3.jpg" alt=""></div>
-      </div>
-      <div class="pt"><span class="t">Navigation from Floorplan + Renderings</span><span class="s">Every rendering placed where it was drawn from. Hover, pin, open.</span></div>
-    </a>
-
-    <a class="ptile" href="deck/">
-      <div class="pv pv-deck" aria-hidden="true">
-        <img class="c c1" src="assets/views/v12.jpg" alt=""><img class="c c2" src="assets/views/v5.jpg" alt=""><img class="c c3" src="assets/views/v17.jpg" alt="">
-      </div>
-      <div class="pt"><span class="t">Presentation</span><span class="s">The 11 November 2026 presentation, slide by slide.</span></div>
+      <div class="pt"><span class="t">360 on the Plan</span><span class="s">Tap a spot on the plan and stand there.</span></div>
     </a>
 
     <a class="ptile" href="cassandra/toolkit/">
       <div class="pv pv-site" aria-hidden="true"><div class="ph"></div><span class="frame"></span></div>
-      <div class="pt"><span class="t">Current Site</span><span class="s">The building as it stands today, with the Angle Finder for stills.</span></div>
+      <div class="pt"><span class="t">The Building Today</span><span class="s">The site as it stands now.</span></div>
     </a>
   </div>
-  <p class="both"><a href="navigation/">See both navigations together on one page &rarr;</a></p>
 
-  <!-- how to open the 360 viewer -->
-  <div class="chooser" id="chooser" hidden role="dialog" aria-modal="true" aria-labelledby="chooserTitle">
-    <div class="ch-card">
-      <p class="ch-eyebrow">Open</p>
-      <h2 id="chooserTitle">360 Viewer</h2>
-      <div class="ch-btns">
-        <button type="button" id="chBox"><b>Shadow box</b><small>Opens over this page</small></button>
-        <button type="button" id="chTab"><b>New tab</b><small>Its own window</small></button>
-      </div>
-      <button type="button" class="ch-x" id="chClose" aria-label="Close">&times;</button>
-    </div>
-  </div>
-  <div class="sbox" id="sbox" hidden role="dialog" aria-modal="true" aria-label="360 Viewer">
-    <button type="button" class="sbox-x" id="sboxClose" aria-label="Close">Close &times;</button>
-    <iframe id="sboxFrame" title="360 Viewer" allow="fullscreen; accelerometer; gyroscope; clipboard-write" allowfullscreen></iframe>
+  <!-- everything else lives here, closed until someone taps it -->
+  <details class="more" id="more">
+  <summary><span class="m-t">More about the project</span><span class="m-s">Facts, map and Worth Avenue history</span></summary>
+
+  <div class="dlabel">Overview</div>
+  <div class="facts">
+    <div><b>Project</b><span>Burlington Arcade</span></div>
+    <div><b>Address</b><span>150 Worth Avenue, Palm Beach</span></div>
+    <div><b>Architect</b><span>Fairfax &amp; Sammons</span></div>
+    <div><b>360 scan</b><span>Level 1, Exterior, Basement, Level 2</span></div>
   </div>
 
   <div class="dlabel">Map</div>
@@ -307,31 +299,10 @@
     </article>
   </div>
   <p class="both"><a href="cassandra/dashboard/">The full story, vocabulary and every gallery &rarr;</a></p>
+  <p class="both"><a href="navigation/">Renderings and 360 on the Plan together on one page &rarr;</a></p>
+  </details>
 </main>
 
-<script>
-/* 360 Viewer tile: ask Shadow box (over this page) or New tab */
-(function(){
-  var ch = document.getElementById('chooser'), sb = document.getElementById('sbox'), fr = document.getElementById('sboxFrame');
-  var url = '';
-  function close(){ ch.hidden = true; }
-  document.querySelectorAll('[data-choose]').forEach(function(a){
-    a.addEventListener('click', function(e){
-      if (e.metaKey || e.ctrlKey || e.shiftKey) return;     // ctrl-click still opens a tab the normal way
-      e.preventDefault(); url = a.dataset.choose; ch.hidden = false; document.getElementById('chBox').focus();
-    });
-  });
-  document.getElementById('chBox').onclick = function(){
-    close(); fr.src = url; sb.hidden = false; document.documentElement.style.overflow = 'hidden';
-  };
-  document.getElementById('chTab').onclick = function(){ close(); window.open(url, '_blank', 'noopener'); };
-  document.getElementById('chClose').onclick = close;
-  ch.addEventListener('click', function(e){ if (e.target === ch) close(); });
-  function closeBox(){ sb.hidden = true; fr.src = 'about:blank'; document.documentElement.style.overflow = ''; }
-  document.getElementById('sboxClose').onclick = closeBox;
-  document.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ if (!sb.hidden) closeBox(); else close(); } });
-})();
-</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 /* Map of the site. PIN = where the marker sits; drag the map to move around. */
@@ -350,6 +321,11 @@
   // scroll-zoom only after a click, so the page still scrolls past the map
   map.on('click', function(){ map.scrollWheelZoom.enable(); });
   map.on('mouseout', function(){ map.scrollWheelZoom.disable(); });
+  // the map sits inside "More about the project"; when that opens, the map measures itself again
+  var more = document.getElementById('more');
+  if (more) more.addEventListener('toggle', function(){
+    if (more.open) setTimeout(function(){ map.invalidateSize(); map.setView(PIN, 18); }, 60);
+  });
   document.querySelectorAll('.maptabs button').forEach(function(b){
     b.addEventListener('click', function(){
       map.removeLayer(current); current = layers[b.dataset.layer].addTo(map);

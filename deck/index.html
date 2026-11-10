@@ -12,8 +12,8 @@
 
 <!-- =====================================================================
      PRESENTATION VIEWER
-     Shows the pitch deck as pictures: one slide at a time, a grid, or one
-     long scroll. The slides are assets/deck/slide-01.jpg, slide-02.jpg ...
+     Shows the presentation as pictures: one slide at a time, or a grid of
+     all slides (the S key still gives one long scroll). The slides are assets/deck/slide-01.jpg, slide-02.jpg ...
      (thumbnails in assets/deck/thumbs/). Which PDF and how many slides is
      set in portal-data.js under "presentation".
      Keys on a laptop: arrows / space = next and back, G = grid,
@@ -32,16 +32,18 @@
     height:40px; padding:0 12px; background:rgba(22,19,16,.72); border:1px solid var(--line); color:var(--ivory);
     text-decoration:none; font-size:13px; font-weight:600; letter-spacing:.08em; font-variant-numeric:tabular-nums;
     transition:opacity .3s ease; }
-  .home{ left:calc(10px + env(safe-area-inset-left)); width:40px; padding:0; justify-content:center; }
+  .home{ left:calc(10px + env(safe-area-inset-left)); gap:8px; padding:0 13px 0 10px; }
   .home svg{ width:20px; height:20px; }
   .count{ right:calc(10px + env(safe-area-inset-right)); }
 
-  /* ---------- the tool bar (symbols only) ---------- */
-  .bar{ position:fixed; left:50%; bottom:calc(12px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:30;
-    display:flex; gap:2px; padding:4px; background:rgba(22,19,16,.86); border:1px solid var(--line);
+  /* ---------- the tool bar: every button has its word under it, and it stays on screen ---------- */
+  .bar{ position:fixed; left:50%; bottom:calc(10px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:30;
+    display:flex; gap:2px; padding:4px; background:rgba(22,19,16,.92); border:1px solid var(--line);
     box-shadow:0 10px 34px rgba(0,0,0,.45); transition:opacity .3s ease; }
-  .bar button, .bar a{ width:48px; height:48px; display:inline-flex; align-items:center; justify-content:center; padding:0;
-    border:0; background:transparent; color:var(--ivory); cursor:pointer; text-decoration:none; }
+  .bar button, .bar a{ min-width:74px; height:60px; display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
+    padding:0 8px; border:0; background:transparent; color:var(--ivory); cursor:pointer; text-decoration:none;
+    font-size:11px; font-weight:600; letter-spacing:.04em; white-space:nowrap; }
+  .bar [hidden]{ display:none; }
   .bar button:hover, .bar a:hover{ background:rgba(244,239,228,.12); }
   .bar button:focus-visible, .bar a:focus-visible, .corner:focus-visible{ outline:2px solid var(--brass); outline-offset:-2px; }
   .bar .on{ background:var(--ivory); color:var(--ink); }
@@ -53,9 +55,13 @@
   body.idle .bar, body.idle .corner{ opacity:0; pointer-events:none; }
   body.idle{ cursor:none; }
 
-  /* ---------- one slide at a time ---------- */
-  .stage{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; touch-action:pan-y pinch-zoom;
-    user-select:none; -webkit-user-select:none; }
+  /* ---------- one slide at a time ----------
+     The slide stops above the buttons, so they never cover a caption. In full screen, and on a
+     phone held sideways, the slide takes the whole screen and the buttons fade until you move or tap. */
+  .stage{ position:fixed; inset:0 0 calc(84px + env(safe-area-inset-bottom)) 0; display:none; align-items:center; justify-content:center;
+    touch-action:pan-y pinch-zoom; user-select:none; -webkit-user-select:none; }
+  html.fs .stage{ bottom:0; }
+  @media (max-height:500px){ .stage{ bottom:0; } .bar button, .bar a{ height:50px; gap:3px; } }
   body.v-slide .stage{ display:flex; }
   .stage img{ display:block; max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; -webkit-user-drag:none; }
   .side{ position:absolute; top:0; bottom:0; width:30%; z-index:2; cursor:pointer; }
@@ -88,15 +94,15 @@
 
   @media (max-width:520px){
     .grid{ grid-template-columns:repeat(2,1fr); gap:8px; padding-left:8px; padding-right:8px; }
-    .bar button, .bar a{ width:44px; height:48px; }
-    .bar .sep{ margin:8px 1px; }
+    .bar button, .bar a{ min-width:62px; padding:0 4px; font-size:10.5px; }
   }
 </style>
 </head>
 <body class="v-slide">
 
-<a class="corner home" id="home" href="../" title="Back to the dashboard" aria-label="Back to the dashboard">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7M5 10v10h5v-6h4v6h5V10"/></svg>
+<a class="corner home" id="home" href="../" title="Back to the home page">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7M5 10v10h5v-6h4v6h5V10"/></svg>
+  <span>Home</span>
 </a>
 <div class="corner count" id="count" aria-live="polite"></div>
 
@@ -109,14 +115,11 @@
 <div class="scroll" id="scroll"></div>
 
 <nav class="bar" id="bar" aria-label="Presentation">
-  <button type="button" class="nav" id="prev" title="Back (left arrow)" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
-  <button type="button" data-v="slide" title="One slide at a time" aria-label="One slide at a time"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="1"/></svg></button>
-  <button type="button" data-v="grid" title="All slides (G)" aria-label="All slides"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="7" height="6"/><rect x="13.5" y="4.5" width="7" height="6"/><rect x="3.5" y="13.5" width="7" height="6"/><rect x="13.5" y="13.5" width="7" height="6"/></svg></button>
-  <button type="button" data-v="scroll" title="Scroll through (S)" aria-label="Scroll through"><svg viewBox="0 0 24 24"><rect x="4" y="2.5" width="16" height="8"/><rect x="4" y="13.5" width="16" height="8"/></svg></button>
-  <span class="sep" aria-hidden="true"></span>
-  <button type="button" id="full" title="Full screen (F)" aria-label="Full screen" hidden><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
-  <a id="pdf" title="Download the PDF" aria-label="Download the PDF" download><svg viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg></a>
-  <button type="button" class="nav" id="next" title="Next (right arrow or space)" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  <button type="button" class="nav" id="prev" title="Back (left arrow)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>Back</span></button>
+  <button type="button" id="all" title="All slides (G)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="7" height="6"/><rect x="13.5" y="4.5" width="7" height="6"/><rect x="3.5" y="13.5" width="7" height="6"/><rect x="13.5" y="13.5" width="7" height="6"/></svg><span id="allWord">All slides</span></button>
+  <button type="button" id="full" title="Full screen (F)" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span>Full screen</span></button>
+  <a id="pdf" title="Download the PDF" download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg><span>Download</span></a>
+  <button type="button" class="nav" id="next" title="Next (right arrow or space)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg><span>Next</span></button>
 </nav>
 
 <script src="../portal-data.js"></script>
@@ -166,7 +169,7 @@
   }
   function go(n, quiet){
     at = clamp(n);
-    $("count").textContent = at + " / " + N;
+    $("count").textContent = at + " of " + N;
     $("prev").disabled = at === 1; $("next").disabled = at === N;
     gridBtns.forEach(function(b, k){ b.classList.toggle("now", k + 1 === at); });
     if(view === "slide") show();
@@ -177,8 +180,8 @@
   function setView(v){
     view = v;
     document.body.className = "v-" + v;
-    var vb = document.querySelectorAll("[data-v]");
-    for(var k = 0; k < vb.length; k++) vb[k].classList.toggle("on", vb[k].getAttribute("data-v") === v);
+    $("all").classList.toggle("on", v !== "slide");
+    $("allWord").textContent = v === "slide" ? "All slides" : "One slide";
     if(v === "slide"){ show(); window.scrollTo(0, 0); }
     if(v === "grid"){ var g = gridBtns[at - 1]; if(g) g.scrollIntoView({ block:"center" }); }
     if(v === "scroll"){ var s = figs[at - 1]; if(s) s.scrollIntoView({ block:"start" }); window.scrollBy(0, -60); }
@@ -198,8 +201,7 @@
   $("next").addEventListener("click", function(){ go(at + 1); });
   $("sidePrev").addEventListener("click", function(){ if(!swiped) go(at - 1); });
   $("sideNext").addEventListener("click", function(){ if(!swiped) go(at + 1); });
-  var vb = document.querySelectorAll("[data-v]");
-  for(var k = 0; k < vb.length; k++) vb[k].addEventListener("click", function(){ setView(this.getAttribute("data-v")); });
+  $("all").addEventListener("click", function(){ setView(view === "slide" ? "grid" : "slide"); });
 
   /* ---------- swipe on a phone or tablet (leaves pinch-to-zoom alone) ---------- */
   var sx = 0, sy = 0, many = false, swiped = false;
@@ -244,21 +246,31 @@
   }
   $("full").addEventListener("click", toggleFull);
   function fullIcon(){
+    de.classList.toggle("fs", !!isFull());
     $("full").innerHTML = isFull()
-      ? '<svg viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>'
-      : '<svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
+      ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg><span>Exit full screen</span>'
+      : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span>Full screen</span>';
+    wake();
   }
   document.addEventListener("fullscreenchange", fullIcon);
   document.addEventListener("webkitfullscreenchange", fullIcon);
 
-  /* ---------- on a laptop, the buttons fade while presenting and come back when the mouse moves ---------- */
-  var idleT;
+  /* ---------- the buttons stay on screen. They fade only in full screen, or on a phone held
+     sideways, where the slide needs the whole screen; moving the mouse or a tap brings them back ---------- */
+  var idleT, SHORT = window.matchMedia("(max-height:500px)");
   function wake(){
     document.body.classList.remove("idle"); clearTimeout(idleT);
-    if(FINE.matches && view === "slide") idleT = setTimeout(function(){ document.body.classList.add("idle"); }, 2600);
+    if(view === "slide" && (isFull() || SHORT.matches)) idleT = setTimeout(function(){ document.body.classList.add("idle"); }, 3000);
   }
   document.addEventListener("mousemove", wake);
+  document.addEventListener("touchstart", wake, { passive:true });
   $("bar").addEventListener("mouseenter", function(){ clearTimeout(idleT); });
+
+  /* a link to another slide (#12) typed or clicked while the deck is already open */
+  window.addEventListener("hashchange", function(){
+    var p = (location.hash || "").replace("#", "").split("-"), n = parseInt(p[0], 10);
+    if(n && n !== at){ go(n, true); }
+  });
 
   /* ---------- start where the link says (#12, #12-grid, #12-scroll) ---------- */
   var h = (location.hash || "").replace("#", "").split("-");

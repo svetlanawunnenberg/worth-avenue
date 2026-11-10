@@ -27,13 +27,12 @@
     /* [label, path, small line]; a row with no path starts a new section */
     var here = location.href.split('#')[0].split('?')[0].replace(/index\.html$/, '');
     [['Menu'],
-     ['Dashboard', '', 'Overview, tools and map'],
-     ['Fairfax Team'],
-     ['360 Viewer', 'scan/#skip=1', 'Walk the building, every floor'],
-     ['Navigation from Floorplan + 360', 'navigation/#floorplan-360', '360 on the plan and on the Worth Avenue elevation'],
-     ['Navigation from Floorplan + Renderings', 'navigation/#floorplan-renderings', 'Every rendering placed on the plan'],
+     ['Home', '', 'Start here'],
      ['Presentation', 'deck/', 'The 11 November 2026 presentation'],
-     ['Current Site', 'cassandra/toolkit/', 'The building today, Angle Finder for stills']
+     ['Renderings', 'navigation/#floorplan-renderings', 'Every view, placed on the plan'],
+     ['360 Tour', 'scan/#skip=1', 'Walk the building, before and designed'],
+     ['360 on the Plan', 'navigation/#floorplan-360', 'Tap a spot on the plan and stand there'],
+     ['The Building Today', 'cassandra/toolkit/', 'The site as it stands now']
     ].forEach(function(r, i){
       if(r.length === 1){ nav.appendChild(el('p', 'pmenu-label' + (i ? ' next' : ''), r[0])); return; }
       var a = el('a', BASE + r[1] === here ? 'here' : '', r[0]);
@@ -153,21 +152,21 @@
   /* ---------- search: one box that finds any page, view, 360 spot, presentation or client ----------
      To add something, add a line to EXTRA below: [title, small line, link, extra words]. */
   var EXTRA = [
-    ['Dashboard', 'Home', '', 'home start overview map'],
-    ['360 Viewer', 'Walk the building, every floor', 'scan/#skip=1', 'scan pano panorama look around walk'],
+    ['Home', 'Start here', '', 'home start overview map dashboard'],
+    ['360 Tour', 'Walk the building, before and designed', 'scan/#skip=1', 'scan pano panorama look around walk viewer'],
     ['360 · Floor 2', '360 Viewer', 'scan/#floor=F2&skip=2', 'second floor upstairs level 2'],
     ['360 · Floor 1 Interior', '360 Viewer', 'scan/#floor=F1&skip=2', 'first floor ground gallery via arcade level 1'],
     ['360 · Floor 1 Exterior', '360 Viewer, Worth Avenue facade', 'scan/#floor=F1X&skip=2', 'facade street outside exterior'],
     ['360 · Basement', '360 Viewer, parking', 'scan/#floor=B&skip=2', 'garage parking cars lower level'],
     ['360 · Designed view, Worth Avenue', '360 Viewer, the design on the facade', 'scan/#s=Fasad__Scan_464__designed&y=94.8&p=-0.6&f=100&skip=2', 'designed renovated proposed after facade'],
     ['Navigation', 'Floorplan + 360 and Floorplan + Renderings', 'navigation/', 'navigate both'],
-    ['Navigation from Floorplan + 360', 'Navigation', 'navigation/#floorplan-360', 'plan spots dots'],
-    ['Navigation from Floorplan + Renderings', 'Navigation', 'navigation/#floorplan-renderings', 'plan views renderings'],
+    ['360 on the Plan', 'Tap a spot on the plan and stand there', 'navigation/#floorplan-360', 'plan spots dots navigation floorplan'],
+    ['Renderings', 'Every view, placed on the plan', 'navigation/#floorplan-renderings', 'plan views renderings navigation floorplan pictures'],
     ['360 on the Plan', 'Ten spots on the floor plan', 'plan360/', 'plan spots dots'],
     ['360 on the Elevation', 'Six spots along Worth Avenue', 'elevation360/', 'elevation street facade'],
     ['Floorplan & Views', 'Every rendering on the plan', 'floorplan/', 'plan renderings views pin present walkthrough pdf'],
     ['Presentation', 'The 11 November 2026 presentation', 'deck/', 'presentation slides deck pdf pitch hearing'],
-    ['Current Site', 'The building today, Angle Finder for stills', 'cassandra/toolkit/', 'toolkit angle finder site today existing'],
+    ['The Building Today', 'The site as it stands now', 'cassandra/toolkit/', 'toolkit angle finder site today existing current'],
     ['Google Maps', '150 Worth Avenue, Palm Beach', 'https://www.google.com/maps/search/?api=1&query=150+Worth+Ave%2C+Palm+Beach%2C+FL+33480', 'map location directions'],
     ['Google Earth', '150 Worth Avenue, Palm Beach, in 3D', 'https://earth.google.com/web/@26.70050,-80.03522,6a,350d,35y,0h,60t,0r', 'map 3d earth aerial'],
     ['Full story and galleries', 'Worth Avenue history, vocabulary, every gallery', 'cassandra/dashboard/', 'dashboard everything history'],
