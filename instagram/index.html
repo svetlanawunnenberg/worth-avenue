@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Post Studio</title>
+<style>
+  :root{
+    --ivory:#f4efe4; --paper:#fbf8f1; --ink:#1a232e; --muted:#4f4a40;
+    --green:#264232; --green-2:#e6eee7; --line:#cfc5ae; --hot:#2a6fdb;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  html,body{margin:0;background:var(--ivory);color:var(--ink);font-family:Georgia,"Times New Roman",serif}
+  body{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+  button,input,select{font-family:system-ui,"Segoe UI",sans-serif}
+
+  header{flex:none;display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap;
+    padding:10px 18px;background:var(--paper);border-bottom:1px solid var(--line)}
+  .brand{margin-right:auto}
+  .brand h1{margin:0;font-size:22px;font-weight:normal;letter-spacing:.04em}
+  .brand span{display:block;color:var(--muted);font-size:14px;font-style:italic}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  button{border:2px solid var(--ink);background:#fff;color:var(--ink);font-size:16px;font-weight:600;
+    padding:8px 16px;border-radius:8px;cursor:pointer;min-height:46px;display:inline-flex;align-items:center;gap:8px}
+  button:hover:not(:disabled){background:var(--green-2)}
+  button:disabled{opacity:.35;cursor:default}
+  button.primary{background:var(--green);border-color:var(--green);color:#fff}
+  button.primary:hover:not(:disabled){background:#1b3124}
+  button.small{min-height:38px;padding:4px 12px;font-size:14px;border-color:var(--line)}
+  button svg{width:22px;height:22px;flex:none}
+
+  main{flex:1;min-height:0;display:flex}
+
+  /* library */
+  .lib{flex:none;width:300px;display:flex;flex-direction:column;background:var(--paper);border-right:1px solid var(--line)}
+  .lib h2{margin:0;padding:14px 14px 4px;font:600 12px system-ui,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+  .lib .add{margin:8px 14px 10px;justify-content:center}
+  #libList{flex:1;min-height:0;overflow:auto;padding:0 14px 14px}
+  .none{color:var(--muted);font-size:15px;line-height:1.4}
+  .card{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px;margin-bottom:10px}
+  .card h3{margin:0 0 2px;font:600 14px system-ui,sans-serif;word-break:break-word}
+  .card p{margin:0 0 8px;color:var(--muted);font:13px system-ui,sans-serif}
+  .card canvas.th{display:block;max-width:100%;max-height:150px;margin:0 auto 8px;border:1px solid var(--line)}
+  .pages{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+  .pg{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;
+    min-height:84px;padding:4px;font:12px system-ui,sans-serif;font-weight:600;border-color:var(--line)}
+  .pg canvas{max-width:100%;max-height:90px;border:1px solid var(--line);background:#fff}
+  .pg .ph{width:100%;height:60px;background:var(--ivory)}
+
+  /* work area */
+  .work{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
+  .formats{flex:none;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 18px 0}
+  .formats b{font:600 12px system-ui,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-right:4px}
+  .pill{min-height:38px;padding:4px 14px;font-size:14px;border-color:var(--line)}
+  .pill.on{background:var(--green);border-color:var(--green);color:#fff}
+  .stage{flex:1;min-height:0;padding:12px 18px;display:flex;justify-content:center;align-items:center;position:relative}
+  canvas#pv{display:block;background:#fff;box-shadow:0 2px 16px rgba(0,0,0,.18);cursor:grab;touch-action:none}
+  canvas#pv.grab{cursor:grabbing}
+  .empty{width:min(620px,100%);padding:44px 28px;text-align:center;border:3px dashed var(--line);
+    border-radius:14px;background:var(--paper);font-size:17px}
+  .empty b{display:block;font-size:26px;font-weight:normal;margin-bottom:8px}
+  .empty p{margin:0 0 20px;color:var(--muted)}
+  .empty button{font-size:18px;padding:12px 30px}
+  body.drag .stage,body.drag .lib{outline:4px dashed var(--green);outline-offset:-6px;background:var(--green-2)}
+
+  .controls{flex:none;padding:4px 18px 8px;font:15px system-ui,sans-serif}
+  .controls .row{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;margin-bottom:8px}
+  .controls .grow{flex:1}
+  .zoom{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+  .zoom input{width:min(260px,40vw)}
+  .swatches{display:flex;gap:6px;align-items:center}
+  .sw{width:34px;height:34px;min-height:0;padding:0;border-radius:50%;border:2px solid var(--line)}
+  .sw.on{outline:3px solid var(--hot);outline-offset:2px}
+  .lab{font:600 12px system-ui,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+  .hint{color:var(--muted);font-size:13px}
+
+  .strip{flex:none;display:flex;gap:10px;overflow-x:auto;padding:10px 18px 12px;border-top:1px solid var(--line);
+    background:var(--paper);min-height:132px;align-items:flex-start}
+  .tile{flex:none;position:relative;cursor:pointer;border:3px solid transparent;border-radius:6px;padding:0;background:none;line-height:0}
+  .tile canvas{display:block;height:100px;border:1px solid var(--line);background:#fff}
+  .tile.on{border-color:var(--hot)}
+  .tile.over{border-color:var(--green)}
+  .tile i{position:absolute;left:4px;top:4px;min-width:22px;height:22px;border-radius:11px;background:var(--ink);color:#fff;
+    font:600 12px/22px system-ui,sans-serif;text-align:center;font-style:normal;padding:0 6px}
+  .tile.g::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:4px;background:var(--green);border-radius:2px}
+  .stripnote{color:var(--muted);font:15px system-ui,sans-serif;align-self:center}
+
+  #status{flex:none;padding:9px 18px;background:var(--paper);border-top:1px solid var(--line);
+    font:16px system-ui,sans-serif;min-height:40px}
+
+  @media (max-width:860px){
+    header{padding:8px 12px}
+    .brand span{display:none}
+    button{font-size:15px;padding:6px 12px;min-height:44px}
+    main{flex-direction:column;overflow:auto}
+    .lib{width:auto;max-height:34vh;flex:none;border-right:none;border-bottom:1px solid var(--line)}
+    .work{min-height:640px}
+    .stage{padding:8px;min-height:340px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>Post Studio</h1>
+    <span>Instagram carousels &middot; Fairfax &amp; Sammons</span>
+  </div>
+  <div class="actions">
+    <button id="open" class="primary" title="Open photos or a PDF from your computer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 8"/></svg>
+      Add photos or PDF</button>
+    <input id="file" type="file" accept="image/*,application/pdf,.pdf" multiple hidden>
+    <button id="saveOne" disabled title="Save the slide on screen as a JPG">Save this slide</button>
+    <button id="saveAll" disabled title="Save every slide in one zip">Save all slides</button>
+  </div>
+</header>
+
+<main>
+  <aside class="lib" id="lib">
+    <h2>Your files</h2>
+    <button class="add" id="open2">Add photos or PDF</button>
+    <div id="libList"></div>
+  </aside>
+
+  <section class="work">
+    <div class="formats" id="formats">
+      <b>Shape</b>
+      <button class="pill on" data-f="portrait">Portrait 4:5</button>
+      <button class="pill" data-f="square">Square</button>
+      <button class="pill" data-f="story">Story 9:16</button>
+      <button class="pill" data-f="landscape">Landscape</button>
+    </div>
+
+    <div class="stage" id="stage">
+      <div class="empty" id="empty">
+        <b>Drop a photo or a PDF here</b>
+        <p>Photos become slides straight away. For a PDF, pick the pages you want from the list on the left.</p>
+        <button class="primary" id="open3">Add photos or PDF</button>
+      </div>
+      <canvas id="pv" hidden></canvas>
+    </div>
+
+    <div class="controls" id="controls" hidden>
+      <div class="row">
+        <div class="zoom">Show more <input type="range" id="zoom" min="0" max="1000" aria-label="Zoom"> Zoom in</div>
+        <button class="small" id="bFill" title="Photo fills the whole slide">Fill</button>
+        <button class="small" id="bFit" title="Whole picture shows, with a border">Fit</button>
+        <span class="lab">Border</span>
+        <span class="swatches" id="bgs">
+          <button class="sw on" data-bg="#f4efe4" style="background:#f4efe4" title="Ivory"></button>
+          <button class="sw" data-bg="#ffffff" style="background:#fff" title="White"></button>
+          <button class="sw" data-bg="#111111" style="background:#111" title="Black"></button>
+          <button class="sw" data-bg="#264232" style="background:#264232" title="Green"></button>
+        </span>
+        <span class="hint">Drag the picture to move it.</span>
+      </div>
+      <div class="row">
+        <span class="lab">Split across</span>
+        <button class="small" data-split="2">2 slides</button>
+        <button class="small" data-split="3">3 slides</button>
+        <button class="small" data-split="4">4 slides</button>
+        <button class="small" data-split="5">5 slides</button>
+        <button class="small" id="unlink" hidden>Unlink pieces</button>
+        <span class="grow"></span>
+        <button class="small" id="bLeft">&larr; Earlier</button>
+        <button class="small" id="bRight">Later &rarr;</button>
+        <button class="small" id="bDup">Duplicate</button>
+        <button class="small" id="bDel">Remove</button>
+      </div>
+    </div>
+
+    <div class="strip" id="strip"></div>
+  </section>
+</main>
+<div id="status">Add a photo or a PDF to begin. Nothing is uploaded; everything stays in this window.</div>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+  const FORMATS = { portrait:{w:1080,h:1350}, square:{w:1080,h:1080}, story:{w:1080,h:1920}, landscape:{w:1080,h:566} };
+  const MAXPX = 6000, SMALL = 1400, PDFPX = 4000, MAXSLIDES = 20;
+
+  let fmtKey = 'portrait';
+  let sources = [], assets = new Map(), slides = [], groups = {}, sel = -1, uid = 1;
+  let drag = null, dragFrom = -1;
+
+  const A = () => FORMATS[fmtKey].w / FORMATS[fmtKey].h;
+  const say = m => { $('#status').textContent = m; };
+  const pv = $('#pv'), pg = pv.getContext('2d');
+
+  /* ---------- zip (no compression, plenty for JPGs) ---------- */
+  const CRC = (() => {
+    const t = new Uint32Array(256);
+    for (let n = 0; n < 256; n++){ let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+    return b => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = t[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+  })();
+  function makeZip(files){
+    const enc = new TextEncoder(), parts = [], central = [];
+    let off = 0;
+    const d = new Date();
+    const time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+    const date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+    for (const f of files){
+      const nm = enc.encode(f.name), crc = CRC(f.data), sz = f.data.length;
+      const lh = new DataView(new ArrayBuffer(30));
+      lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true);
+      lh.setUint16(10, time, true); lh.setUint16(12, date, true);
+      lh.setUint32(14, crc, true); lh.setUint32(18, sz, true); lh.setUint32(22, sz, true);
+      lh.setUint16(26, nm.length, true);
+      parts.push(lh.buffer, nm, f.data);
+      const ch = new DataView(new ArrayBuffer(46));
+      ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true);
+      ch.setUint16(12, time, true); ch.setUint16(14, date, true);
+      ch.setUint32(16, crc, true); ch.setUint32(20, sz, true); ch.setUint32(24, sz, true);
+      ch.setUint16(28, nm.length, true); ch.setUint32(42, off, true);
+      central.push(ch.buffer, nm);
+      off += 30 + nm.length + sz;
+    }
+    let csz = 0; central.forEach(p => { csz += p.byteLength; });
+    const end = new DataView(new ArrayBuffer(22));
+    end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+    end.setUint32(12, csz, true); end.setUint32(16, off, true);
+    return new Blob([...parts, ...central, end.buffer], { type:'application/zip' });
+  }
+  function saveBlob(blob, name){
+    const u = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(u), 4000);
+  }
+
+  /* ---------- pictures and PDFs ---------- */
+  function smallOf(src, w, h){
+    const s = Math.min(1, SMALL / Math.max(w, h)), c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(w * s)); c.height = Math.max(1, Math.round(h * s));
+    const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(src, 0, 0, c.width, c.height);
+    return c;
+  }
+  function putAsset(key, big, label){
+    const a = { key, big, w: big.width, h: big.height, label, small: smallOf(big, big.width, big.height) };
+    assets.set(key, a); return a;
+  }
+  async function loadImage(file){
+    let bmp = await createImageBitmap(file);
+    const long = Math.max(bmp.width, bmp.height);
+    if (long > MAXPX){
+      const s = MAXPX / long, w = Math.round(bmp.width * s), h = Math.round(bmp.height * s);
+      bmp.close();
+      bmp = await createImageBitmap(file, { resizeWidth:w, resizeHeight:h, resizeQuality:'high' });
+    }
+    return bmp;
+  }
+  let pdfReady = null;
+  function loadPdfJs(){
+    if (pdfReady) return pdfReady;
+    pdfReady = (async () => {
+      await new Promise((ok, no) => {
+        const s = document.createElement('script');
+        s.src = PDFJS + 'pdf.min.js'; s.onload = ok;
+        s.onerror = () => no(new Error('The PDF reader would not load. Check the internet connection and try again.'));
+        document.head.appendChild(s);
+      });
+      const r = await fetch(PDFJS + 'pdf.worker.min.js');
+      const b = await r.blob();
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([b], { type:'text/javascript' }));
+    })().catch(e => { pdfReady = null; throw e; });
+    return pdfReady;
+  }
+  async function renderPage(doc, n, longEdge){
+    const page = await doc.getPage(n), v0 = page.getViewport({ scale:1 });
+    const vp = page.getViewport({ scale: longEdge / Math.max(v0.width, v0.height) });
+    const c = document.createElement('canvas');
+    c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+    await page.render({ canvasContext:g, viewport:vp }).promise;
+    return c;
+  }
+
+  async function handleFiles(list){
+    const files = [...list];
+    for (const f of files){
+      const isPdf = f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
+      try {
+        if (isPdf) await addPdf(f);
+        else if (f.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp|avif)$/i.test(f.name)) await addImage(f);
+        else say('Skipped ' + f.name + ': only photos and PDFs open here.');
+      } catch (e){
+        if (/\.tiff?$/i.test(f.name)) say(f.name + ' is a TIFF, which browsers cannot open. Save it as a JPG first.');
+        else say('Could not open ' + f.name + '. ' + (e && e.message ? e.message : ''));
+      }
+    }
+  }
+  async function addImage(f){
+    say('Opening ' + f.name + '...');
+    const bmp = await loadImage(f), key = 'i' + (uid++);
+    const a = putAsset(key, bmp, f.name);
+    const th = document.createElement('canvas'), s = 160 / Math.max(a.w, a.h);
+    th.width = Math.max(1, Math.round(a.w * s)); th.height = Math.max(1, Math.round(a.h * s));
+    th.getContext('2d').drawImage(a.small, 0, 0, th.width, th.height);
+    sources.push({ id:key, kind:'img', name:f.name, key, thumb:th });
+    renderLib();
+    addSlide(key, 'fill');
+    say('Added ' + f.name + '. Drag it to choose what shows, or split it across slides.');
+  }
+  async function addPdf(f){
+    say('Opening ' + f.name + '...');
+    await loadPdfJs();
+    const buf = new Uint8Array(await f.arrayBuffer());
+    const doc = await window.pdfjsLib.getDocument({ data:buf }).promise;
+    const src = { id:'p' + (uid++), kind:'pdf', name:f.name, doc, n:doc.numPages, thumbs:{} };
+    sources.push(src);
+    renderLib();
+    if (src.n === 1){ await addPage(src, 1); }
+    else say(f.name + ' has ' + src.n + ' pages. Click the pages you want in the list on the left.');
+  }
+  async function addPage(src, n){
+    const key = src.id + ':' + n;
+    if (!assets.has(key)){
+      say('Preparing page ' + n + '...');
+      const c = await renderPage(src.doc, n, PDFPX);
+      putAsset(key, c, src.name + ' p.' + n);
+    }
+    addSlide(key, 'fit');
+    say('Added page ' + n + '. It shows whole; use Fill or the zoom slider to crop in.');
+  }
+
+  /* ---------- slides ---------- */
+  function ctl(s){ return s.grp ? groups[s.grp.id] : s; }
+  function view(s){
+    const o = ctl(s);
+    if (!s.grp) return { cx:o.cx, cy:o.cy, w:o.w };
+    const sw = o.w / o.n;
+    return { cx: o.cx - o.w / 2 + (s.grp.i + 0.5) * sw, cy:o.cy, w:sw };
+  }
+  function bounds(o){
+    const a = assets.get(o.src), r = o.n * A();
+    return { fill: Math.min(a.w, a.h * r), fit: Math.max(a.w, a.h * r) };
+  }
+  function axis(c, vw, dim){
+    const half = vw / 2;
+    return vw <= dim ? Math.min(dim - half, Math.max(half, c)) : Math.min(half, Math.max(dim - half, c));
+  }
+  function clampO(o){
+    const a = assets.get(o.src), ph = o.w / (o.n * A());
+    o.cx = axis(o.cx, o.w, a.w); o.cy = axis(o.cy, ph, a.h);
+  }
+  function applyMode(o){
+    const b = bounds(o);
+    if (o.mode === 'fill') o.w = b.fill; else if (o.mode === 'fit') o.w = b.fit;
+    clampO(o);
+  }
+  function setMode(o, m){
+    const a = assets.get(o.src);
+    o.mode = m; o.cx = a.w / 2; o.cy = a.h / 2; applyMode(o);
+  }
+  function tOf(o){
+    const b = bounds(o), lo = b.fill / 4, hi = b.fit;
+    return Math.min(1, Math.max(0, Math.log(o.w / hi) / Math.log(lo / hi)));
+  }
+  function setT(o, t){
+    const b = bounds(o), lo = b.fill / 4, hi = b.fit;
+    o.w = hi * Math.pow(lo / hi, t); o.mode = 'custom'; clampO(o);
+  }
+  function addSlide(key, mode){
+    const s = { id:uid++, src:key, bg:'#f4efe4', grp:null, n:1, cx:0, cy:0, w:1, mode };
+    setMode(s, mode);
+    slides.push(s); sel = slides.length - 1;
+    if (slides.length > MAXSLIDES) say('Heads up: Instagram carousels hold ' + MAXSLIDES + ' slides at most.');
+    renderAll();
+  }
+
+  /* ---------- painting ---------- */
+  function drawScaled(g, src, sx, sy, sw, sh, dx, dy, dw, dh){
+    let cur = src, cx = sx, cy = sy, cw = sw, ch = sh;
+    while (cw > dw * 2 && ch > dh * 2){
+      const nw = Math.ceil(cw / 2), nh = Math.ceil(ch / 2), t = document.createElement('canvas');
+      t.width = nw; t.height = nh;
+      const tg = t.getContext('2d'); tg.imageSmoothingQuality = 'high';
+      tg.drawImage(cur, cx, cy, cw, ch, 0, 0, nw, nh);
+      cur = t; cx = 0; cy = 0; cw = nw; ch = nh;
+    }
+    g.imageSmoothingQuality = 'high';
+    g.drawImage(cur, cx, cy, cw, ch, dx, dy, dw, dh);
+  }
+  function paint(g, s, W, H, small){
+    g.fillStyle = s.bg; g.fillRect(0, 0, W, H);
+    const a = assets.get(s.src);
+    if (!a) return;
+    const v = view(s), w = v.w, h = w * H / W, x = v.cx - w / 2, y = v.cy - h / 2, k = W / w;
+    const sx = Math.max(0, x), sy = Math.max(0, y), ex = Math.min(a.w, x + w), ey = Math.min(a.h, y + h);
+    if (ex <= sx || ey <= sy) return;
+    const src = small ? a.small : a.big, r = src.width / a.w;
+    drawScaled(g, src, sx * r, sy * r, (ex - sx) * r, (ey - sy) * r, (sx - x) * k, (sy - y) * k, (ex - sx) * k, (ey - sy) * k);
+  }
+
+  /* ---------- screen ---------- */
+  function renderStage(){
+    const has = sel >= 0 && slides[sel];
+    $('#empty').hidden = slides.length > 0 || !!has;
+    pv.hidden = !has;
+    $('#controls').hidden = !has;
+    $('#saveOne').disabled = !has; $('#saveAll').disabled = !slides.length;
+    if (!has) return;
+    const st = $('#stage'), cs = getComputedStyle(st);
+    const bw = st.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const bh = st.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    const F = FORMATS[fmtKey], k = Math.max(0.05, Math.min(bw / F.w, bh / F.h));
+    const dw = Math.floor(F.w * k), dh = Math.floor(F.h * k), dpr = Math.min(2, window.devicePixelRatio || 1);
+    pv.style.width = dw + 'px'; pv.style.height = dh + 'px';
+    pv.width = Math.round(dw * dpr); pv.height = Math.round(dh * dpr);
+    paint(pg, slides[sel], pv.width, pv.height, true);
+  }
+  function renderStrip(){
+    const el = $('#strip'); el.innerHTML = '';
+    if (!slides.length){
+      const p = document.createElement('span'); p.className = 'stripnote';
+      p.textContent = 'Your slides appear here, in order. Drag one to reorder.'; el.appendChild(p); return;
+    }
+    const F = FORMATS[fmtKey], tw = Math.round(100 * F.w / F.h);
+    slides.forEach((s, i) => {
+      const t = document.createElement('div');
+      t.className = 'tile' + (i === sel ? ' on' : '') + (s.grp ? ' g' : '');
+      t.draggable = true; t.title = 'Slide ' + (i + 1);
+      const c = document.createElement('canvas'); c.width = tw * 2; c.height = 200; c.style.width = tw + 'px';
+      paint(c.getContext('2d'), s, c.width, c.height, true);
+      const n = document.createElement('i'); n.textContent = i + 1;
+      t.append(c, n);
+      t.addEventListener('click', () => { sel = i; renderAll(); });
+      t.addEventListener('dragstart', e => { dragFrom = i; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'slide'); });
+      t.addEventListener('dragover', e => { if (dragFrom >= 0){ e.preventDefault(); t.classList.add('over'); } });
+      t.addEventListener('dragleave', () => t.classList.remove('over'));
+      t.addEventListener('drop', e => {
+        if (dragFrom < 0) return;
+        e.preventDefault(); e.stopPropagation();
+        const [m] = slides.splice(dragFrom, 1); slides.splice(i, 0, m);
+        sel = i; dragFrom = -1; renderAll();
+      });
+      t.addEventListener('dragend', () => { dragFrom = -1; renderStrip(); });
+      el.appendChild(t);
+    });
+  }
+  function renderControls(){
+    const s = slides[sel]; if (!s) return;
+    const o = ctl(s);
+    $('#zoom').value = Math.round(tOf(o) * 1000);
+    document.querySelectorAll('#bgs .sw').forEach(b => b.classList.toggle('on', b.dataset.bg === s.bg));
+    document.querySelectorAll('[data-split]').forEach(b => { b.disabled = !!s.grp; });
+    $('#unlink').hidden = !s.grp;
+    $('#bLeft').disabled = sel === 0; $('#bRight').disabled = sel === slides.length - 1;
+  }
+  function renderAll(){ renderStage(); renderStrip(); renderControls(); }
+
+  /* ---------- library ---------- */
+  let thumbQ = Promise.resolve(), io = null;
+  function queueThumb(src, n, cell){
+    thumbQ = thumbQ.then(async () => {
+      if (!src.thumbs[n]) src.thumbs[n] = await renderPage(src.doc, n, 200);
+      if (cell.isConnected) cell.replaceChildren(src.thumbs[n]);
+    }).catch(() => {});
+  }
+  function renderLib(){
+    const el = $('#libList');
+    if (io) io.disconnect();
+    io = new IntersectionObserver(es => es.forEach(e => {
+      if (e.isIntersecting){ io.unobserve(e.target); queueThumb(e.target._src, e.target._n, e.target); }
+    }), { root:el });
+    el.innerHTML = '';
+    if (!sources.length){
+      const p = document.createElement('p'); p.className = 'none';
+      p.textContent = 'Nothing here yet. Drop photos or a PDF anywhere on this page.'; el.appendChild(p); return;
+    }
+    for (const s of sources){
+      const card = document.createElement('div'); card.className = 'card';
+      const h = document.createElement('h3'); h.textContent = s.name; card.appendChild(h);
+      const p = document.createElement('p'); card.appendChild(p);
+      if (s.kind === 'img'){
+        p.textContent = 'Photo';
+        card.appendChild(s.thumb);
+        s.thumb.className = 'th';
+        const b = document.createElement('button'); b.className = 'small'; b.textContent = 'Add again';
+        b.onclick = () => addSlide(s.key, 'fill'); card.appendChild(b);
+      } else {
+        p.textContent = s.n + ' page' + (s.n === 1 ? '' : 's') + '. Click a page to add it.';
+        const all = document.createElement('button'); all.className = 'small'; all.textContent = 'Add all pages';
+        all.onclick = async () => {
+          if (s.n > MAXSLIDES && !confirm('That is ' + s.n + ' pages, more than a carousel holds. Add them all anyway?')) return;
+          for (let n = 1; n <= s.n; n++) await addPage(s, n);
+        };
+        card.appendChild(all);
+        const grid = document.createElement('div'); grid.className = 'pages';
+        for (let n = 1; n <= s.n; n++){
+          const b = document.createElement('button'); b.className = 'pg'; b.title = 'Add page ' + n;
+          const cell = document.createElement('div'); cell.className = 'ph'; cell._src = s; cell._n = n;
+          if (s.thumbs[n]) cell.replaceChildren(s.thumbs[n]); else io.observe(cell);
+          const lab = document.createElement('span'); lab.textContent = 'p. ' + n;
+          b.append(cell, lab); b.onclick = () => addPage(s, n);
+          grid.appendChild(b);
+        }
+        card.appendChild(grid);
+      }
+      el.appendChild(card);
+    }
+  }
+
+  /* ---------- actions ---------- */
+  function split(n){
+    const s = slides[sel]; if (!s || s.grp) return;
+    const id = 'g' + (uid++);
+    const g = { src:s.src, n, cx:s.cx, cy:s.cy, w:1, mode:'fill' };
+    setMode(g, 'fill');
+    groups[id] = g;
+    const parts = [];
+    for (let i = 0; i < n; i++) parts.push({ id:uid++, src:s.src, bg:s.bg, grp:{ id, i }, n:1, cx:0, cy:0, w:1, mode:'fill' });
+    slides.splice(sel, 1, ...parts);
+    say('Split into ' + n + '. The pieces move together; drag to choose what shows. A wide photo splits best.');
+    renderAll();
+  }
+  function unlink(){
+    const s = slides[sel]; if (!s || !s.grp) return;
+    const id = s.grp.id;
+    slides.forEach(t => {
+      if (t.grp && t.grp.id === id){ const v = view(t); t.cx = v.cx; t.cy = v.cy; t.w = v.w; t.mode = 'custom'; t.n = 1; t.grp = null; }
+    });
+    delete groups[id];
+    say('The pieces are separate slides now.');
+    renderAll();
+  }
+  function setBg(c){
+    const s = slides[sel]; if (!s) return;
+    if (s.grp) slides.forEach(t => { if (t.grp && t.grp.id === s.grp.id) t.bg = c; }); else s.bg = c;
+    renderAll();
+  }
+  function move(d){
+    const j = sel + d; if (j < 0 || j >= slides.length) return;
+    [slides[sel], slides[j]] = [slides[j], slides[sel]]; sel = j; renderAll();
+  }
+  function dup(){
+    const s = slides[sel]; if (!s) return;
+    const v = view(s);
+    slides.splice(sel + 1, 0, { id:uid++, src:s.src, bg:s.bg, grp:null, n:1, cx:v.cx, cy:v.cy, w:v.w, mode:'custom' });
+    sel++; renderAll();
+  }
+  function remove(){
+    if (!slides[sel]) return;
+    slides.splice(sel, 1);
+    sel = Math.min(sel, slides.length - 1);
+    renderAll();
+  }
+  function slideBlob(s){
+    const F = FORMATS[fmtKey], c = document.createElement('canvas');
+    c.width = F.w; c.height = F.h;
+    paint(c.getContext('2d'), s, F.w, F.h, false);
+    return new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
+  }
+  const pad = n => String(n).padStart(2, '0');
+  async function saveOne(){
+    if (!slides[sel]) return;
+    saveBlob(await slideBlob(slides[sel]), 'post-slide-' + pad(sel + 1) + '.jpg');
+    say('Saved slide ' + (sel + 1) + ' to your Downloads folder.');
+  }
+  async function saveAll(){
+    if (!slides.length) return;
+    say('Making ' + slides.length + ' JPGs...');
+    const files = [];
+    for (let i = 0; i < slides.length; i++){
+      const b = await slideBlob(slides[i]);
+      files.push({ name:'post-slide-' + pad(i + 1) + '.jpg', data:new Uint8Array(await b.arrayBuffer()) });
+    }
+    saveBlob(makeZip(files), 'post-slides.zip');
+    say('Saved post-slides.zip with ' + slides.length + ' slides to your Downloads folder.');
+  }
+
+  /* ---------- wiring ---------- */
+  const pick = () => $('#file').click();
+  ['#open', '#open2', '#open3'].forEach(s => $(s).addEventListener('click', pick));
+  $('#file').addEventListener('change', e => { handleFiles(e.target.files); e.target.value = ''; });
+  $('#saveOne').addEventListener('click', saveOne);
+  $('#saveAll').addEventListener('click', saveAll);
+  $('#bFill').addEventListener('click', () => { if (slides[sel]){ setMode(ctl(slides[sel]), 'fill'); renderAll(); } });
+  $('#bFit').addEventListener('click', () => { if (slides[sel]){ setMode(ctl(slides[sel]), 'fit'); renderAll(); } });
+  $('#zoom').addEventListener('input', e => { if (slides[sel]){ setT(ctl(slides[sel]), e.target.value / 1000); renderStage(); renderStrip(); } });
+  $('#bgs').addEventListener('click', e => { const b = e.target.closest('.sw'); if (b) setBg(b.dataset.bg); });
+  document.querySelectorAll('[data-split]').forEach(b => b.addEventListener('click', () => split(+b.dataset.split)));
+  $('#unlink').addEventListener('click', unlink);
+  $('#bLeft').addEventListener('click', () => move(-1));
+  $('#bRight').addEventListener('click', () => move(1));
+  $('#bDup').addEventListener('click', dup);
+  $('#bDel').addEventListener('click', remove);
+  $('#formats').addEventListener('click', e => {
+    const b = e.target.closest('.pill'); if (!b) return;
+    fmtKey = b.dataset.f;
+    document.querySelectorAll('.pill').forEach(p => p.classList.toggle('on', p === b));
+    Object.values(groups).forEach(applyMode);
+    slides.forEach(s => { if (!s.grp) applyMode(s); });
+    renderAll();
+  });
+
+  /* drag the picture on the stage */
+  pv.addEventListener('pointerdown', e => {
+    const s = slides[sel]; if (!s) return;
+    pv.setPointerCapture(e.pointerId); pv.classList.add('grab');
+    drag = { x:e.clientX, y:e.clientY };
+  });
+  pv.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const s = slides[sel], o = ctl(s), v = view(s);
+    const k = pv.clientWidth / v.w;
+    o.cx -= (e.clientX - drag.x) / k; o.cy -= (e.clientY - drag.y) / k;
+    drag.x = e.clientX; drag.y = e.clientY;
+    clampO(o); renderStage();
+  });
+  const endDrag = () => { if (drag){ drag = null; pv.classList.remove('grab'); renderStrip(); } };
+  pv.addEventListener('pointerup', endDrag); pv.addEventListener('pointercancel', endDrag);
+  pv.addEventListener('wheel', e => {
+    const s = slides[sel]; if (!s) return;
+    e.preventDefault();
+    const o = ctl(s); setT(o, Math.min(1, Math.max(0, tOf(o) - e.deltaY * 0.001)));
+    renderStage(); renderStrip(); renderControls();
+  }, { passive:false });
+
+  /* drop and paste files anywhere */
+  const hasFiles = e => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
+  window.addEventListener('dragover', e => { e.preventDefault(); if (hasFiles(e)) document.body.classList.add('drag'); });
+  window.addEventListener('dragleave', e => { if (!e.relatedTarget) document.body.classList.remove('drag'); });
+  window.addEventListener('drop', e => {
+    e.preventDefault(); document.body.classList.remove('drag');
+    if (hasFiles(e)) handleFiles(e.dataTransfer.files);
+  });
+  window.addEventListener('paste', e => {
+    const fs = [...(e.clipboardData ? e.clipboardData.files : [])];
+    if (fs.length) handleFiles(fs);
+  });
+  window.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' && e.target.type !== 'range') return;
+    if (e.key === 'ArrowLeft' && sel > 0){ sel--; renderAll(); }
+    if (e.key === 'ArrowRight' && sel < slides.length - 1){ sel++; renderAll(); }
+  });
+  new ResizeObserver(() => renderStage()).observe($('#stage'));
+
+  renderLib(); renderStrip();
+  window.__studio = { slides: () => slides, groups: () => groups, sources: () => sources };
+})();
+</script>
+</body>
+</html>
