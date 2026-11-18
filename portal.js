@@ -28,9 +28,9 @@
     var here = location.href.split('#')[0].split('?')[0].replace(/index\.html$/, '');
     [['Menu'],
      ['Home', '', 'Start here'],
-     ['Presentation', 'deck/', 'The 11 November 2026 presentation'],
+     ['Presentation', 'deck/', 'The 16 November 2026 presentation'],
      ['Renderings', 'navigation/#floorplan-renderings', 'Every view, placed on the plan'],
-     ['360 Tour', 'scan/#skip=1', 'Walk the building, before and designed'],
+     ['360 Tour', 'scan/#skip=2', 'Walk the building, before and designed'],
      ['360 on the Plan', 'navigation/#floorplan-360', 'Tap a spot on the plan and stand there'],
      ['The Building Today', 'cassandra/toolkit/', 'The site as it stands now']
     ].forEach(function(r, i){
@@ -153,7 +153,7 @@
      To add something, add a line to EXTRA below: [title, small line, link, extra words]. */
   var EXTRA = [
     ['Home', 'Start here', '', 'home start overview map dashboard'],
-    ['360 Tour', 'Walk the building, before and designed', 'scan/#skip=1', 'scan pano panorama look around walk viewer'],
+    ['360 Tour', 'Walk the building, before and designed', 'scan/#skip=2', 'scan pano panorama look around walk viewer'],
     ['360 · Floor 2', '360 Viewer', 'scan/#floor=F2&skip=2', 'second floor upstairs level 2'],
     ['360 · Floor 1 Interior', '360 Viewer', 'scan/#floor=F1&skip=2', 'first floor ground gallery via arcade level 1'],
     ['360 · Floor 1 Exterior', '360 Viewer, Worth Avenue facade', 'scan/#floor=F1X&skip=2', 'facade street outside exterior'],
@@ -165,7 +165,7 @@
     ['360 on the Plan', 'Ten spots on the floor plan', 'plan360/', 'plan spots dots'],
     ['360 on the Elevation', 'Six spots along Worth Avenue', 'elevation360/', 'elevation street facade'],
     ['Floorplan & Views', 'Every rendering on the plan', 'floorplan/', 'plan renderings views pin present walkthrough pdf'],
-    ['Presentation', 'The 11 November 2026 presentation', 'deck/', 'presentation slides deck pdf pitch hearing'],
+    ['Presentation', 'The 16 November 2026 presentation', 'deck/', 'presentation slides deck pdf pitch hearing'],
     ['The Building Today', 'The site as it stands now', 'cassandra/toolkit/', 'toolkit angle finder site today existing current'],
     ['Google Maps', '150 Worth Avenue, Palm Beach', 'https://www.google.com/maps/search/?api=1&query=150+Worth+Ave%2C+Palm+Beach%2C+FL+33480', 'map location directions'],
     ['Google Earth', '150 Worth Avenue, Palm Beach, in 3D', 'https://earth.google.com/web/@26.70050,-80.03522,6a,350d,35y,0h,60t,0r', 'map 3d earth aerial'],
@@ -189,6 +189,19 @@
   ];
   var VIEW_NOS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17];
 
+  /* the newest presentation's per-slide text (assets/deck-…/slides.js) loads lazily, once
+     portal-data.js says where it is; searchItems() picks it up as soon as it is ready. */
+  var slidesRequested = false;
+  function ensureSlides(){
+    if(slidesRequested) return;
+    var P = window.PORTAL;
+    if(!P || !P.presentation || !P.presentation.search) return;
+    slidesRequested = true;
+    var sc = document.createElement('script'); sc.src = BASE + P.presentation.search;
+    sc.onload = function(){ window.dispatchEvent(new Event('portal-slides-ready')); };
+    document.head.appendChild(sc);
+  }
+
   function searchItems(){
     var items = [];
     var partner = /\/yael\//.test(location.pathname);   // Yael only ever sees unbranded files
@@ -201,13 +214,38 @@
       items.push({ t:'View ' + n + ' on the plan', s:'Floorplan & Views', u:BASE + 'floorplan/#v=V' + n, k:'rendering plan pin v' + n });
     });
     var P = window.PORTAL;
+    ensureSlides();
     if(P){
-      if(!partner) (P.exports || []).slice(0, 1).forEach(function(f){   // only the newest presentation
+      if(!partner) (P.exports || []).slice(0, 1).forEach(function(f){   // only the newest presentation, as one file
         if(f.file) items.push({ t:f.title, s:'Presentation · ' + f.date, u:BASE + f.file, k:'pdf deck presentation', tab:true });
       });
+      /* every slide of the newest presentation, so a word anywhere on a slide finds it and
+         jumps straight there (deck/#N) instead of only to the presentation as a whole */
+      if(!partner && window.PRESO_SLIDES && P.presentation){
+        window.PRESO_SLIDES.forEach(function(sl){
+          items.push({ t:sl.t, s:'Slide ' + sl.n + ' · ' + P.presentation.title, u:BASE + 'deck/#' + sl.n, k:sl.x });
+        });
+      }
     }
     return items;
   }
+
+  /* run a search against the same items and scoring used by the search box everywhere on the
+     site; a page can call window.PortalSearch.run("parking") to build its own results list. */
+  function matchItems(q){
+    q = (q || '').toLowerCase().trim();
+    if(!q) return [];
+    var parts = q.split(/\s+/), out = [];
+    searchItems().forEach(function(x){
+      var w = (x.t + ' ' + x.s + ' ' + x.k).toLowerCase(), t = x.t.toLowerCase();
+      if(!parts.every(function(p){ return w.indexOf(p) > -1; })) return;
+      x.score = t === q ? 0 : t.indexOf(q) === 0 ? 1 : t.indexOf(q) > -1 ? 2 : 3;
+      out.push(x);
+    });
+    out.sort(function(a, b){ return a.score - b.score; });
+    return out;
+  }
+  window.PortalSearch = { items:searchItems, run:matchItems, ensureSlides:ensureSlides };
 
   function buildSearch(){
     if(!window.PORTAL){                       // some pages do not load the list of files; fetch it quietly
@@ -223,23 +261,15 @@
     box.setAttribute('aria-label', 'Search');
     var input = el('input');
     input.type = 'search';
-    input.placeholder = 'Search views, 360 spots, the presentation';
+    input.placeholder = 'Search anything — a view, a 360 spot, a word from the presentation…';
     input.setAttribute('aria-label', 'Search');
     var list = el('div', 'psearch-list');
     box.appendChild(input); box.appendChild(list);
 
     function run(){
-      var q = input.value.toLowerCase().trim(), out = [];
       list.innerHTML = '';
-      if(!q){ list.appendChild(el('p', 'psearch-hint', 'Try "view 8", "basement", "entrance", "deck" or a client name.')); return; }
-      var parts = q.split(/\s+/);
-      searchItems().forEach(function(x){
-        var w = (x.t + ' ' + x.s + ' ' + x.k).toLowerCase(), t = x.t.toLowerCase();
-        if(!parts.every(function(p){ return w.indexOf(p) > -1; })) return;
-        x.score = t === q ? 0 : t.indexOf(q) === 0 ? 1 : t.indexOf(q) > -1 ? 2 : 3;
-        out.push(x);
-      });
-      out.sort(function(a, b){ return a.score - b.score; });
+      if(!input.value.trim()){ list.appendChild(el('p', 'psearch-hint', 'Try "view 8", "basement", "parking", "bakery" or a client name.')); return; }
+      var out = matchItems(input.value);
       if(!out.length){ list.appendChild(el('p', 'psearch-hint', 'Nothing found for "' + input.value + '".')); return; }
       out.slice(0, 30).forEach(function(x){
         var a = el('a', '', x.t);
@@ -259,6 +289,7 @@
       if(e.key === 'Enter'){ var a = list.querySelector('a'); if(a) a.click(); }
       if(e.key === 'Escape') set(false);
     });
+    window.addEventListener('portal-slides-ready', function(){ if(box.classList.contains('on')) run(); });
     btn.addEventListener('click', function(){ set(!box.classList.contains('on')); });
     document.addEventListener('click', function(e){ if(box.classList.contains('on') && !box.contains(e.target) && !btn.contains(e.target)) set(false); });
     document.addEventListener('keydown', function(e){

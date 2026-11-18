@@ -45,7 +45,8 @@ window.PORTAL = {
   /* Cassandra > Latest Exports (every PDF we have sent, branded and unbranded). Newest first.
      Yael does not see this list; she gets only the unbranded deck, from "latest" below. */
   exports: [
-    { title:"Presentation, 11 November 2026", file:"assets/150-worth-avenue-presentation-2026-11-11.pdf", view:"deck/", date:"11 November 2026" },
+    { title:"Presentation, 16 November 2026", file:"assets/150-worth-avenue-presentation-2026-11-16.pdf", view:"deck/", date:"16 November 2026" },
+    { title:"Presentation, 11 November 2026", file:"assets/150-worth-avenue-presentation-2026-11-11.pdf", view:"deck/?d=2026-11-11", date:"11 November 2026" },
     { title:"Pitch deck, unbranded, with plans", file:"assets/2026-10-26_Burlington_pitch_deck_unbranded.pdf", view:"deck/", date:"26 October 2026" },
     { title:"Pitch deck, with plans", file:"assets/2026-10-19_Burlington_pitch_deck.pdf", date:"19 October 2026" },
     { title:"Landscaping set (42 pages)", file:"assets/2026-10-13_Burlington_landscaping.pdf", date:"13 October 2026" }
@@ -59,11 +60,20 @@ window.PORTAL = {
     { key:"deck", label:"Pitch deck, unbranded, from the architects", note:"Pitch deck, unbranded", file:"assets/2026-10-26_Burlington_pitch_deck_unbranded.pdf", view:"deck/", date:"26 October 2026" }
   ],
 
-  /* The presentation viewer (deck/). It shows the slides as pictures in assets/deck/
-     (slide-01.jpg ...), made from the PDF below. For a new deck the slide pictures
-     have to be made again, so ask Claude; then change pdf, count and date here. */
+  /* The presentation viewer (deck/). It shows the slides as pictures in assets/deck-2026-11-16/
+     (slide-01.jpg ...), made from the PDF below, plus assets/deck-2026-11-16/slides.js, which
+     holds each slide's text so the search box can jump straight to a slide by word.
+     For a new deck: ask Claude to make the slide pictures and the slides.js search file,
+     then change pdf, slides, count and date here, and add the old deck to "decks" below
+     (deck/?d=<key> opens it). */
   presentation: {
-    title:"Presentation, 11 November 2026", pdf:"assets/150-worth-avenue-presentation-2026-11-11.pdf",
-    slides:"assets/deck-2026-11-11/", count:60, date:"11 November 2026"
+    title:"Presentation, 16 November 2026", pdf:"assets/150-worth-avenue-presentation-2026-11-16.pdf",
+    slides:"assets/deck-2026-11-16/", search:"assets/deck-2026-11-16/slides.js", count:75, date:"16 November 2026"
+  },
+
+  /* Earlier presentations, still reachable at deck/?d=2026-11-11 and so on. The newest one
+     above does not need to be listed here too. */
+  decks: {
+    "2026-11-11": { title:"Presentation, 11 November 2026", pdf:"assets/150-worth-avenue-presentation-2026-11-11.pdf", slides:"assets/deck-2026-11-11/", count:60, date:"11 November 2026" }
   }
 };
