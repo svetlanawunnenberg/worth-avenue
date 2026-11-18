@@ -150,26 +150,29 @@
   }
 
   /* ---------- search: one box that finds any page, view, 360 spot, presentation or client ----------
-     To add something, add a line to EXTRA below: [title, small line, link, extra words]. */
+     To add something, add a line to EXTRA below: [title, small line, link, extra words, flags].
+     flags is a space-separated string: "tool" marks a generic app/entry-point (not one specific
+     place or picture) so it sorts after real results and gets a small "Tool" tag; "team" hides
+     a row from Yael's unbranded view. Leave flags off (or "") for an ordinary row. */
   var EXTRA = [
-    ['Home', 'Start here', '', 'home start overview map dashboard'],
-    ['360 Tour', 'Walk the building, before and designed', 'scan/#skip=2', 'scan pano panorama look around walk viewer'],
+    ['Home', 'Start here', '', 'home start overview map dashboard', 'tool'],
+    ['360 Tour', 'Walk the building, before and designed', 'scan/#skip=2', 'scan pano panorama look around walk viewer', 'tool'],
     ['360 · Floor 2', '360 Viewer', 'scan/#floor=F2&skip=2', 'second floor upstairs level 2'],
     ['360 · Floor 1 Interior', '360 Viewer', 'scan/#floor=F1&skip=2', 'first floor ground gallery via arcade level 1'],
     ['360 · Floor 1 Exterior', '360 Viewer, Worth Avenue facade', 'scan/#floor=F1X&skip=2', 'facade street outside exterior'],
     ['360 · Basement', '360 Viewer, parking', 'scan/#floor=B&skip=2', 'garage parking cars lower level'],
     ['360 · Designed view, Worth Avenue', '360 Viewer, the design on the facade', 'scan/#s=Fasad__Scan_464__designed&y=94.8&p=-0.6&f=100&skip=2', 'designed renovated proposed after facade'],
-    ['Navigation', 'Floorplan + 360 and Floorplan + Renderings', 'navigation/', 'navigate both'],
-    ['360 on the Plan', 'Tap a spot on the plan and stand there', 'navigation/#floorplan-360', 'plan spots dots navigation floorplan'],
-    ['Renderings', 'Every view, placed on the plan', 'navigation/#floorplan-renderings', 'plan views renderings navigation floorplan pictures'],
-    ['360 on the Plan', 'Ten spots on the floor plan', 'plan360/', 'plan spots dots'],
-    ['360 on the Elevation', 'Six spots along Worth Avenue', 'elevation360/', 'elevation street facade'],
-    ['Floorplan & Views', 'Every rendering on the plan', 'floorplan/', 'plan renderings views pin present walkthrough pdf'],
-    ['Presentation', 'The 16 November 2026 presentation', 'deck/', 'presentation slides deck pdf pitch hearing'],
-    ['The Building Today', 'The site as it stands now', 'cassandra/toolkit/', 'toolkit angle finder site today existing current'],
-    ['Google Maps', '150 Worth Avenue, Palm Beach', 'https://www.google.com/maps/search/?api=1&query=150+Worth+Ave%2C+Palm+Beach%2C+FL+33480', 'map location directions'],
-    ['Google Earth', '150 Worth Avenue, Palm Beach, in 3D', 'https://earth.google.com/web/@26.70050,-80.03522,6a,350d,35y,0h,60t,0r', 'map 3d earth aerial'],
-    ['Full story and galleries', 'Worth Avenue history, vocabulary, every gallery', 'cassandra/dashboard/', 'dashboard everything history'],
+    ['Navigation', 'Floorplan + 360 and Floorplan + Renderings', 'navigation/', 'navigate both', 'tool'],
+    ['360 on the Plan', 'Tap a spot on the plan and stand there', 'navigation/#floorplan-360', 'plan spots dots navigation floorplan', 'tool'],
+    ['Renderings', 'Every view, placed on the plan', 'navigation/#floorplan-renderings', 'plan views renderings navigation floorplan pictures', 'tool'],
+    ['360 on the Plan', 'Ten spots on the floor plan', 'plan360/', 'plan spots dots', 'tool'],
+    ['360 on the Elevation', 'Six spots along Worth Avenue', 'elevation360/', 'elevation street facade', 'tool'],
+    ['Floorplan & Views', 'Every rendering on the plan', 'floorplan/', 'plan renderings views pin present walkthrough pdf', 'tool'],
+    ['Presentation', 'The 16 November 2026 presentation', 'deck/', 'presentation slides deck pdf pitch hearing', 'tool'],
+    ['The Building Today', 'The site as it stands now', 'cassandra/toolkit/', 'toolkit angle finder site today existing current', 'tool'],
+    ['Google Maps', '150 Worth Avenue, Palm Beach', 'https://www.google.com/maps/search/?api=1&query=150+Worth+Ave%2C+Palm+Beach%2C+FL+33480', 'map location directions', 'tool'],
+    ['Google Earth', '150 Worth Avenue, Palm Beach, in 3D', 'https://earth.google.com/web/@26.70050,-80.03522,6a,350d,35y,0h,60t,0r', 'map 3d earth aerial', 'tool'],
+    ['Full story and galleries', 'Worth Avenue history, vocabulary, every gallery', 'cassandra/dashboard/', 'dashboard everything history', 'tool'],
     ['Spot 1 · Arcade entrance from the Esplanade', '360 on the Plan, Level 1', 'plan360/#spot=1', ''],
     ['Spot 2 · Arcade entrance from Worth Avenue', '360 on the Plan, Level 1', 'plan360/#spot=2', ''],
     ['Spot 3 · Arcade gallery, central', '360 on the Plan, Level 1', 'plan360/#spot=3', ''],
@@ -208,7 +211,7 @@
     EXTRA.forEach(function(r){
       if(r[4] === 'team' && partner) return;
       var ext = /^https?:/.test(r[2]);
-      items.push({ t:r[0], s:r[1], u:ext ? r[2] : BASE + r[2], k:r[3], tab:ext });
+      items.push({ t:r[0], s:r[1], u:ext ? r[2] : BASE + r[2], k:r[3], tab:ext, tool:r[4] === 'tool' });
     });
     VIEW_NOS.forEach(function(n){
       items.push({ t:'View ' + n + ' on the plan', s:'Floorplan & Views', u:BASE + 'floorplan/#v=V' + n, k:'rendering plan pin v' + n });
@@ -242,7 +245,8 @@
       x.score = t === q ? 0 : t.indexOf(q) === 0 ? 1 : t.indexOf(q) > -1 ? 2 : 3;
       out.push(x);
     });
-    out.sort(function(a, b){ return a.score - b.score; });
+    /* real places and pictures first; a bare tool/app entry point sorts after all of them */
+    out.sort(function(a, b){ return (!!a.tool - !!b.tool) || (a.score - b.score); });
     return out;
   }
   window.PortalSearch = { items:searchItems, run:matchItems, ensureSlides:ensureSlides };
@@ -271,11 +275,14 @@
       if(!input.value.trim()){ list.appendChild(el('p', 'psearch-hint', 'Try "view 8", "basement", "parking", "bakery" or a client name.')); return; }
       var out = matchItems(input.value);
       if(!out.length){ list.appendChild(el('p', 'psearch-hint', 'Nothing found for "' + input.value + '".')); return; }
+      var toolsStarted = false;
       out.slice(0, 30).forEach(function(x){
-        var a = el('a', '', x.t);
+        if(x.tool && !toolsStarted){ toolsStarted = true; list.appendChild(el('p', 'psearch-div', 'Tools')); }
+        var a = el('a', x.tool ? 'is-tool' : '', x.t);
         a.href = x.u;
         if(x.tab){ a.target = '_blank'; a.rel = 'noopener'; }
         a.appendChild(el('small', '', x.s));
+        if(x.tool) a.appendChild(el('span', 'psearch-tag', 'Tool'));
         list.appendChild(a);
       });
     }

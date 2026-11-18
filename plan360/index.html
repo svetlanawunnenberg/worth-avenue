@@ -137,8 +137,8 @@ var W = 1543, H = 1054, NS = "http://www.w3.org/2000/svg";
 var svg = document.getElementById("dots"), pop = document.getElementById("pop"), plan = document.getElementById("plan");
 var current = null, popSpot = null;
 
-// &skip=1 tells the viewer to go straight in, with no title page
-function url(s, inner){ return "../scan/" + (inner ? "#" + inner : (s.link || "#s=" + s.id)) + "&skip=1"; }
+// &skip=2 tells the viewer to go straight in, full chrome (plan, menu, angle finder), no title page
+function url(s, inner){ return "../scan/" + (inner ? "#" + inner : (s.link || "#s=" + s.id)) + "&skip=2"; }
 
 var box = document.getElementById("viewbox"), frame = document.getElementById("vbFrame"), shown = null;
 function openView(s, inner){

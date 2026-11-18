@@ -204,7 +204,7 @@ function openSpot(s, view){
   bar.appendChild(share); bar.appendChild(tab); bar.appendChild(save); bar.appendChild(close);
 
   var frame = document.createElement("iframe");
-  frame.title = "360 view, " + s.name; frame.src = "../scan/" + hash(s, 1, view);
+  frame.title = "360 view, " + s.name; frame.src = "../scan/" + hash(s, 2, view);
   frame.setAttribute("allow", "fullscreen; accelerometer; gyroscope"); frame.setAttribute("allowfullscreen", "");
   w.appendChild(bar); w.appendChild(frame);
   document.body.appendChild(w);

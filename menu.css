@@ -63,6 +63,12 @@
 .psearch-list a:hover,.psearch-list a:focus-visible{ background:var(--white); border-color:var(--ink); outline:none; }
 .psearch-list a small{ display:block; font:400 .76rem/1.4 'Inter',-apple-system,'Segoe UI',sans-serif; color:var(--brass); margin-top:2px; }
 .psearch-hint{ margin:8px 12px; font-size:.86rem; color:var(--ink-soft,#3A342C); }
+/* a bare tool/app entry point, not a specific place or picture: listed last, under its own heading */
+.psearch-div{ margin:10px 10px 2px; padding-top:10px; border-top:1px solid var(--line); font:600 .68rem/1.4 'Inter',-apple-system,'Segoe UI',sans-serif;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft,#3A342C); }
+.psearch-list a.is-tool{ opacity:.85; }
+.psearch-tag{ display:inline-block; margin-left:8px; padding:1px 7px; vertical-align:1px; border:1px solid var(--line);
+  font:600 .64rem/1.6 'Inter',-apple-system,'Segoe UI',sans-serif; letter-spacing:.1em; text-transform:uppercase; color:var(--brass); }
 .embed .psearch-btn,.embed .psearch{ display:none !important; }
 
 /* ---------- gentle snap: when scrolling stops near a section, the page eases onto it ----------
